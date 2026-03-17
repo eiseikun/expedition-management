@@ -212,4 +212,13 @@ document.getElementById("editor").style.display="none"
 editIndex=null
 }
 
+window.deletePlayer = async function(i){
+if(!confirm("削除しますか？")) return
+const ref = doc(db,"players",playerDocs[i])
+await deleteDoc(ref)
+players.splice(i,1)
+playerDocs.splice(i,1)
+render()
+}
+
 load()
