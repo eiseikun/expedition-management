@@ -191,19 +191,18 @@ render()
 
 }
 
-window.saveTableImage=function(){
-
-const table=document.querySelector("#playerTable")
-
-html2canvas(table,{scale:2}).then(canvas=>{
-
-const link=document.createElement("a")
-link.download="clan_table.png"
-link.href=canvas.toDataURL()
-link.click()
-
-})
-
-}
+/* スマホで写真を保存 */
+window.saveTableImage = function () {
+const table = document.querySelector("#playerTable");
+html2canvas(table, { scale: 3 }).then(canvas => {
+const image = canvas.toDataURL("image/png");
+const link = document.createElement("a");
+link.href = image;
+link.download = "archer_clan_table.png";
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+});
+};
 
 load()
