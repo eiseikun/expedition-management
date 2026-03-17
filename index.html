@@ -11,113 +11,110 @@
 
 <h1>ねこ海賊団 遠征管理</h1>
 
-<!-- モード表示 -->
-<div id="modeIndicator" class="mode-indicator">通常モード</div>
-
 <div class="top-buttons">
-  <button onclick="unlockEdit()">編集画面を開く</button>
+  <button onclick="unlockEdit()">編集画面</button>
   <button onclick="saveTableImage()">画像保存</button>
 </div>
 
 <div class="table-container">
-  <table id="playerTable">
-    <thead>
-      <tr>
-        <th>名前</th>
-        <th onclick="sortByPower()">戦力</th>
-        <th>戦術</th>
-        <th>装備</th>
-        <th>主キャラ</th>
-        <th>ルーン</th>
-        <th>編成</th>
-        <th onclick="sortByRelic()">聖物%</th>
-        <th>遠征</th>
-        <th>レーン</th>
-        <th>編集</th>
-        <th>削除</th>
-      </tr>
-    </thead>
-    <tbody id="playerBody"></tbody>
-  </table>
+<table id="playerTable">
+<thead>
+<tr>
+<th>名前</th>
+<th onclick="sortByPower()">戦力</th>
+<th>戦術</th>
+<th>装備</th>
+<th>主キャラ</th>
+<th>ルーン</th>
+<th>編成</th>
+<th onclick="sortByRelic()">聖物%</th>
+<th>遠征</th>
+<th>レーン</th>
+<th>編集</th>
+<th>削除</th>
+</tr>
+</thead>
+<tbody id="playerBody"></tbody>
+</table>
 </div>
 
-<!-- 編集画面 -->
 <div id="editor" class="editor" style="display:none;">
-  <h2>プレイヤー編集画面</h2>
-  <input id="name" placeholder="名前">
-  <input id="power" placeholder="戦力">
+<h2>プレイヤー編集</h2>
 
-  <select id="range">
-    <option>遠距離</option>
-    <option>中距離</option>
-    <option>近距離</option>
-  </select>
+<input id="name" placeholder="名前">
+<input id="power" placeholder="戦力">
 
-  <select id="style">
-    <option>バランス</option>
-    <option>攻撃優先</option>
-    <option>移動優先</option>
-    <option>取得優先</option>
-  </select>
+<select id="range">
+<option>遠距離</option>
+<option>中距離</option>
+<option>近距離</option>
+</select>
 
-  <!-- 装備選択 -->
-  <select id="gear">
-    <option>神託</option>
-    <option>グリフォン</option>
-    <option>ドラグーン</option>
-    <option>キメラ</option>
-  </select>
-  <div id="gearChaosContainer">
-    <label><input type="checkbox" value="武器">武器</label>
-    <label><input type="checkbox" value="お守り">お守り</label>
-    <label><input type="checkbox" value="指輪">指輪</label>
-    <label><input type="checkbox" value="兜">兜</label>
-    <label><input type="checkbox" value="鎧">鎧</label>
-    <label><input type="checkbox" value="靴">靴</label>
-  </div>
+<select id="style">
+<option>バランス</option>
+<option>攻撃優先</option>
+<option>移動優先</option>
+<option>取得優先</option>
+</select>
 
-  <select id="chaos">
-    <option>なし</option>
-    <option>武器</option>
-    <option>指輪</option>
-    <option>武器・指輪</option>
-  </select>
+<select id="gear">
+<option>神託</option>
+<option>グリフォン</option>
+<option>ドラグーン</option>
+<option>キメラ</option>
+</select>
 
-  <input id="hero" placeholder="主キャラ">
+<!-- 装備のカオス部位 -->
+<div id="gearChaosContainer">
+  <label><input type="checkbox" value="武器">武器</label>
+  <label><input type="checkbox" value="お守り">お守り</label>
+  <label><input type="checkbox" value=="指輪">指輪</label>
+  <label><input type="checkbox" value="兜">兜</label>
+  <label><input type="checkbox" value="鎧">鎧</label>
+  <label><input type="checkbox" value="靴">靴</label>
+</div>
 
-  <h3>鋭利</h3>
-  <select id="sharpQuality">
-    <option>none</option>
-    <option>legend</option>
-    <option>mythic</option>
-  </select>
-  <select id="sharpEnchant">
-    <option>ボスダメUP</option>
-    <option>雑魚敵UP</option>
-    <option>会心率UP</option>
-    <option>主武器UP</option>
-  </select>
+<input id="hero" placeholder="主キャラ">
 
-  <h3>アロレ</h3>
-  <select id="arrowQuality">
-    <option>none</option>
-    <option>legend</option>
-    <option>mythic</option>
-  </select>
-  <select id="arrowEnchant">
-    <option>ボスダメUP</option>
-    <option>雑魚敵UP</option>
-    <option>会心率UP</option>
-    <option>主武器UP</option>
-  </select>
+<h3>鋭利</h3>
+<select id="sharpQuality">
+<option>none</option>
+<option>legend</option>
+<option>mythic</option>
+</select>
+<select id="sharpEnchant">
+<option>ボスダメUP</option>
+<option>雑魚敵UP</option>
+<option>会心率UP</option>
+<option>主武器UP</option>
+</select>
 
-  <input id="formation" placeholder="編成">
-  <input id="mythic" placeholder="ミシック数">
-  <input id="legend" placeholder="レジェンド数">
-  <input id="lane" placeholder="レーン番号">
+<h3>アロレ</h3>
+<select id="arrowQuality">
+<option>none</option>
+<option>legend</option>
+<option>mythic</option>
+</select>
+<select id="arrowEnchant">
+<option>ボスダメUP</option>
+<option>雑魚敵UP</option>
+<option>会心率UP</option>
+<option>主武器UP</option>
+</select>
 
-  <button onclick="savePlayer()">保存</button>
-  <button onclick="closeEditor(false)">保存せず閉じる</button>
+<input id="formation" placeholder="編成">
+<input id="mythic" placeholder="ミシック数">
+<input id="legend" placeholder="レジェンド数">
+<select id="lane">
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>控え</option>
+</select>
+
+<button onclick="savePlayer()">保存</button>
+<button onclick="closeEditor()">閉じる</button>
+
 </div>
 
 <script type="module" src="app.js"></script>
