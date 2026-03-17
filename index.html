@@ -6,18 +6,18 @@
 <title>ねこ海賊団 遠征管理</title>
 <link rel="stylesheet" href="style.css">
 
-<!-- Firebase 10系モジュール -->
+<!-- Firebase v10 モジュール版 -->
 <script type="module" src="app.js"></script>
+
 <!-- html2canvas -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
+
 <header>
   <h1>ねこ海賊団 遠征管理</h1>
-  <div>
-    <button id="addPlayerBtn">プレイヤー追加</button>
-    <button id="exportBtn">レーンをPNG保存</button>
-  </div>
+  <button id="addPlayerBtn">プレイヤー追加</button>
+  <button id="exportBtn">レーンをPNG保存</button>
 </header>
 
 <main id="lanesContainer">
@@ -32,7 +32,6 @@
     <h2 id="modalTitle">プレイヤー追加</h2>
     <form id="playerForm">
       <input type="hidden" id="playerId">
-
       <label>名前:<input type="text" id="name" required></label>
       <label>戦力:<input type="number" id="power" required></label>
       <label>レーン:
@@ -80,14 +79,14 @@
       </fieldset>
 
       <!-- ルーン -->
-      <label>鋭利の矢:
+      <label>ルーン鋭利:
         <select id="rune1">
           <option value="-">-</option>
           <option value="レジェンド">レジェンド</option>
           <option value="ミシック">ミシック</option>
         </select>
       </label>
-      <label>アロレ:
+      <label>ルーンアロレ:
         <select id="rune2">
           <option value="-">-</option>
           <option value="レジェンド">レジェンド</option>
@@ -105,7 +104,6 @@
   </div>
 </div>
 
-<!-- トースト -->
 <div id="toast" class="toast hidden">保存完了</div>
 
 </body>
