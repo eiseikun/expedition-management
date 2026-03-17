@@ -1,5 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase設定
 const firebaseConfig = {
@@ -13,17 +15,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// データ
+// データ管理
 let players = [];
 let playerDocs = [];
 let editIndex = null;
-const PASSWORD = "1234";
+const PASSWORD="1234";
 
 // 編集画面表示
-window.unlockEdit = function() {
+window.unlockEdit = function(){
   const p = prompt("パスワード");
-  if(p === PASSWORD){
-    document.getElementById("editor").style.display = "block";
+  if(p===PASSWORD){
+    document.getElementById("editor").style.display="block";
   }
 }
 
@@ -38,8 +40,8 @@ function relicBuff(m,l){ return Number((m*0.25 + l*0.025).toFixed(3)); }
 
 // ルーン表示
 function runeHTML(name,quality,enchant){
-  if(quality==="none") return "";
-  const cls = quality==="mythic" ? "rune rune-mythic" : "rune rune-legend";
+  if(quality==="none")return "";
+  const cls=quality==="mythic"?"rune rune-mythic":"rune rune-legend";
   return `<span class="${cls}">${name}(${enchant})</span>`;
 }
 
@@ -49,76 +51,79 @@ function gearText(gear,chaosArr){
   return `${gear}/${chaosArr.join(',')}カオス`;
 }
 
-// 編集画面に値をセット
+// 編集保存
+window.savePlayer = async function(){
+  const chaosSelect = Array.from(document.getElementById("chaos").selectedOptions).map(o=>o.value);
+  let p = {
+    name:document.getElementById("name").value,
+    power:Number(document.getElementById("power").value),
+    range:document.getElementById("range").value,
+    style:document.getElementById("style").value,
+    gear:document.getElementById("gear").value,
+    chaos:chaosSelect,
+    hero:document.getElementById("hero").value,
+    sharpQ:document.getElementById("sharpQuality").value,
+    sharpE:document.getElementById("sharpEnchant").value,
+    arrowQ:document.getElementById("arrowQuality").value,
+    arrowE:document.getElementById("arrowEnchant").value,
+    formation:document.getElementById("formation").value,
+    mythic:Number(document.getElementById("mythic").value),
+    legend:Number(document.getElementById("legend").value),
+    lane:Number(document.getElementById("lane").value),
+    expedition:false
+  }
+
+  try {
+    if(editIndex===null){
+      const docRef = await addDoc(collection(db,"players"),p);
+      players.push(p);
+      playerDocs.push(docRef.id);
+      console.log("保存成功:", docRef.id);
+    } else {
+      const ref = doc(db,"players",playerDocs[editIndex]);
+      await updateDoc(ref,p);
+      players[editIndex] = p;
+      console.log("更新成功:", playerDocs[editIndex]);
+      editIndex=null;
+    }
+    closeEditor();
+    render();
+  } catch(e) {
+    console.error("Firestore保存エラー:", e);
+    alert("保存に失敗しました。コンソールを確認してください。");
+  }
+}
+
+// 編集画面閉じる
+window.closeEditor=function(){
+  document.getElementById("editor").style.display="none";
+  editIndex=null;
+}
+
+// 編集画面呼び出し
 window.editPlayer = function(i){
   const p = players[i];
   editIndex = i;
 
-  document.getElementById("name").value = p.name;
-  document.getElementById("power").value = p.power;
-  document.getElementById("range").value = p.range;
-  document.getElementById("style").value = p.style;
-  document.getElementById("gear").value = p.gear;
-  document.getElementById("hero").value = p.hero;
-  document.getElementById("sharpQuality").value = p.sharpQ;
-  document.getElementById("sharpEnchant").value = p.sharpE;
-  document.getElementById("arrowQuality").value = p.arrowQ;
-  document.getElementById("arrowEnchant").value = p.arrowE;
-  document.getElementById("formation").value = p.formation;
-  document.getElementById("mythic").value = p.mythic;
-  document.getElementById("legend").value = p.legend;
-  document.getElementById("lane").value = p.lane;
+  document.getElementById("name").value=p.name;
+  document.getElementById("power").value=p.power;
+  document.getElementById("range").value=p.range;
+  document.getElementById("style").value=p.style;
+  document.getElementById("gear").value=p.gear;
+  document.getElementById("hero").value=p.hero;
+  document.getElementById("sharpQuality").value=p.sharpQ;
+  document.getElementById("sharpEnchant").value=p.sharpE;
+  document.getElementById("arrowQuality").value=p.arrowQ;
+  document.getElementById("arrowEnchant").value=p.arrowE;
+  document.getElementById("formation").value=p.formation;
+  document.getElementById("mythic").value=p.mythic;
+  document.getElementById("legend").value=p.legend;
+  document.getElementById("lane").value=p.lane;
 
   // chaosマルチ選択反映
-  Array.from(document.getElementById("chaos").options).forEach(opt => {
-    opt.selected = p.chaos.includes(opt.value);
-  });
+  Array.from(document.getElementById("chaos").options).forEach(opt=>opt.selected=p.chaos.includes(opt.value));
 
-  document.getElementById("editor").style.display = "block";
-}
-
-// 編集画面閉じる（破棄）
-window.closeEditor = function(){
-  document.getElementById("editor").style.display = "none";
-  editIndex = null;
-}
-
-// 保存ボタン
-window.savePlayer = async function(){
-  const chaosSelect = Array.from(document.getElementById("chaos").selectedOptions).map(o=>o.value);
-
-  let p = {
-    name: document.getElementById("name").value,
-    power: Number(document.getElementById("power").value),
-    range: document.getElementById("range").value,
-    style: document.getElementById("style").value,
-    gear: document.getElementById("gear").value,
-    chaos: chaosSelect,
-    hero: document.getElementById("hero").value,
-    sharpQ: document.getElementById("sharpQuality").value,
-    sharpE: document.getElementById("sharpEnchant").value,
-    arrowQ: document.getElementById("arrowQuality").value,
-    arrowE: document.getElementById("arrowEnchant").value,
-    formation: document.getElementById("formation").value,
-    mythic: Number(document.getElementById("mythic").value),
-    legend: Number(document.getElementById("legend").value),
-    lane: Number(document.getElementById("lane").value),
-    expedition: false
-  }
-
-  if(editIndex === null){
-    const docRef = await addDoc(collection(db,"players"), p);
-    players.push({...p, id: docRef.id});
-    playerDocs.push(docRef.id);
-  } else {
-    const ref = doc(db,"players",playerDocs[editIndex]);
-    await updateDoc(ref, p);
-    players[editIndex] = {...p, id: playerDocs[editIndex]};
-    editIndex = null;
-  }
-
-  closeEditor();
-  render();
+  document.getElementById("editor").style.display="block";
 }
 
 // プレイヤー削除
@@ -134,18 +139,18 @@ window.deletePlayer = async function(i){
 // 画像保存
 window.saveTableImage = function(){
   const table = document.querySelector(".table-container");
-  html2canvas(table, {scale:3}).then(canvas=>{
+  html2canvas(table,{scale:3}).then(canvas=>{
     const link = document.createElement("a");
-    link.download = "archer_table.png";
-    link.href = canvas.toDataURL("image/png");
+    link.download="archer_table.png";
+    link.href=canvas.toDataURL("image/png");
     link.click();
   });
 }
 
 // レーンごとに分けて表示
 function render(){
-  const body = document.getElementById("playerBody");
-  body.innerHTML = "";
+  const body=document.getElementById("playerBody");
+  body.innerHTML="";
 
   for(let laneNum=1; laneNum<=3; laneNum++){
     const lanePlayers = players.filter(p=>p.lane===laneNum);
@@ -155,17 +160,17 @@ function render(){
     // レーンヘッダー
     const trLane = document.createElement("tr");
     trLane.classList.add("lane-header");
-    trLane.innerHTML = `<td colspan="12">レーン${laneNum} (${lanePlayers.length}/8)</td>`;
+    trLane.innerHTML=`<td colspan="12">レーン${laneNum} (${lanePlayers.length}/8)</td>`;
     body.appendChild(trLane);
 
-    // デフォルト戦力降順
+    // デフォルトは戦力降順
     lanePlayers.sort((a,b)=>b.power-a.power);
 
-    lanePlayers.forEach(p=>{
+    lanePlayers.forEach((p,i)=>{
       const tr = document.createElement("tr");
-      tr.innerHTML = `
+      tr.innerHTML=`
         <td>${p.name}</td>
-        <td>${p.power>=1000000 ? (p.power/1000000).toFixed(1)+"M" : p.power}</td>
+        <td>${(p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power)}</td>
         <td>${p.range}/${p.style}</td>
         <td>${gearText(p.gear,p.chaos)}</td>
         <td>${p.hero}</td>
@@ -195,7 +200,7 @@ window.sortLane = function(type){
     }
     // 元配列にも反映
     lanePlayers.forEach(p=>{
-      const idx = players.findIndex(x=>x.id===p.id);
+      const idx = players.findIndex(x=>x===p);
       if(idx>-1) players[idx]=p;
     });
   }
@@ -204,12 +209,17 @@ window.sortLane = function(type){
 
 // データロード
 async function load(){
-  const querySnapshot = await getDocs(collection(db,"players"));
-  querySnapshot.forEach(d=>{
-    players.push({...d.data(), id: d.id});
-    playerDocs.push(d.id);
-  });
-  render();
+  try{
+    const querySnapshot = await getDocs(collection(db,"players"));
+    querySnapshot.forEach(d=>{
+      players.push(d.data());
+      playerDocs.push(d.id);
+    });
+    console.log("ロード完了:", players.length,"件");
+    render();
+  } catch(e){
+    console.error("Firestoreロードエラー:", e);
+  }
 }
 
 load();
