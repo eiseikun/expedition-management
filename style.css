@@ -1,80 +1,75 @@
 body{
-
 font-family:sans-serif;
 background:#111;
 color:white;
 text-align:center;
-
 }
 
 table{
-
 width:100%;
 border-collapse:collapse;
-
 }
 
 th,td{
-
 padding:8px;
 border:1px solid #333;
-
 }
 
 th{
-
 background:#222;
 cursor:pointer;
-
 }
 
 tr:nth-child(even){
-
 background:#1a1a1a;
-
 }
 
 input,select{
-
 margin:4px;
 padding:6px;
-
 }
 
 button{
-
 padding:6px 12px;
 margin:4px;
-
 cursor:pointer;
-
 }
 
 .rune{
-
 padding:3px 6px;
 border-radius:6px;
 font-weight:bold;
 margin-right:4px;
-
 }
 
 .rune-mythic{
-
 background:#d32f2f;
 color:white;
-
 }
 
 .rune-legend{
-
 background:#fbc02d;
 color:black;
-
 }
 
 .table-container{
-
 overflow-x:auto;
+}
 
+/* スマホで見やすく */
+@media (max-width:700px){
+table{
+font-size:12px;
+}
+th,td{
+padding:4px;
+}
+button{
+font-size:12px;
+padding:4px 6px;
+}
+
+input,select{
+width:90%;
+}
 }
