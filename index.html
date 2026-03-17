@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ねこ海賊団 遠征管理</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+</head>
+
+<body>
+
+<h1>ねこ海賊団 遠征管理</h1>
+
+<div class="top-buttons">
+<button onclick="unlockEdit()">編集モード</button>
+<button onclick="saveTableImage()">画像保存</button>
+</div>
+
+<div class="table-container">
+
+<table id="playerTable">
+
+<thead>
+<tr>
+<th>名前</th>
+<th onclick="sortByPower()">戦力</th>
+<th>戦術</th>
+<th>装備</th>
+<th>主キャラ</th>
+<th>ルーン</th>
+<th>編成</th>
+<th onclick="sortByRelic()">聖物%</th>
+<th>編集</th>
+</tr>
+</thead>
+
+<tbody id="playerBody"></tbody>
+
+</table>
+
+</div>
+
+<div id="editor" class="editor" style="display:none;">
+
+<h2>プレイヤー編集</h2>
+
+<input id="name" placeholder="名前">
+<input id="power" placeholder="戦力">
+
+<select id="range">
+<option>遠距離</option>
+<option>中距離</option>
+<option>近距離</option>
+</select>
+
+<select id="style">
+<option>バランス</option>
+<option>攻撃優先</option>
+<option>移動優先</option>
+<option>取得優先</option>
+</select>
+
+<select id="gear">
+<option>神託</option>
+<option>グリフォン</option>
+<option>ドラグーン</option>
+<option>キメラ</option>
+</select>
+
+<select id="chaos">
+<option>なし</option>
+<option>武器</option>
+<option>指輪</option>
+<option>武器・指輪</option>
+</select>
+
+<input id="hero" placeholder="主キャラ">
+
+<h3>鋭利</h3>
+
+<select id="sharpQuality">
+<option>none</option>
+<option>legend</option>
+<option>mythic</option>
+</select>
+
+<select id="sharpEnchant">
+<option>ボスダメUP</option>
+<option>雑魚敵UP</option>
+<option>会心率UP</option>
+<option>主武器UP</option>
+</select>
+
+<h3>アロレ</h3>
+
+<select id="arrowQuality">
+<option>none</option>
+<option>legend</option>
+<option>mythic</option>
+</select>
+
+<select id="arrowEnchant">
+<option>ボスダメUP</option>
+<option>雑魚敵UP</option>
+<option>会心率UP</option>
+<option>主武器UP</option>
+</select>
+
+<input id="formation" placeholder="編成">
+
+<input id="mythic" placeholder="ミシック数">
+<input id="legend" placeholder="レジェンド数">
+
+<button onclick="savePlayer()">保存</button>
+
+</div>
+
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
