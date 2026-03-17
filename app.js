@@ -26,7 +26,7 @@ let players=[]
 let playerDocs=[]
 let editIndex=null
 
-const PASSWORD="archer"
+const PASSWORD="1234"
 
 window.unlockEdit=function(){
 
