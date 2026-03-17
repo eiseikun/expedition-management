@@ -80,3 +80,10 @@ fieldset { margin: 5px 0; }
   padding: 10px;
   border-radius: 5px;
 }
+
+.player-card button {
+  padding: 2px 5px;
+  margin: 2px;
+  font-size: 12px;
+  cursor: pointer;
+}
