@@ -80,16 +80,21 @@ tr.innerHTML=`
 <td>${p.formation}</td>
 <td>${relicBuff(p.mythic,p.legend)}</td>
 <td>
+<input type="checkbox"
+onchange="toggleExpedition(${i})"
+${p.expedition?"checked":""}>
+</td>
+<td>
 <button onclick="editPlayer(${i})">編集</button>
 </td>
 <td>
 <button onclick="deletePlayer(${i})">削除</button>
 </td>
 
+`
+  
 body.appendChild(tr)
-
 })
-
 }
 
 window.editPlayer=function(i){
@@ -147,51 +152,34 @@ legend:Number(document.getElementById("legend").value)
 }
 
 if(editIndex===null){
-
 await addDoc(collection(db,"players"),p)
 players.push(p)
-
 }else{
-
 const ref=doc(db,"players",playerDocs[editIndex])
 await updateDoc(ref,p)
-
 players[editIndex]=p
 editIndex=null
-
 }
-
 render()
-
 }
 
 async function load(){
-
 const querySnapshot=await getDocs(collection(db,"players"))
-
 querySnapshot.forEach(d=>{
-
 players.push(d.data())
 playerDocs.push(d.id)
-
 })
-
 render()
-
 }
 
 window.sortByPower=function(){
-
 players.sort((a,b)=>b.power-a.power)
 render()
-
 }
 
 window.sortByRelic=function(){
-
 players.sort((a,b)=>relicBuff(b.mythic,b.legend)-relicBuff(a.mythic,a.legend))
 render()
-
 }
 
 /* スマホで写真を保存 */
