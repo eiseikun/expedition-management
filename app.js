@@ -79,9 +79,12 @@ tr.innerHTML=`
 <td>${rune}</td>
 <td>${p.formation}</td>
 <td>${relicBuff(p.mythic,p.legend)}</td>
-<td><button onclick="editPlayer(${i})">編集</button></td>
-
-`
+<td>
+<button onclick="editPlayer(${i})">編集</button>
+</td>
+<td>
+<button onclick="deletePlayer(${i})">削除</button>
+</td>
 
 body.appendChild(tr)
 
