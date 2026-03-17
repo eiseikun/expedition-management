@@ -3,6 +3,7 @@ body {
   margin: 0;
   padding: 0;
   background: #e0f7fa;
+  color: #000;
 }
 
 header {
@@ -10,7 +11,7 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  background: #29b6f6;
+  background: #00acc1;
   color: white;
 }
 
@@ -18,10 +19,6 @@ button {
   padding: 5px 10px;
   margin-left: 5px;
   cursor: pointer;
-  border: none;
-  border-radius: 4px;
-  background: #03a9f4;
-  color: white;
 }
 
 main {
@@ -32,8 +29,8 @@ main {
 }
 
 .lane {
-  background: #ffffff;
-  border: 1px solid #b3e5fc;
+  background: #fff;
+  border: 1px solid #ccc;
   padding: 5px;
   border-radius: 5px;
 }
@@ -45,10 +42,10 @@ main {
 }
 
 .player-card {
-  border: 1px solid #0288d1;
+  border: 1px solid #333;
   padding: 5px;
   border-radius: 5px;
-  background: #b3e5fc;
+  background: #b2ebf2;
   width: 48%;
 }
 
@@ -68,6 +65,7 @@ main {
   width: 90%;
   max-width: 400px;
   border-radius: 5px;
+  min-width: 250px;
 }
 
 fieldset { margin: 5px 0; }
@@ -79,7 +77,7 @@ fieldset { margin: 5px 0; }
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #29b6f6;
+  background: #00acc1;
   color: white;
   padding: 10px;
   border-radius: 5px;
@@ -90,4 +88,10 @@ fieldset { margin: 5px 0; }
   margin: 2px;
   font-size: 12px;
   cursor: pointer;
+}
+
+/* モバイル対応 */
+@media(max-width:700px){
+  button{ font-size:12px; padding:4px 6px; }
+  .player-card{ width:100%; }
 }
