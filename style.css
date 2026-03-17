@@ -1,92 +1,93 @@
-/* 全体 */
-
+/* ===============================
+基本スタイル
+=============================== */
 body{
-font-family:sans-serif;
-background:#111;
-color:white;
-text-align:center;
+  font-family:sans-serif;
+  background:#111;
+  color:white;
+  text-align:center;
 }
-
-/* モード表示 */
-
-.mode-view{
-padding:8px;
-font-weight:bold;
-}
-
-.mode-edit{
-color:#ff5252;
-}
-
-/* テーブル */
 
 table{
-width:100%;
-border-collapse:collapse;
+  width:100%;
+  border-collapse:collapse;
 }
 
 th,td{
-padding:8px;
-border:1px solid #333;
+  padding:8px;
+  border:1px solid #333;
 }
 
 th{
-background:#222;
-cursor:pointer;
+  background:#222;
+  cursor:pointer;
 }
 
 tr:nth-child(even){
-background:#1a1a1a;
+  background:#1a1a1a;
 }
-
-/* ボタン */
-
-button{
-padding:6px 12px;
-margin:4px;
-cursor:pointer;
-background:#222;
-color:white;
-border:1px solid #555;
-border-radius:6px;
-}
-
-button:hover{
-background:#444;
-}
-
-/* 入力 */
 
 input,select{
-margin:4px;
-padding:6px;
+  margin:4px;
+  padding:6px;
 }
 
-/* 横スクロール */
+button{
+  padding:6px 12px;
+  margin:4px;
+  cursor:pointer;
+}
 
+/* ===============================
+ルーン
+=============================== */
+.rune{
+  padding:3px 6px;
+  border-radius:6px;
+  font-weight:bold;
+  margin-right:4px;
+}
+.rune-mythic{ background:#d32f2f; color:white; }
+.rune-legend{ background:#fbc02d; color:black; }
+
+/* ===============================
+テーブルコンテナ
+=============================== */
 .table-container{
-overflow-x:auto;
+  overflow-x:auto;
 }
 
-/* スマホ */
+/* ===============================
+編集モード背景
+=============================== */
+.mode-edit + .table-container{
+  background: rgba(255,255,255,0.05);
+  transition: background 0.3s;
+}
 
+/* ===============================
+編集パネル
+=============================== */
+.editor{
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  border: 2px solid #555;
+  padding: 16px;
+  border-radius: 8px;
+  z-index: 999;
+  width: 95%;
+  max-width: 480px;
+}
+
+/* ===============================
+スマホ対応
+=============================== */
 @media (max-width:700px){
-
-table{
-font-size:12px;
-}
-
-th,td{
-padding:4px;
-}
-
-button{
-font-size:12px;
-padding:4px 6px;
-}
-
-input,select{
-width:90%;
-}
-
+  table{ font-size:12px; }
+  th,td{ padding:4px; }
+  button{ font-size:12px; padding:4px 6px; }
+  input,select{ width:90%; }
 }
