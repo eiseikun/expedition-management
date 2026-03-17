@@ -1,9 +1,24 @@
+/* 全体 */
+
 body{
 font-family:sans-serif;
 background:#111;
 color:white;
 text-align:center;
 }
+
+/* モード表示 */
+
+.mode-view{
+padding:8px;
+font-weight:bold;
+}
+
+.mode-edit{
+color:#ff5252;
+}
+
+/* テーブル */
 
 table{
 width:100%;
@@ -24,46 +39,47 @@ tr:nth-child(even){
 background:#1a1a1a;
 }
 
-input,select{
-margin:4px;
-padding:6px;
-}
+/* ボタン */
 
 button{
 padding:6px 12px;
 margin:4px;
 cursor:pointer;
-}
-
-.rune{
-padding:3px 6px;
-border-radius:6px;
-font-weight:bold;
-margin-right:4px;
-}
-
-.rune-mythic{
-background:#d32f2f;
+background:#222;
 color:white;
+border:1px solid #555;
+border-radius:6px;
 }
 
-.rune-legend{
-background:#fbc02d;
-color:black;
+button:hover{
+background:#444;
 }
+
+/* 入力 */
+
+input,select{
+margin:4px;
+padding:6px;
+}
+
+/* 横スクロール */
 
 .table-container{
 overflow-x:auto;
 }
 
-/* スマホで見やすく */
+/* スマホ */
+
 @media (max-width:700px){
+
 table{
 font-size:12px;
 }
+
 th,td{
 padding:4px;
 }
+
 button{
 font-size:12px;
 padding:4px 6px;
@@ -72,4 +88,5 @@ padding:4px 6px;
 input,select{
 width:90%;
 }
+
 }
