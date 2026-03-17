@@ -1,6 +1,4 @@
-/* ===============================
-基本スタイル
-=============================== */
+/* body全体 */
 body{
   font-family:sans-serif;
   background:#111;
@@ -8,6 +6,17 @@ body{
   text-align:center;
 }
 
+/* モード表示 */
+.mode-indicator{
+  margin:8px 0;
+  font-weight:bold;
+  padding:4px 8px;
+  border-radius:4px;
+  display:inline-block;
+  background:#333;
+}
+
+/* table */
 table{
   width:100%;
   border-collapse:collapse;
@@ -27,64 +36,52 @@ tr:nth-child(even){
   background:#1a1a1a;
 }
 
+/* input,select,button */
 input,select{
   margin:4px;
   padding:6px;
 }
-
 button{
   padding:6px 12px;
   margin:4px;
   cursor:pointer;
 }
 
-/* ===============================
-ルーン
-=============================== */
+/* ルーン表示 */
 .rune{
   padding:3px 6px;
   border-radius:6px;
   font-weight:bold;
   margin-right:4px;
 }
-.rune-mythic{ background:#d32f2f; color:white; }
-.rune-legend{ background:#fbc02d; color:black; }
+.rune-mythic{
+  background:#d32f2f;
+  color:white;
+}
+.rune-legend{
+  background:#fbc02d;
+  color:black;
+}
 
-/* ===============================
-テーブルコンテナ
-=============================== */
+/* table-container */
 .table-container{
   overflow-x:auto;
 }
 
-/* ===============================
-編集モード背景
-=============================== */
-.mode-edit + .table-container{
-  background: rgba(255,255,255,0.05);
-  transition: background 0.3s;
-}
-
-/* ===============================
-編集パネル
-=============================== */
+/* 編集画面 */
 .editor{
-  position: fixed;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #222;
-  border: 2px solid #555;
-  padding: 16px;
-  border-radius: 8px;
-  z-index: 999;
-  width: 95%;
-  max-width: 480px;
+  position:fixed;
+  top:10%;
+  left:50%;
+  transform:translateX(-50%);
+  background:#222;
+  padding:16px;
+  border:2px solid #555;
+  border-radius:8px;
+  z-index:100;
 }
 
-/* ===============================
-スマホ対応
-=============================== */
+/* スマホ対応 */
 @media (max-width:700px){
   table{ font-size:12px; }
   th,td{ padding:4px; }
