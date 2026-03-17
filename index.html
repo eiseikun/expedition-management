@@ -9,6 +9,7 @@
 
 <link rel="stylesheet" href="style.css">
 
+<!-- スクショ保存ライブラリ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
@@ -17,16 +18,28 @@
 
 <h1>ねこ海賊団 遠征管理</h1>
 
+<!-- モード表示 -->
+<div id="modeIndicator" class="mode-view">
+通常モード
+</div>
+
+<!-- 上部ボタン -->
 <div class="top-buttons">
+
 <button onclick="unlockEdit()">編集モード</button>
+<button onclick="closeEditor()">閲覧モード</button>
 <button onclick="saveTableImage()">画像保存</button>
+
 </div>
 
 <div class="table-container">
+
 <table id="playerTable">
 
 <thead>
+
 <tr>
+
 <th>名前</th>
 <th onclick="sortByPower()">戦力</th>
 <th>戦術</th>
@@ -35,22 +48,29 @@
 <th>ルーン</th>
 <th>編成</th>
 <th onclick="sortByRelic()">聖物%</th>
+<th>レーン</th>
 <th>遠征</th>
 <th>編集</th>
 <th>削除</th>
+
 </tr>
+
 </thead>
 
 <tbody id="playerBody"></tbody>
 
 </table>
+
 </div>
+
+<!-- 編集画面 -->
 
 <div id="editor" class="editor" style="display:none;">
 
 <h2>プレイヤー編集</h2>
 
 <input id="name" placeholder="名前">
+
 <input id="power" placeholder="戦力">
 
 <select id="range">
@@ -66,50 +86,13 @@
 <option>取得優先</option>
 </select>
 
-<select id="gear">
-<option>神託</option>
-<option>グリフォン</option>
-<option>ドラグーン</option>
-<option>キメラ</option>
-</select>
-
-<select id="chaos">
-<option>なし</option>
-<option>武器</option>
-<option>指輪</option>
-<option>武器・指輪</option>
-</select>
-
 <input id="hero" placeholder="主キャラ">
 
-<h3>鋭利</h3>
-
-<select id="sharpQuality">
-<option>none</option>
-<option>legend</option>
-<option>mythic</option>
-</select>
-
-<select id="sharpEnchant">
-<option>ボスダメUP</option>
-<option>雑魚敵UP</option>
-<option>会心率UP</option>
-<option>主武器UP</option>
-</select>
-
-<h3>アロレ</h3>
-
-<select id="arrowQuality">
-<option>none</option>
-<option>legend</option>
-<option>mythic</option>
-</select>
-
-<select id="arrowEnchant">
-<option>ボスダメUP</option>
-<option>雑魚敵UP</option>
-<option>会心率UP</option>
-<option>主武器UP</option>
+<select id="lane">
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>控え</option>
 </select>
 
 <input id="formation" placeholder="編成">
@@ -119,9 +102,10 @@
 
 <button onclick="savePlayer()">保存</button>
 <button onclick="closeEditor()">閉じる</button>
+
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script type="module" src="app.js"></script>
+
 </body>
 </html>
