@@ -193,7 +193,7 @@ render()
 
 /* スマホで写真を保存 */
 window.saveTableImage = function () {
-const table = document.querySelector("#playerTable");
+const table = document.querySelector(".table-container");
 html2canvas(table, {
 scale:3
 }).then(canvas => {
