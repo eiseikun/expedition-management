@@ -5,121 +5,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ねこ海賊団 遠征管理</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Firebase 10系モジュール -->
+<script type="module" src="app.js"></script>
+<!-- html2canvas -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
+<header>
+  <h1>ねこ海賊団 遠征管理</h1>
+  <div>
+    <button id="addPlayerBtn">プレイヤー追加</button>
+    <button id="exportBtn">レーンをPNG保存</button>
+  </div>
+</header>
 
-<h1>ねこ海賊団 遠征管理</h1>
+<main id="lanesContainer">
+  <div class="lane" data-lane="1"><h2>レーン1</h2><div class="players"></div></div>
+  <div class="lane" data-lane="2"><h2>レーン2</h2><div class="players"></div></div>
+  <div class="lane" data-lane="3"><h2>レーン3</h2><div class="players"></div></div>
+</main>
 
-<div class="mode-indicator" id="modeIndicator">通常モード</div>
+<!-- モーダル -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="modalTitle">プレイヤー追加</h2>
+    <form id="playerForm">
+      <input type="hidden" id="playerId">
 
-<div class="top-buttons">
-  <button onclick="unlockEdit()">編集画面</button>
-  <button onclick="saveTableImage()">画像保存</button>
+      <label>名前:<input type="text" id="name" required></label>
+      <label>戦力:<input type="number" id="power" required></label>
+      <label>レーン:
+        <select id="lane">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </label>
+
+      <!-- 戦術 -->
+      <label>戦術距離:
+        <select id="tacticsDistance">
+          <option value="近距離">近距離</option>
+          <option value="中距離">中距離</option>
+          <option value="遠距離">遠距離</option>
+        </select>
+      </label>
+      <label>戦術パターン:
+        <select id="tacticsPattern">
+          <option value="バランス">バランス</option>
+          <option value="攻撃優先">攻撃優先</option>
+          <option value="移動優先">移動優先</option>
+          <option value="取得優先">取得優先</option>
+        </select>
+      </label>
+
+      <!-- 装備 -->
+      <label>装備種類:
+        <select id="equipmentType">
+          <option value="神託">神託</option>
+          <option value="グリフォン">グリフォン</option>
+          <option value="ドラグーン">ドラグーン</option>
+          <option value="キメラ">キメラ</option>
+        </select>
+      </label>
+      <fieldset>
+        <legend>カオス設定</legend>
+        <label><input type="checkbox" id="chaosWeapon"> 武器</label>
+        <label><input type="checkbox" id="chaosAmulet"> お守り</label>
+        <label><input type="checkbox" id="chaosRing"> 指輪</label>
+        <label><input type="checkbox" id="chaosHelmet"> 兜</label>
+        <label><input type="checkbox" id="chaosArmor"> 鎧</label>
+        <label><input type="checkbox" id="chaosBoots"> 靴</label>
+      </fieldset>
+
+      <!-- ルーン -->
+      <label>鋭利の矢:
+        <select id="rune1">
+          <option value="-">-</option>
+          <option value="レジェンド">レジェンド</option>
+          <option value="ミシック">ミシック</option>
+        </select>
+      </label>
+      <label>アロレ:
+        <select id="rune2">
+          <option value="-">-</option>
+          <option value="レジェンド">レジェンド</option>
+          <option value="ミシック">ミシック</option>
+        </select>
+      </label>
+
+      <!-- 聖物 -->
+      <label>聖物 ミシック:<input type="number" id="artifactMythic" value="0"></label>
+      <label>聖物 レジェンド:<input type="number" id="artifactLegend" value="0"></label>
+
+      <button type="submit">保存</button>
+      <button type="button" id="closeModal">閉じる</button>
+    </form>
+  </div>
 </div>
 
-<div class="table-container">
-  <table id="playerTable">
-    <thead>
-      <tr>
-        <th>名前</th>
-        <th onclick="sortLane('power')">戦力</th>
-        <th>戦術</th>
-        <th>装備</th>
-        <th>主キャラ</th>
-        <th>ルーン</th>
-        <th>編成</th>
-        <th onclick="sortLane('relic')">聖物%</th>
-        <th>レーン</th>
-        <th>遠征</th>
-        <th>編集</th>
-        <th>削除</th>
-      </tr>
-    </thead>
-    <tbody id="playerBody"></tbody>
-  </table>
-</div>
+<!-- トースト -->
+<div id="toast" class="toast hidden">保存完了</div>
 
-<!-- 編集モーダル -->
-<div id="editor" class="editor" style="display:none;">
-  <h2>プレイヤー編集</h2>
-
-  <input id="name" placeholder="名前">
-  <input id="power" placeholder="戦力">
-
-  <select id="range">
-    <option>遠距離</option>
-    <option>中距離</option>
-    <option>近距離</option>
-  </select>
-
-  <select id="style">
-    <option>バランス</option>
-    <option>攻撃優先</option>
-    <option>移動優先</option>
-    <option>取得優先</option>
-  </select>
-
-  <select id="gear">
-    <option>神託</option>
-    <option>グリフォン</option>
-    <option>ドラグーン</option>
-    <option>キメラ</option>
-  </select>
-
-  <label>カオス部位</label>
-  <select id="chaos" multiple>
-    <option value="武器">武器</option>
-    <option value="お守り">お守り</option>
-    <option value="指輪">指輪</option>
-    <option value="兜">兜</option>
-    <option value="鎧">鎧</option>
-    <option value="靴">靴</option>
-  </select>
-
-  <input id="hero" placeholder="主キャラ">
-
-  <h3>鋭利の矢</h3>
-  <select id="sharpQuality">
-    <option>none</option>
-    <option>legend</option>
-    <option>mythic</option>
-  </select>
-  <select id="sharpEnchant">
-    <option>跳ね返り</option>
-    <option>クリダメUP</option>
-    <option>主武器会心率UP</option>
-    <option>主武器UP</option>
-  </select>
-
-  <h3>アロレルーン</h3>
-  <select id="arrowQuality">
-    <option>none</option>
-    <option>legend</option>
-    <option>mythic</option>
-  </select>
-  <select id="arrowEnchant">
-    <option>固有</option>
-    <option>クリダメ軽減</option>
-    <option>主武器会心ダメUP</option>
-    <option>主武器UP</option>
-  </select>
-
-  <input id="formation" placeholder="編成">
-  <input id="mythic" placeholder="ミシック数">
-  <input id="legend" placeholder="レジェンド数">
-
-  <label>レーン</label>
-  <select id="lane">
-    <option value="1">レーン1</option>
-    <option value="2">レーン2</option>
-    <option value="3">レーン3</option>
-  </select>
-
-  <button onclick="savePlayer()">保存</button>
-  <button onclick="closeEditor()">閉じる</button>
-</div>
-
-<script type="module" src="app.js"></script>
 </body>
 </html>
