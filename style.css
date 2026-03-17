@@ -1,22 +1,14 @@
-/* body全体 */
+/* 全体 */
 body{
   font-family:sans-serif;
   background:#111;
   color:white;
   text-align:center;
+  margin:0;
+  padding:0;
 }
 
-/* モード表示 */
-.mode-indicator{
-  margin:8px 0;
-  font-weight:bold;
-  padding:4px 8px;
-  border-radius:4px;
-  display:inline-block;
-  background:#333;
-}
-
-/* table */
+/* テーブル */
 table{
   width:100%;
   border-collapse:collapse;
@@ -36,52 +28,63 @@ tr:nth-child(even){
   background:#1a1a1a;
 }
 
-/* input,select,button */
+/* レーンヘッダー行 */
+tr.lane-header{
+  background:#333;
+  font-weight:bold;
+  text-align:left;
+}
+
+/* 編集画面 */
+.editor{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#222;
+  padding:20px;
+  border-radius:10px;
+  z-index:100;
+  max-width:90%;
+}
+
+/* 入力や選択 */
 input,select{
   margin:4px;
   padding:6px;
 }
+
+/* ボタン */
 button{
   padding:6px 12px;
   margin:4px;
   cursor:pointer;
 }
 
-/* ルーン表示 */
+/* ルーン */
 .rune{
   padding:3px 6px;
   border-radius:6px;
   font-weight:bold;
   margin-right:4px;
 }
+
 .rune-mythic{
   background:#d32f2f;
   color:white;
 }
+
 .rune-legend{
   background:#fbc02d;
   color:black;
 }
 
-/* table-container */
+/* テーブル横スクロール */
 .table-container{
   overflow-x:auto;
 }
 
-/* 編集画面 */
-.editor{
-  position:fixed;
-  top:10%;
-  left:50%;
-  transform:translateX(-50%);
-  background:#222;
-  padding:16px;
-  border:2px solid #555;
-  border-radius:8px;
-  z-index:100;
-}
-
-/* スマホ対応 */
+/* スマホ用 */
 @media (max-width:700px){
   table{ font-size:12px; }
   th,td{ padding:4px; }
