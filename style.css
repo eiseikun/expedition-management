@@ -8,25 +8,27 @@ body{
   padding:0;
 }
 
+/* モード表示 */
+.mode-indicator{
+  margin:10px 0;
+  padding:6px;
+  font-weight:bold;
+}
+
 /* テーブル */
 table{
   width:100%;
   border-collapse:collapse;
 }
-
 th,td{
   padding:8px;
   border:1px solid #333;
 }
-
 th{
   background:#222;
   cursor:pointer;
 }
-
-tr:nth-child(even){
-  background:#1a1a1a;
-}
+tr:nth-child(even){ background:#1a1a1a; }
 
 /* レーンヘッダー行 */
 tr.lane-header{
@@ -49,40 +51,18 @@ tr.lane-header{
 }
 
 /* 入力や選択 */
-input,select{
-  margin:4px;
-  padding:6px;
-}
+input,select{ margin:4px; padding:6px; }
 
 /* ボタン */
-button{
-  padding:6px 12px;
-  margin:4px;
-  cursor:pointer;
-}
+button{ padding:6px 12px; margin:4px; cursor:pointer; }
 
 /* ルーン */
-.rune{
-  padding:3px 6px;
-  border-radius:6px;
-  font-weight:bold;
-  margin-right:4px;
-}
-
-.rune-mythic{
-  background:#d32f2f;
-  color:white;
-}
-
-.rune-legend{
-  background:#fbc02d;
-  color:black;
-}
+.rune{ padding:3px 6px; border-radius:6px; font-weight:bold; margin-right:4px; }
+.rune-mythic{ background:#d32f2f; color:white; }
+.rune-legend{ background:#fbc02d; color:black; }
 
 /* テーブル横スクロール */
-.table-container{
-  overflow-x:auto;
-}
+.table-container{ overflow-x:auto; }
 
 /* スマホ用 */
 @media (max-width:700px){
