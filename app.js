@@ -1,7 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase設定
 const firebaseConfig = {
@@ -15,23 +13,22 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// データ
-let players = [];
-let playerDocs = [];
-let editIndex = null;
+let players=[], playerDocs=[], editIndex=null;
 const PASSWORD="1234";
 
 // 編集画面表示
-window.unlockEdit = function(){
-  const p = prompt("パスワード");
+window.unlockEdit=function(){
+  const p=prompt("パスワード");
   if(p===PASSWORD){
     document.getElementById("editor").style.display="block";
+    document.getElementById("modeIndicator").innerText="編集中モード";
+    document.getElementById("modeIndicator").style.background="#d32f2f";
   }
 }
 
 // 遠征チェック切替
-window.toggleExpedition = function(i){
-  players[i].expedition = !players[i].expedition;
+window.toggleExpedition=function(i){
+  players[i].expedition=!players[i].expedition;
   render();
 }
 
@@ -40,7 +37,7 @@ function relicBuff(m,l){ return Number((m*0.25 + l*0.025).toFixed(3)); }
 
 // ルーン表示
 function runeHTML(name,quality,enchant){
-  if(quality==="none")return "";
+  if(quality==="none") return "";
   const cls=quality==="mythic"?"rune rune-mythic":"rune rune-legend";
   return `<span class="${cls}">${name}(${enchant})</span>`;
 }
@@ -52,9 +49,9 @@ function gearText(gear,chaosArr){
 }
 
 // 保存ボタン
-window.savePlayer = async function(){
-  const chaosSelect = Array.from(document.getElementById("chaos").selectedOptions).map(o=>o.value);
-  let p = {
+window.savePlayer=async function(){
+  const chaosSelect=Array.from(document.getElementById("chaos").selectedOptions).map(o=>o.value);
+  let p={
     name:document.getElementById("name").value,
     power:Number(document.getElementById("power").value),
     range:document.getElementById("range").value,
@@ -71,16 +68,16 @@ window.savePlayer = async function(){
     legend:Number(document.getElementById("legend").value),
     lane:Number(document.getElementById("lane").value),
     expedition:false
-  }
+  };
 
   if(editIndex===null){
-    const docRef = await addDoc(collection(db,"players"),p);
+    const docRef=await addDoc(collection(db,"players"),p);
     players.push(p);
     playerDocs.push(docRef.id);
   }else{
-    const ref = doc(db,"players",playerDocs[editIndex]);
+    const ref=doc(db,"players",playerDocs[editIndex]);
     await updateDoc(ref,p);
-    players[editIndex] = p;
+    players[editIndex]=p;
     editIndex=null;
   }
 
@@ -91,13 +88,15 @@ window.savePlayer = async function(){
 // 編集画面閉じる
 window.closeEditor=function(){
   document.getElementById("editor").style.display="none";
+  document.getElementById("modeIndicator").innerText="通常モード";
+  document.getElementById("modeIndicator").style.background="transparent";
   editIndex=null;
 }
 
 // 編集画面呼び出し
-window.editPlayer = function(i){
-  const p = players[i];
-  editIndex = i;
+window.editPlayer=function(i){
+  const p=players[i];
+  editIndex=i;
 
   document.getElementById("name").value=p.name;
   document.getElementById("power").value=p.power;
@@ -114,16 +113,17 @@ window.editPlayer = function(i){
   document.getElementById("legend").value=p.legend;
   document.getElementById("lane").value=p.lane;
 
-  // chaosマルチ選択反映
   Array.from(document.getElementById("chaos").options).forEach(opt=>opt.selected=p.chaos.includes(opt.value));
 
   document.getElementById("editor").style.display="block";
+  document.getElementById("modeIndicator").innerText="編集中モード";
+  document.getElementById("modeIndicator").style.background="#d32f2f";
 }
 
 // プレイヤー削除
-window.deletePlayer = async function(i){
+window.deletePlayer=async function(i){
   if(!confirm("削除しますか？")) return;
-  const ref = doc(db,"players",playerDocs[i]);
+  const ref=doc(db,"players",playerDocs[i]);
   await deleteDoc(ref);
   players.splice(i,1);
   playerDocs.splice(i,1);
@@ -131,40 +131,37 @@ window.deletePlayer = async function(i){
 }
 
 // 画像保存
-window.saveTableImage = function(){
-  const table = document.querySelector(".table-container");
+window.saveTableImage=function(){
+  const table=document.querySelector(".table-container");
   html2canvas(table,{scale:3}).then(canvas=>{
-    const link = document.createElement("a");
+    const link=document.createElement("a");
     link.download="archer_table.png";
     link.href=canvas.toDataURL("image/png");
     link.click();
   });
 }
 
-// レーンごとに分けて表示
+// レーンごと表示
 function render(){
   const body=document.getElementById("playerBody");
   body.innerHTML="";
 
   for(let laneNum=1; laneNum<=3; laneNum++){
-    const lanePlayers = players.filter(p=>p.lane===laneNum);
-
+    const lanePlayers=players.filter(p=>p.lane===laneNum);
     if(lanePlayers.length===0) continue;
 
-    // レーンヘッダー
-    const trLane = document.createElement("tr");
+    const trLane=document.createElement("tr");
     trLane.classList.add("lane-header");
     trLane.innerHTML=`<td colspan="12">レーン${laneNum} (${lanePlayers.length}/8)</td>`;
     body.appendChild(trLane);
 
-    // デフォルトは戦力降順
     lanePlayers.sort((a,b)=>b.power-a.power);
 
-    lanePlayers.forEach((p,i)=>{
-      const tr = document.createElement("tr");
+    lanePlayers.forEach(p=>{
+      const tr=document.createElement("tr");
       tr.innerHTML=`
         <td>${p.name}</td>
-        <td>${(p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power)}</td>
+        <td>${p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power}</td>
         <td>${p.range}/${p.style}</td>
         <td>${gearText(p.gear,p.chaos)}</td>
         <td>${p.hero}</td>
@@ -182,20 +179,15 @@ function render(){
 }
 
 // レーン内ソート
-window.sortLane = function(type){
+window.sortLane=function(type){
   for(let laneNum=1; laneNum<=3; laneNum++){
-    const lanePlayers = players.filter(p=>p.lane===laneNum);
-    if(type==="power"){
-      lanePlayers.sort((a,b)=>b.power-a.power);
-    }else if(type==="relic"){
-      lanePlayers.sort((a,b)=>relicBuff(b.mythic,b.legend)-relicBuff(a.mythic,a.legend));
-    }else if(type==="name"){
-      lanePlayers.sort((a,b)=>a.name.localeCompare(b.name));
-    }
-    // 更新元配列にも反映
-    let start = players.findIndex(p=>p.lane===laneNum);
-    lanePlayers.forEach((p,i)=>{
-      const idx = players.findIndex(x=>x===p);
+    const lanePlayers=players.filter(p=>p.lane===laneNum);
+    if(type==="power") lanePlayers.sort((a,b)=>b.power-a.power);
+    else if(type==="relic") lanePlayers.sort((a,b)=>relicBuff(b.mythic,b.legend)-relicBuff(a.mythic,a.legend));
+    else if(type==="name") lanePlayers.sort((a,b)=>a.name.localeCompare(b.name));
+
+    lanePlayers.forEach(p=>{
+      const idx=players.findIndex(x=>x===p);
       if(idx>-1) players[idx]=p;
     });
   }
@@ -204,12 +196,11 @@ window.sortLane = function(type){
 
 // データロード
 async function load(){
-  const querySnapshot = await getDocs(collection(db,"players"));
+  const querySnapshot=await getDocs(collection(db,"players"));
   querySnapshot.forEach(d=>{
     players.push(d.data());
     playerDocs.push(d.id);
   });
   render();
 }
-
 load();
