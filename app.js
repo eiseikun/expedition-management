@@ -1,7 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase設定
 const firebaseConfig = {
@@ -16,53 +14,51 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // データ
-let players = [];
-let playerDocs = [];
-let editIndex = null;
+let players = []; // {id, name, power, ...}
+let editId = null;
 const PASSWORD = "1234";
 
 // 編集画面表示
 window.unlockEdit = function() {
   const p = prompt("パスワード");
-  if (p === PASSWORD) {
-    document.getElementById("editor").style.display = "block";
-  }
-}
+  if(p === PASSWORD) document.getElementById("editor").style.display = "block";
+};
 
 // 遠征チェック切替
-window.toggleExpedition = function(i) {
-  players[i].expedition = !players[i].expedition;
+window.toggleExpedition = function(id){
+  const p = players.find(x => x.id === id);
+  if(!p) return;
+  p.expedition = !p.expedition;
   render();
-}
+};
 
 // 聖物計算
-function relicBuff(m, l) {
-  return Number((m * 0.25 + l * 0.025).toFixed(3));
-}
+function relicBuff(m,l){ return Number((m*0.25 + l*0.025).toFixed(3)); }
 
 // ルーン表示
-function runeHTML(name, quality, enchant) {
-  if (quality === "none") return "";
-  const cls = quality === "mythic" ? "rune rune-mythic" : "rune rune-legend";
+function runeHTML(name,quality,enchant){
+  if(quality==="none") return "";
+  const cls = quality==="mythic" ? "rune rune-mythic" : "rune rune-legend";
   return `<span class="${cls}">${name}(${enchant})</span>`;
 }
 
 // 装備表示
-function gearText(gear, chaosArr) {
-  if (!chaosArr || chaosArr.length === 0) return gear;
+function gearText(gear,chaosArr){
+  if(!chaosArr || chaosArr.length===0) return gear;
   return `${gear}/${chaosArr.join(',')}カオス`;
 }
 
 // 編集画面を閉じる
-window.closeEditor = function() {
+window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
-  editIndex = null;
-}
+  editId = null;
+};
 
 // 編集画面呼び出し
-window.editPlayer = function(i) {
-  const p = players[i];
-  editIndex = i;
+window.editPlayer = function(id){
+  const p = players.find(x => x.id === id);
+  if(!p) return;
+  editId = id;
 
   document.getElementById("name").value = p.name;
   document.getElementById("power").value = p.power;
@@ -79,107 +75,103 @@ window.editPlayer = function(i) {
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
 
-  Array.from(document.getElementById("chaos").options).forEach(opt => {
+  // chaosマルチ選択反映
+  Array.from(document.getElementById("chaos").options).forEach(opt=>{
     opt.selected = p.chaos.includes(opt.value);
   });
 
   document.getElementById("editor").style.display = "block";
-}
+};
 
-// プレイヤー削除
-window.deletePlayer = async function(i) {
-  if (!confirm("削除しますか？")) return;
-  const ref = doc(db, "players", playerDocs[i]);
-  await deleteDoc(ref);
-  players.splice(i, 1);
-  playerDocs.splice(i, 1);
+// 保存
+window.savePlayer = async function(){
+  const chaosSelect = Array.from(document.getElementById("chaos").selectedOptions).map(o=>o.value);
+  const playerData = {
+    name:document.getElementById("name").value,
+    power:Number(document.getElementById("power").value),
+    range:document.getElementById("range").value,
+    style:document.getElementById("style").value,
+    gear:document.getElementById("gear").value,
+    chaos:chaosSelect,
+    hero:document.getElementById("hero").value,
+    sharpQ:document.getElementById("sharpQuality").value,
+    sharpE:document.getElementById("sharpEnchant").value,
+    arrowQ:document.getElementById("arrowQuality").value,
+    arrowE:document.getElementById("arrowEnchant").value,
+    formation:document.getElementById("formation").value,
+    mythic:Number(document.getElementById("mythic").value),
+    legend:Number(document.getElementById("legend").value),
+    lane:Number(document.getElementById("lane").value),
+    expedition:false
+  };
+
+  if(editId === null){
+    const docRef = await addDoc(collection(db,"players"),playerData);
+    players.push({id:docRef.id, ...playerData});
+  } else {
+    const ref = doc(db,"players",editId);
+    await updateDoc(ref,playerData);
+    const idx = players.findIndex(x => x.id === editId);
+    if(idx !== -1) players[idx] = {id:editId, ...playerData};
+    editId = null;
+  }
+
+  closeEditor();
   render();
-}
+};
+
+// 削除
+window.deletePlayer = async function(id){
+  if(!confirm("削除しますか？")) return;
+  const ref = doc(db,"players",id);
+  await deleteDoc(ref);
+  const idx = players.findIndex(x=>x.id===id);
+  if(idx!==-1) players.splice(idx,1);
+  render();
+};
 
 // 画像保存
-window.saveTableImage = function() {
+window.saveTableImage = function(){
   const table = document.querySelector(".table-container");
-  html2canvas(table, { scale: 3 }).then(canvas => {
+  html2canvas(table,{scale:3}).then(canvas=>{
     const link = document.createElement("a");
     link.download = "archer_table.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
   });
-}
+};
 
-// 保存ボタン
-window.savePlayer = async function() {
-  const chaosSelect = Array.from(document.getElementById("chaos").selectedOptions).map(o => o.value);
-
-  let p = {
-    name: document.getElementById("name").value,
-    power: Number(document.getElementById("power").value),
-    range: document.getElementById("range").value,
-    style: document.getElementById("style").value,
-    gear: document.getElementById("gear").value,
-    chaos: chaosSelect,
-    hero: document.getElementById("hero").value,
-    sharpQ: document.getElementById("sharpQuality").value,
-    sharpE: document.getElementById("sharpEnchant").value,
-    arrowQ: document.getElementById("arrowQuality").value,
-    arrowE: document.getElementById("arrowEnchant").value,
-    formation: document.getElementById("formation").value,
-    mythic: Number(document.getElementById("mythic").value),
-    legend: Number(document.getElementById("legend").value),
-    lane: Number(document.getElementById("lane").value),
-    expedition: false
-  };
-
-  if (editIndex === null) {
-    const docRef = await addDoc(collection(db, "players"), p);
-    players.push(p);
-    playerDocs.push(docRef.id);
-  } else {
-    const ref = doc(db, "players", playerDocs[editIndex]);
-    await updateDoc(ref, p);
-    players[editIndex] = p; // ←ここで反映
-    editIndex = null;
-  }
-
-  closeEditor();
-  render(); // ←これでメイン画面に反映
-}
-
-// レーンごとに分けて表示
-function render() {
+// レーンごとに表示
+function render(){
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
 
-  for (let laneNum = 1; laneNum <= 3; laneNum++) {
-    const lanePlayers = players.filter(p => p.lane === laneNum);
+  for(let laneNum=1; laneNum<=3; laneNum++){
+    const lanePlayers = players.filter(p=>p.lane===laneNum);
+    if(lanePlayers.length === 0) continue;
 
-    if (lanePlayers.length === 0) continue;
-
-    // レーンヘッダー
     const trLane = document.createElement("tr");
     trLane.classList.add("lane-header");
     trLane.innerHTML = `<td colspan="12">レーン${laneNum} (${lanePlayers.length}/8)</td>`;
     body.appendChild(trLane);
 
-    // デフォルトは戦力降順
-    lanePlayers.sort((a, b) => b.power - a.power);
+    lanePlayers.sort((a,b)=>b.power - a.power);
 
-    lanePlayers.forEach(p => {
-      const idx = players.indexOf(p);
+    lanePlayers.forEach(p=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${p.name}</td>
-        <td>${p.power >= 1000000 ? (p.power / 1000000).toFixed(1) + "M" : p.power}</td>
+        <td>${(p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power)}</td>
         <td>${p.range}/${p.style}</td>
-        <td>${gearText(p.gear, p.chaos)}</td>
+        <td>${gearText(p.gear,p.chaos)}</td>
         <td>${p.hero}</td>
-        <td>${runeHTML("鋭利", p.sharpQ, p.sharpE) + runeHTML("アロレ", p.arrowQ, p.arrowE)}</td>
+        <td>${runeHTML("鋭利",p.sharpQ,p.sharpE)+runeHTML("アロレ",p.arrowQ,p.arrowE)}</td>
         <td>${p.formation}</td>
-        <td>${relicBuff(p.mythic, p.legend)}</td>
+        <td>${relicBuff(p.mythic,p.legend)}</td>
         <td>${p.lane}</td>
-        <td><input type="checkbox" onchange="toggleExpedition(${idx})" ${p.expedition ? "checked" : ""}></td>
-        <td><button onclick="editPlayer(${idx})">編集</button></td>
-        <td><button onclick="deletePlayer(${idx})">削除</button></td>
+        <td><input type="checkbox" onchange="toggleExpedition('${p.id}')" ${p.expedition?"checked":""}></td>
+        <td><button onclick="editPlayer('${p.id}')">編集</button></td>
+        <td><button onclick="deletePlayer('${p.id}')">削除</button></td>
       `;
       body.appendChild(tr);
     });
@@ -187,27 +179,26 @@ function render() {
 }
 
 // レーン内ソート
-window.sortLane = function(type) {
-  for (let laneNum = 1; laneNum <= 3; laneNum++) {
-    const lanePlayers = players.filter(p => p.lane === laneNum);
-    if (type === "power") lanePlayers.sort((a, b) => b.power - a.power);
-    else if (type === "relic") lanePlayers.sort((a, b) => relicBuff(b.mythic, b.legend) - relicBuff(a.mythic, a.legend));
-    else if (type === "name") lanePlayers.sort((a, b) => a.name.localeCompare(b.name));
+window.sortLane = function(type){
+  for(let laneNum=1; laneNum<=3; laneNum++){
+    const lanePlayers = players.filter(p=>p.lane===laneNum);
+    if(type==="power") lanePlayers.sort((a,b)=>b.power - a.power);
+    else if(type==="relic") lanePlayers.sort((a,b)=>relicBuff(b.mythic,b.legend) - relicBuff(a.mythic,a.legend));
+    else if(type==="name") lanePlayers.sort((a,b)=>a.name.localeCompare(b.name));
 
-    lanePlayers.forEach((p, i) => {
-      const idx = players.findIndex(x => x === p);
-      if (idx > -1) players[idx] = p;
+    lanePlayers.forEach(p=>{
+      const idx = players.findIndex(x=>x.id===p.id);
+      if(idx!==-1) players[idx]=p;
     });
   }
   render();
-}
+};
 
 // データロード
-async function load() {
-  const querySnapshot = await getDocs(collection(db, "players"));
-  querySnapshot.forEach(d => {
-    players.push(d.data());
-    playerDocs.push(d.id);
+async function load(){
+  const querySnapshot = await getDocs(collection(db,"players"));
+  querySnapshot.forEach(d=>{
+    players.push({id:d.id, ...d.data()});
   });
   render();
 }
