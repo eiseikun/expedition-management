@@ -194,15 +194,14 @@ render()
 /* スマホで写真を保存 */
 window.saveTableImage = function () {
 const table = document.querySelector("#playerTable");
-html2canvas(table, { scale: 3 }).then(canvas => {
-const image = canvas.toDataURL("image/png");
+html2canvas(table, {
+scale:3
+}).then(canvas => {
 const link = document.createElement("a");
-link.href = image;
-link.download = "archer_clan_table.png";
-document.body.appendChild(link);
+link.download = "archer_table.png";
+link.href = canvas.toDataURL("image/png");
 link.click();
-document.body.removeChild(link);
 });
-};
+}
 
 load()
