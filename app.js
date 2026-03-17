@@ -204,4 +204,9 @@ link.click();
 });
 }
 
+window.closeEditor=function(){
+document.getElementById("editor").style.display="none"
+editIndex=null
+}
+
 load()
