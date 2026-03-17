@@ -1,7 +1,6 @@
-// app.js
 document.addEventListener("DOMContentLoaded", () => {
 
-  // --- Firebase初期化 ---
+  // --- Firebase 初期化 ---
   const firebaseConfig = {
     apiKey: "AIzaSyCflhFHEMcgqfkr6Dhp4SwlC1A8dmcMwWE",
     authDomain: "expedition-management-date.firebaseapp.com",
@@ -32,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(isFormDirty && !confirm("未保存です。閉じますか？")) return;
     modal.classList.add("hidden");
   });
+
   playerForm.addEventListener("input", () => isFormDirty = true);
 
   // --- モーダル開閉関数 ---
@@ -48,7 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("tacticsPattern").value = player.tactics.pattern;
       document.getElementById("equipmentType").value = player.equipment.type;
       for(let k in player.equipment.chaos){
-        document.getElementById("chaos"+capitalize(k)).checked = player.equipment.chaos[k];
+        const el = document.getElementById("chaos"+capitalize(k));
+        if(el) el.checked = player.equipment.chaos[k];
       }
       document.getElementById("rune1").value = player.rune1;
       document.getElementById("rune2").value = player.rune2;
@@ -90,15 +91,20 @@ document.addEventListener("DOMContentLoaded", () => {
       artifactLegend: Number(document.getElementById("artifactLegend").value),
       artifactRate: Number(document.getElementById("artifactMythic").value)*0.25 + Number(document.getElementById("artifactLegend").value)*0.025
     };
-    if(playerId){
-      await playersRef.doc(playerId).update(data);
-    } else {
-      await playersRef.add(data);
+    try {
+      if(playerId){
+        await playersRef.doc(playerId).update(data);
+      } else {
+        await playersRef.add(data);
+      }
+      modal.classList.add("hidden");
+      showToast("保存完了");
+      loadPlayers();
+      isFormDirty = false;
+    } catch(err){
+      console.error("保存エラー:", err);
+      alert("保存に失敗しました");
     }
-    modal.classList.add("hidden");
-    showToast("保存完了");
-    loadPlayers();
-    isFormDirty = false;
   });
 
   // --- トースト ---
@@ -113,39 +119,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- プレイヤー表示 ---
   async function loadPlayers(){
-    const snapshot = await playersRef.get();
-    const allPlayers = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
-    document.querySelectorAll(".players").forEach(div=>div.innerHTML="");
-    for(let lane=1; lane<=3; lane++){
-      const laneDiv = document.querySelector(`.lane[data-lane='${lane}'] .players`);
-      allPlayers.filter(p=>p.lane===lane).sort((a,b)=>b.power-a.power).forEach(p=>{
-        const card = document.createElement("div");
-        card.className = "player-card";
-        card.innerHTML = `
-          <b>${p.name}</b><br>
-          戦力:${p.power}<br>
-          戦術:${p.tactics.distance} - ${p.tactics.pattern}<br>
-          装備:${p.equipment.type}<br>
-          カオス: ${Object.entries(p.equipment.chaos).filter(([k,v])=>v).map(([k])=>k).join(",") || "-"}<br>
-          ルーン:${p.rune1},${p.rune2}<br>
-          聖物:${p.artifactRate.toFixed(3)}%<br>
-          <button onclick="editPlayer('${p.id}')">編集</button>
-          <button onclick="deletePlayer('${p.id}')">削除</button>
-        `;
-        laneDiv.appendChild(card);
-      });
+    try {
+      const snapshot = await playersRef.get();
+      const allPlayers = snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+      document.querySelectorAll(".players").forEach(div=>div.innerHTML="");
+      for(let lane=1; lane<=3; lane++){
+        const laneDiv = document.querySelector(`.lane[data-lane='${lane}'] .players`);
+        allPlayers.filter(p=>p.lane===lane).sort((a,b)=>b.power-a.power).forEach(p=>{
+          const card = document.createElement("div");
+          card.className = "player-card";
+          card.innerHTML = `
+            <b>${p.name}</b><br>
+            戦力:${p.power}<br>
+            戦術:${p.tactics.distance} - ${p.tactics.pattern}<br>
+            装備:${p.equipment.type}<br>
+            カオス: ${Object.entries(p.equipment.chaos).filter(([k,v])=>v).map(([k])=>k).join(",") || "-"}<br>
+            ルーン:${p.rune1},${p.rune2}<br>
+            聖物:${p.artifactRate.toFixed(3)}%<br>
+            <button onclick="window.editPlayer('${p.id}')">編集</button>
+            <button onclick="window.deletePlayer('${p.id}')">削除</button>
+          `;
+          laneDiv.appendChild(card);
+        });
+      }
+    } catch(err){
+      console.error("Firestore読み込みエラー:", err);
     }
   }
 
   // --- 編集・削除 ---
   window.editPlayer = async (id)=>{
-    const doc = await playersRef.doc(id).get();
-    openModal({id,...doc.data()});
+    try {
+      const doc = await playersRef.doc(id).get();
+      openModal({id,...doc.data()});
+    } catch(err){
+      console.error("編集エラー:", err);
+    }
   };
+
   window.deletePlayer = async (id)=>{
     if(confirm("削除しますか？")) {
-      await playersRef.doc(id).delete();
-      loadPlayers();
+      try {
+        await playersRef.doc(id).delete();
+        loadPlayers();
+      } catch(err){
+        console.error("削除エラー:", err);
+      }
     }
   };
 
@@ -162,4 +181,4 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- 初期読み込み ---
   loadPlayers();
 
-}); // DOMContentLoaded 終わり
+});
