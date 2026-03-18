@@ -36,28 +36,29 @@ tr.lane-header{
   text-align:left;
 }
 
-/* 編集画面（スマホ対応スクロール + 下ボタン固定） */
+/* 編集画面（スクロール可・スマホ対応） */
 .editor{
   position: fixed;
-  top: 5vh;                
+  top: 5vh;
   left: 50%;
   transform: translateX(-50%);
   background: #222;
-  padding: 20px 20px 90px 20px; /* 下部にボタン分余裕 */
+  padding: 20px;
   border-radius: 10px;
   z-index: 100;
 
-  width: 90%;              
-  max-width: 400px;        
-  max-height: 90vh;        
-  overflow-y: auto;        
-  -webkit-overflow-scrolling: touch; 
-  box-sizing: border-box;  
+  width: 90%;
+  max-width: 400px;
+  max-height: 90vh;       /* モーダル内で縦スクロール可能 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 /* 入力・選択 */
 .editor input,
-.editor select {
+.editor select,
+.editor button{
   width: 100%;
   margin: 4px 0;
   padding: 6px;
@@ -119,18 +120,12 @@ tr.lane-header{
   input,select{ width:90%; }
 }
 
-/* 下部固定ボタン（モーダル内スクロールに対応） */
+/* 編集画面のボタン（最後に置く） */
 .editor-footer{
-  position: sticky;
-  bottom: 0;
   display: flex;
   justify-content: space-between;
-  background: #222;
-  padding: 10px 0 0 0;
   margin-top: 10px;
-  box-sizing: border-box;
 }
-
 .editor-footer button{
   width: 48%;
   padding: 10px;
