@@ -104,3 +104,5 @@ button{ padding:6px 12px; margin:4px; cursor:pointer; }
 .cell.chaos{
   background:#9c27b0;
 }
+.cell.mythic{ background:#d32f2f; }
+.cell.legend{ background:#fbc02d; }
