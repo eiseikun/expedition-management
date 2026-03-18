@@ -18,40 +18,41 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
-// ===== 追加モードで開く =====
+// ===== 追加モード =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
   document.getElementById("modeIndicator").style.background = "#2e7d32";
 
-  // 入力リセット
   document.querySelectorAll("#editor input").forEach(i => i.value = "");
   document.querySelectorAll("#editor select").forEach(s => s.selectedIndex = 0);
+  document.querySelectorAll("#chaos input").forEach(cb=>cb.checked=false);
 
   editIndex = null;
 };
 
-// ===== 聖物計算 =====
-function relicBuff(m, l){
-  return Number((m * 0.25 + l * 0.025).toFixed(3));
+// ===== 聖物 =====
+function relicBuff(m,l){
+  return Number((m*0.25 + l*0.025).toFixed(3));
 }
 
-// ===== ルーン表示 =====
-function runeHTML(name, quality, enchant){
-  if(quality === "none") return "";
-  const cls = quality === "mythic" ? "rune rune-mythic" : "rune rune-legend";
-  return `<span class="${cls}">${name}(${enchant})</span>`;
+// ===== ルーン =====
+function runeHTML(name,q,e){
+  if(q==="none") return "";
+  const cls = q==="mythic"?"rune rune-mythic":"rune rune-legend";
+  return `<span class="${cls}">${name}(${e})</span>`;
 }
 
-// ===== 装備表示 =====
-function gearText(gear, chaosArr){
+// ===== 装備（完成版） =====
+function gearText(gear, chaosArr, chaosType){
   const parts = ["武器","お守り","指輪","兜","鎧","靴"];
+  chaosArr = Array.isArray(chaosArr) ? chaosArr : [];
 
   return `
     <div class="gear-box">
       ${parts.map(p=>{
         if(chaosArr.includes(p)){
-          return `<div class="cell chaos"></div>`;
+          return `<div class="cell ${chaosType || "chaos"}"></div>`;
         }else{
           return `<div class="cell empty"></div>`;
         }
@@ -62,8 +63,8 @@ function gearText(gear, chaosArr){
 
 // ===== 保存 =====
 window.savePlayer = async function(){
-　const chaosSelect = Array.from(document.querySelectorAll("#chaos input:checked")).map(cb => cb.value);
-  
+  const chaosSelect = Array.from(document.querySelectorAll("#chaos input:checked")).map(cb => cb.value);
+
   let p = {
     name: document.getElementById("name").value,
     power: Number(document.getElementById("power").value),
@@ -71,6 +72,7 @@ window.savePlayer = async function(){
     style: document.getElementById("style").value,
     gear: document.getElementById("gear").value,
     chaos: chaosSelect,
+    chaosType: document.getElementById("chaosType").value,
     hero: document.getElementById("hero").value,
     sharpQ: document.getElementById("sharpQuality").value,
     sharpE: document.getElementById("sharpEnchant").value,
@@ -79,8 +81,7 @@ window.savePlayer = async function(){
     formation: document.getElementById("formation").value,
     mythic: Number(document.getElementById("mythic").value),
     legend: Number(document.getElementById("legend").value),
-    lane: Number(document.getElementById("lane").value),
-    expedition: false
+    lane: Number(document.getElementById("lane").value)
   };
 
   if(editIndex === null){
@@ -103,7 +104,6 @@ window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
   document.getElementById("modeIndicator").style.background = "transparent";
-  editIndex = null;
 };
 
 // ===== 編集 =====
@@ -125,16 +125,17 @@ window.editPlayer = function(i){
   document.getElementById("mythic").value = p.mythic;
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
+  document.getElementById("chaosType").value = p.chaosType || "chaos";
 
-document.querySelectorAll("#chaos input").forEach(cb=>{
-  cb.checked = p.chaos.includes(cb.value);
-});
+  document.querySelectorAll("#chaos input").forEach(cb=>{
+    cb.checked = (p.chaos || []).includes(cb.value);
+  });
 
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
   document.getElementById("modeIndicator").style.background = "#d32f2f";
 };
-document.querySelectorAll("#chaos input").forEach(cb=>cb.checked=false);
+
 // ===== 削除 =====
 window.deletePlayer = async function(i){
   if(!confirm("削除しますか？")) return;
@@ -147,28 +148,12 @@ window.deletePlayer = async function(i){
   render();
 };
 
-// ===== 画像保存 =====
-window.saveTableImage = function(){
-  const table = document.querySelector(".table-container");
-  html2canvas(table,{scale:3}).then(canvas=>{
-    const link = document.createElement("a");
-    link.download = "archer_table.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  });
-};
-
 // ===== 描画 =====
 function render(){
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
 
-  const laneNames = {
-    1: "レーン1",
-    2: "レーン2",
-    3: "レーン3",
-    0: "控え"
-  };
+  const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(laneNum=>{
     const lanePlayers = players.filter(p => (p.lane ?? 0) === laneNum);
@@ -192,7 +177,7 @@ function render(){
         <td>${p.name}</td>
         <td>${p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power}</td>
         <td>${p.range}/${p.style}</td>
-        <td>${gearText(p.gear,p.chaos)}</td>
+        <td>${gearText(p.gear,p.chaos,p.chaosType)}</td>
         <td>${p.hero}</td>
         <td>${runeHTML("鋭利",p.sharpQ,p.sharpE)+runeHTML("アロレ",p.arrowQ,p.arrowE)}</td>
         <td>${p.formation}</td>
@@ -204,17 +189,6 @@ function render(){
     });
   });
 }
-
-// ===== ソート =====
-window.sortLane = function(type){
-  players.sort((a,b)=>{
-    if(type==="power") return b.power - a.power;
-    if(type==="relic") return relicBuff(b.mythic,b.legend) - relicBuff(a.mythic,a.legend);
-    if(type==="name") return a.name.localeCompare(b.name);
-    return 0;
-  });
-  render();
-};
 
 // ===== 初期ロード =====
 async function load(){
