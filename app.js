@@ -57,8 +57,8 @@ function gearText(gear, chaosArr){
 
 // ===== 保存 =====
 window.savePlayer = async function(){
-  const chaosSelect = Array.from(document.getElementById("chaos").selectedOptions).map(o => o.value);
-
+　const chaosSelect = Array.from(document.querySelectorAll("#chaos input:checked")).map(cb => cb.value);
+  
   let p = {
     name: document.getElementById("name").value,
     power: Number(document.getElementById("power").value),
@@ -121,14 +121,15 @@ window.editPlayer = function(i){
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
 
-  Array.from(document.getElementById("chaos").options)
-    .forEach(opt => opt.selected = p.chaos.includes(opt.value));
+document.querySelectorAll("#chaos input").forEach(cb=>{
+  cb.checked = p.chaos.includes(cb.value);
+});
 
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
   document.getElementById("modeIndicator").style.background = "#d32f2f";
 };
-
+document.querySelectorAll("#chaos input").forEach(cb=>cb.checked=false);
 // ===== 削除 =====
 window.deletePlayer = async function(i){
   if(!confirm("削除しますか？")) return;
