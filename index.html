@@ -20,20 +20,15 @@
 <input id="search" placeholder="🔍 プレイヤー検索" oninput="render()">
 
 <div class="top-buttons">
-
 <button onclick="openEditor()">プレイヤー追加</button>
 <button onclick="saveTableImage()">画像保存</button>
-
 </div>
 
 <div class="table-container">
-
-<table>
+<table id="table">
 
 <thead>
-
 <tr>
-
 <th>名前</th>
 <th onclick="sortPlayers()">戦力</th>
 <th>戦術</th>
@@ -41,19 +36,16 @@
 <th>主キャラ</th>
 <th>編成</th>
 <th>聖物%</th>
-
 </tr>
-
 </thead>
 
 <tbody id="playerBody"></tbody>
 
 </table>
-
 </div>
 
-<div id="editor" class="editor" style="display:none">
-
+<!-- 編集 -->
+<div id="editor" class="editor">
 <div class="editor-box">
 
 <h2>プレイヤー編集</h2>
@@ -98,7 +90,28 @@
 <button onclick="closeEditor()">閉じる</button>
 
 </div>
+</div>
 
+<!-- メニュー -->
+<div id="menu" class="menu">
+<div class="menu-box">
+
+<h3 id="menuName"></h3>
+
+<p>レーン移動</p>
+<button onclick="moveLaneFromMenu(1)">レーン1</button>
+<button onclick="moveLaneFromMenu(2)">レーン2</button>
+<button onclick="moveLaneFromMenu(3)">レーン3</button>
+<button onclick="moveLaneFromMenu(4)">控え</button>
+
+<hr>
+
+<button onclick="editFromMenu()">✏ 編集</button>
+<button onclick="deleteFromMenu()">🗑 削除</button>
+
+<button onclick="closeMenu()">閉じる</button>
+
+</div>
 </div>
 
 <script type="module" src="app.js"></script>
