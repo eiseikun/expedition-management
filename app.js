@@ -183,6 +183,9 @@ window.saveTableImage = async function(){
 };
 
 // ===== 描画 =====
+function formatPower(val){
+  return val.toFixed(2) + "M"; // 常に小数2桁＋M
+}
 function render(){
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
