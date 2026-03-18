@@ -1,84 +1,91 @@
-body {
-  font-family: sans-serif;
-  margin: 0;
-  padding: 0;
-  background: #e0f7fa;
+/* 全体 */
+body{
+  font-family:sans-serif;
+  background:#111;
+  color:white;
+  text-align:center;
+  margin:0;
+  padding:0;
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background: #00bcd4;
-  color: white;
+/* モード表示 */
+.mode-indicator{
+  margin:10px 0;
+  padding:6px;
+  font-weight:bold;
+  background: #00bfff; /* 水色 */
+  border-radius:4px;
+  display:inline-block;
 }
 
-.buttons button {
-  margin-left: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
+/* テーブル */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  padding:8px;
+  border:1px solid #333;
+}
+th{
+  background:#0077aa; /* 水色系 */
+  cursor:pointer;
+}
+tr:nth-child(even){ background:#1a1a1a; }
+
+/* レーンヘッダー行 */
+tr.lane-header{
+  background:#005577;
+  font-weight:bold;
+  text-align:left;
 }
 
-main {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+/* 編集画面 */
+.editor{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background: rgba(0,191,255,0.9);
+  color:#000;
+  padding:20px;
+  border-radius:10px;
+  z-index:100;
+  max-width:90%;
 }
 
-.lane {
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 5px;
+/* 入力や選択 */
+input,select{ 
+  margin:4px; 
+  padding:6px; 
+  border-radius:4px;
+  border:none;
 }
 
-.players {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+/* ボタン */
+button{ 
+  padding:6px 12px; 
+  margin:4px; 
+  cursor:pointer;
+  background:#00bfff;
+  border:none;
+  border-radius:4px;
+  color:#000;
+  font-weight:bold;
 }
 
-.player-card {
-  border: 1px solid #333;
-  border-radius: 5px;
-  background: #b2ebf2;
-  width: 48%;
-  padding: 5px;
-}
+/* ルーン */
+.rune{ padding:3px 6px; border-radius:6px; font-weight:bold; margin-right:4px; }
+.rune-mythic{ background:#d32f2f; color:white; }
+.rune-legend{ background:#fbc02d; color:black; }
 
-.modal {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+/* テーブル横スクロール */
+.table-container{ overflow-x:auto; }
 
-.modal-content {
-  background: white;
-  padding: 10px;
-  width: 90%;
-  max-width: 400px;
-  border-radius: 5px;
-}
-
-.hidden { display: none; }
-
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #00bcd4;
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-}
-
+/* スマホ用 */
 @media (max-width:700px){
-  .player-card { width: 100%; }
+  table{ font-size:12px; }
+  th,td{ padding:4px; }
+  button{ font-size:12px; padding:4px 6px; }
+  input,select{ width:90%; }
 }
