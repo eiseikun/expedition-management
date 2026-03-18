@@ -18,23 +18,62 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
-// ===== 追加モード =====
-// モーダル開く
+// ===== 追加モード（モーダル開閉 + 背景スクロール制御） =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
   document.getElementById("modeIndicator").style.background = "#2e7d32";
+
+  // 入力リセット
   document.querySelectorAll("#editor input").forEach(i => i.value = "");
   document.querySelectorAll("#editor select").forEach(s => s.selectedIndex = 0);
-  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
+  document.querySelectorAll("#chaos select").forEach(s => s.value = "");
+
   editIndex = null;
+
+  // 背景スクロール禁止
   document.body.style.overflow = "hidden";
 };
+
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
   document.getElementById("modeIndicator").style.background = "transparent";
+
+  // 背景スクロール復活
   document.body.style.overflow = "auto";
+};
+
+// ===== 編集モードも背景スクロール止める =====
+window.editPlayer = function(i){
+  const p = players[i];
+  editIndex = i;
+
+  document.getElementById("name").value = p.name;
+  document.getElementById("power").value = p.power;
+  document.getElementById("range").value = p.range;
+  document.getElementById("style").value = p.style;
+  document.getElementById("gear").value = p.gear;
+  document.getElementById("hero").value = p.hero;
+  document.getElementById("sharpQuality").value = p.sharpQ;
+  document.getElementById("sharpEnchant").value = p.sharpE;
+  document.getElementById("arrowQuality").value = p.arrowQ;
+  document.getElementById("arrowEnchant").value = p.arrowE;
+  document.getElementById("formation").value = p.formation;
+  document.getElementById("mythic").value = p.mythic;
+  document.getElementById("legend").value = p.legend;
+  document.getElementById("lane").value = p.lane;
+
+  document.querySelectorAll("#chaos select").forEach(s=>{
+    const found = (p.gearDetail || []).find(g=>g.part===s.dataset.part);
+    s.value = found ? found.type : "";
+  });
+
+  document.getElementById("editor").style.display = "block";
+  document.getElementById("modeIndicator").innerText = "編集モード";
+  document.getElementById("modeIndicator").style.background = "#d32f2f";
+
+  document.body.style.overflow = "hidden";
 };
 
   // 装備リセット
