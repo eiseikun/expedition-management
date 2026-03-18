@@ -1,120 +1,124 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>ねこ海賊団 遠征管理</title>
-
 <link rel="stylesheet" href="style.css">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 </head>
-
 <body>
 
 <h1>ねこ海賊団 遠征管理</h1>
 
-<input id="search" placeholder="🔍 プレイヤー検索" oninput="render()">
+<div class="mode-indicator" id="modeIndicator">通常モード</div>
 
 <div class="top-buttons">
-<button onclick="openEditor()">プレイヤー追加</button>
-<button onclick="saveTableImage()">画像保存</button>
+  <button onclick="unlockEdit()">編集画面</button>
+  <button onclick="saveTableImage()">画像保存</button>
 </div>
 
 <div class="table-container">
-<table id="table">
-
-<thead>
-<tr>
-<th>名前</th>
-<th onclick="sortPlayers()">戦力</th>
-<th>戦術</th>
-<th>装備</th>
-<th>主キャラ</th>
-<th>編成</th>
-<th>聖物%</th>
-</tr>
-</thead>
-
-<tbody id="playerBody"></tbody>
-
-</table>
+  <table id="playerTable">
+    <thead>
+      <tr>
+        <th>名前</th>
+        <th onclick="sortLane('power')">戦力</th>
+        <th>戦術</th>
+        <th>装備</th>
+        <th>主キャラ</th>
+        <th>ルーン</th>
+        <th>編成</th>
+        <th onclick="sortLane('relic')">聖物%</th>
+        <th>レーン</th>
+        <th>遠征</th>
+        <th>編集</th>
+        <th>削除</th>
+      </tr>
+    </thead>
+    <tbody id="playerBody"></tbody>
+  </table>
 </div>
 
-<!-- 編集 -->
-<div id="editor" class="editor">
-<div class="editor-box">
+<div id="editor" class="editor" style="display:none;">
+  <h2>プレイヤー編集</h2>
 
-<h2>プレイヤー編集</h2>
+  <input id="name" placeholder="名前">
+  <input id="power" placeholder="戦力">
 
-<input id="name" placeholder="名前">
-<input id="power" placeholder="戦力 (例 2.51)">
+  <select id="range">
+    <option>遠距離</option>
+    <option>中距離</option>
+    <option>近距離</option>
+  </select>
 
-<select id="range">
-<option>遠距離</option>
-<option>中距離</option>
-<option>近距離</option>
-</select>
+  <select id="style">
+    <option>バランス</option>
+    <option>攻撃優先</option>
+    <option>移動優先</option>
+    <option>取得優先</option>
+  </select>
 
-<select id="style">
-<option>バランス</option>
-<option>攻撃優先</option>
-<option>移動優先</option>
-<option>取得優先</option>
-</select>
+  <!-- 装備 -->
+  <select id="gear">
+    <option>神託</option>
+    <option>グリフォン</option>
+    <option>ドラグーン</option>
+    <option>キメラ</option>
+  </select>
+  <label>カオス部位</label>
+  <select id="chaos" multiple>
+    <option value="武器">武器</option>
+    <option value="お守り">お守り</option>
+    <option value="指輪">指輪</option>
+    <option value="兜">兜</option>
+    <option value="鎧">鎧</option>
+    <option value="靴">靴</option>
+  </select>
 
-<select id="gear">
-<option>神託</option>
-<option>グリフォン</option>
-<option>ドラグーン</option>
-<option>キメラ</option>
-</select>
+  <input id="hero" placeholder="主キャラ">
 
-<input id="hero" placeholder="主キャラ">
-<input id="formation" placeholder="編成">
+  <h3>鋭利の矢</h3>
+  <select id="sharpQuality">
+    <option>none</option>
+    <option>legend</option>
+    <option>mythic</option>
+  </select>
+  <select id="sharpEnchant">
+    <option>跳ね返り</option>
+    <option>クリダメUP</option>
+    <option>主武器会心率UP</option>
+    <option>主武器UP</option>
+  </select>
 
-<input id="mythic" placeholder="ミシック数">
-<input id="legend" placeholder="レジェンド数">
+  <h3>アロレルーン</h3>
+  <select id="arrowQuality">
+    <option>none</option>
+    <option>legend</option>
+    <option>mythic</option>
+  </select>
+  <select id="arrowEnchant">
+    <option>固有</option>
+    <option>クリダメ軽減</option>
+    <option>主武器会心ダメUP</option>
+    <option>主武器UP</option>
+  </select>
 
-<select id="lane">
-<option value="1">レーン1</option>
-<option value="2">レーン2</option>
-<option value="3">レーン3</option>
-<option value="4">控え</option>
-</select>
+  <input id="formation" placeholder="編成">
+  <input id="mythic" placeholder="ミシック数">
+  <input id="legend" placeholder="レジェンド数">
 
-<button onclick="savePlayer()">保存</button>
-<button onclick="closeEditor()">閉じる</button>
+  <label>レーン</label>
+  <select id="lane">
+    <option value="1">レーン1</option>
+    <option value="2">レーン2</option>
+    <option value="3">レーン3</option>
+  </select>
 
-</div>
-</div>
-
-<!-- メニュー -->
-<div id="menu" class="menu">
-<div class="menu-box">
-
-<h3 id="menuName"></h3>
-
-<p>レーン移動</p>
-<button onclick="moveLaneFromMenu(1)">レーン1</button>
-<button onclick="moveLaneFromMenu(2)">レーン2</button>
-<button onclick="moveLaneFromMenu(3)">レーン3</button>
-<button onclick="moveLaneFromMenu(4)">控え</button>
-
-<hr>
-
-<button onclick="editFromMenu()">✏ 編集</button>
-<button onclick="deleteFromMenu()">🗑 削除</button>
-
-<button onclick="closeMenu()">閉じる</button>
-
-</div>
+  <button onclick="savePlayer()">保存</button>
+  <button onclick="closeEditor()">閉じる</button>
 </div>
 
 <script type="module" src="app.js"></script>
-
 </body>
 </html>
