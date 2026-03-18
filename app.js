@@ -18,12 +18,10 @@ const PASSWORD="1234";
 
 // 編集画面表示
 window.unlockEdit=function(){
-  const p=prompt("パスワード");
-  if(p===PASSWORD){
-    document.getElementById("editor").style.display="block";
-    document.getElementById("modeIndicator").innerText="編集中モード";
-    document.getElementById("modeIndicator").style.background="#d32f2f";
-  }
+  document.getElementById("editor").style.display="block";
+  document.getElementById("modeIndicator").innerText="編集中モード";
+  document.getElementById("modeIndicator").style.background="#d32f2f";
+}
 }
 
 // 遠征チェック切替
