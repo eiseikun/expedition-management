@@ -64,57 +64,58 @@
     <option>キメラ</option>
   </select>
 
-<label>装備（部位ごと品質）</label>
-<div id="chaos" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-  <div>武器
-    <select data-part="武器">
-      <option value="">なし</option>
-      <option value="chaos">カオス</option>
-      <option value="mythic">ミシック</option>
-      <option value="legend">レジェンド</option>
-    </select>
+  <label>装備（部位ごと品質）</label>
+  <div id="chaos" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+    <div>武器
+      <select data-part="武器">
+        <option value="">なし</option>
+        <option value="chaos">カオス</option>
+        <option value="mythic">ミシック</option>
+        <option value="legend">レジェンド</option>
+      </select>
+    </div>
+    <div>兜
+      <select data-part="兜">
+        <option value="">なし</option>
+        <option value="chaos">カオス</option>
+        <option value="mythic">ミシック</option>
+        <option value="legend">レジェンド</option>
+      </select>
+    </div>
+    <div>お守り
+      <select data-part="お守り">
+        <option value="">なし</option>
+        <option value="chaos">カオス</option>
+        <option value="mythic">ミシック</option>
+        <option value="legend">レジェンド</option>
+      </select>
+    </div>
+    <div>鎧
+      <select data-part="鎧">
+        <option value="">なし</option>
+        <option value="chaos">カオス</option>
+        <option value="mythic">ミシック</option>
+        <option value="legend">レジェンド</option>
+      </select>
+    </div>
+    <div>指輪
+      <select data-part="指輪">
+        <option value="">なし</option>
+        <option value="chaos">カオス</option>
+        <option value="mythic">ミシック</option>
+        <option value="legend">レジェンド</option>
+      </select>
+    </div>
+    <div>靴
+      <select data-part="靴">
+        <option value="">なし</option>
+        <option value="chaos">カオス</option>
+        <option value="mythic">ミシック</option>
+        <option value="legend">レジェンド</option>
+      </select>
+    </div>
   </div>
-  <div>兜
-    <select data-part="兜">
-      <option value="">なし</option>
-      <option value="chaos">カオス</option>
-      <option value="mythic">ミシック</option>
-      <option value="legend">レジェンド</option>
-    </select>
-  </div>
-  <div>お守り
-    <select data-part="お守り">
-      <option value="">なし</option>
-      <option value="chaos">カオス</option>
-      <option value="mythic">ミシック</option>
-      <option value="legend">レジェンド</option>
-    </select>
-  </div>
-  <div>鎧
-    <select data-part="鎧">
-      <option value="">なし</option>
-      <option value="chaos">カオス</option>
-      <option value="mythic">ミシック</option>
-      <option value="legend">レジェンド</option>
-    </select>
-  </div>
-  <div>指輪
-    <select data-part="指輪">
-      <option value="">なし</option>
-      <option value="chaos">カオス</option>
-      <option value="mythic">ミシック</option>
-      <option value="legend">レジェンド</option>
-    </select>
-  </div>
-  <div>靴
-    <select data-part="靴">
-      <option value="">なし</option>
-      <option value="chaos">カオス</option>
-      <option value="mythic">ミシック</option>
-      <option value="legend">レジェンド</option>
-    </select>
-  </div>
-</div>
+
   <input id="hero" placeholder="主キャラ">
 
   <h3>鋭利の矢</h3>
@@ -130,7 +131,7 @@
     <option>主武器UP</option>
   </select>
 
-  <h3>アロレルーン</h3>
+  <h3>アロレ</h3>
   <select id="arrowQuality">
     <option>none</option>
     <option>legend</option>
@@ -154,11 +155,12 @@
     <option value="2">レーン2</option>
     <option value="3">レーン3</option>
   </select>
-<!-- 編集画面の最後に追加 -->
-<div class="editor-footer">
-  <button onclick="savePlayer()">保存</button>
-  <button onclick="closeEditor()">閉じる</button>
-</div>
+
+  <!-- 保存・閉じるボタンは固定せずモーダル内の最後に置く -->
+  <div class="editor-footer">
+    <button onclick="savePlayer()">保存</button>
+    <button onclick="closeEditor()">閉じる</button>
+  </div>
 </div>
 
 <script type="module" src="app.js"></script>
