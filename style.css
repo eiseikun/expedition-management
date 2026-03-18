@@ -119,21 +119,18 @@ tr.lane-header{
   input,select{ width:90%; }
 }
 
-/* 下部固定ボタン */
+/* 下部固定ボタン（モーダル内スクロールに対応） */
 .editor-footer{
-  position: fixed;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 400px;
+  position: sticky;
+  bottom: 0;
   display: flex;
   justify-content: space-between;
   background: #222;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 10px 0 0 0;
+  margin-top: 10px;
   box-sizing: border-box;
 }
+
 .editor-footer button{
   width: 48%;
   padding: 10px;
