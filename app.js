@@ -47,7 +47,7 @@ function runeHTML(name,q,e){
 
 // ===== 装備（部位ごと品質） =====
 function gearText(gearDetail){
-  const parts = ["武器","お守り","指輪","兜","鎧","靴"];
+  const parts = ["武器","兜","お守り","鎧","指輪","靴"];
   gearDetail = Array.isArray(gearDetail) ? gearDetail : [];
 
   return `
