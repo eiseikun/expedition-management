@@ -19,13 +19,23 @@ let playerDocs = [];
 let editIndex = null;
 
 // ===== 追加モード =====
+// モーダル開く
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
   document.getElementById("modeIndicator").style.background = "#2e7d32";
-
   document.querySelectorAll("#editor input").forEach(i => i.value = "");
   document.querySelectorAll("#editor select").forEach(s => s.selectedIndex = 0);
+  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
+  editIndex = null;
+  document.body.style.overflow = "hidden";
+};
+window.closeEditor = function(){
+  document.getElementById("editor").style.display = "none";
+  document.getElementById("modeIndicator").innerText = "通常モード";
+  document.getElementById("modeIndicator").style.background = "transparent";
+  document.body.style.overflow = "auto";
+};
 
   // 装備リセット
   document.querySelectorAll("#chaos select").forEach(s=>s.value="");
