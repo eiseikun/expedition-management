@@ -22,10 +22,7 @@
 <div class="top-buttons">
 
 <button onclick="openEditor()">プレイヤー追加</button>
-
 <button onclick="saveTableImage()">画像保存</button>
-
-<button onclick="screenshotMode()">スクショ</button>
 
 </div>
 
@@ -44,9 +41,6 @@
 <th>主キャラ</th>
 <th>編成</th>
 <th>聖物%</th>
-<th>レーン</th>
-<th>編集</th>
-<th>削除</th>
 
 </tr>
 
@@ -60,10 +54,11 @@
 
 <div id="editor" class="editor" style="display:none">
 
+<div class="editor-box">
+
 <h2>プレイヤー編集</h2>
 
 <input id="name" placeholder="名前">
-
 <input id="power" placeholder="戦力 (例 2.51)">
 
 <select id="range">
@@ -87,11 +82,9 @@
 </select>
 
 <input id="hero" placeholder="主キャラ">
-
 <input id="formation" placeholder="編成">
 
 <input id="mythic" placeholder="ミシック数">
-
 <input id="legend" placeholder="レジェンド数">
 
 <select id="lane">
@@ -103,6 +96,8 @@
 
 <button onclick="savePlayer()">保存</button>
 <button onclick="closeEditor()">閉じる</button>
+
+</div>
 
 </div>
 
