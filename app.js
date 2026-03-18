@@ -1,8 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc }
-
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
@@ -17,31 +14,23 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let players=[];
-let playerDocs=[];
+let ids=[];
 let editIndex=null;
+let selectedIndex=null;
+let sortAsc=true;
 
-let collapsed={1:false,2:false,3:false,4:false};
-
-function relicBuff(m,l){
-return (m*0.25 + l*0.025).toFixed(3);
-}
-
-function powerText(v){
-return Number(v).toFixed(2)+"M";
-}
-
-window.openEditor=function(){
-document.getElementById("editor").style.display="flex";
-}
-
-window.closeEditor=function(){
-document.getElementById("editor").style.display="none";
+window.openEditor=()=>{
+editor.style.display="flex";
 editIndex=null;
 }
 
-window.savePlayer=async function(){
+window.closeEditor=()=>{
+editor.style.display="none";
+}
 
-let p={
+window.savePlayer=async()=>{
+
+let data={
 name:name.value,
 power:Number(power.value),
 range:range.value,
@@ -49,37 +38,100 @@ style:style.value,
 gear:gear.value,
 hero:hero.value,
 formation:formation.value,
-mythic:Number(mythic.value),
-legend:Number(legend.value),
+mythic:Number(mythic.value||0),
+legend:Number(legend.value||0),
 lane:Number(lane.value)
 };
 
-if(editIndex===null){
-
-const ref=await addDoc(collection(db,"players"),p);
-
-players.push(p);
-playerDocs.push(ref.id);
-
+if(editIndex==null){
+await addDoc(collection(db,"players"),data);
 }else{
-
-const ref=doc(db,"players",playerDocs[editIndex]);
-
-await updateDoc(ref,p);
-
-players[editIndex]=p;
-
+await updateDoc(doc(db,"players",ids[editIndex]),data);
 }
 
 closeEditor();
+load();
+}
+
+function relic(p){
+return (p.mythic*0.25 + p.legend*0.025).toFixed(2)+"%";
+}
+
+function powerText(p){
+return p+"M";
+}
+
+window.sortPlayers=()=>{
+sortAsc=!sortAsc;
 render();
 }
 
-window.editPlayer=function(i){
+function render(){
 
-editIndex=i;
+let body=document.getElementById("playerBody");
+body.innerHTML="";
 
-let p=players[i];
+let keyword=search.value.toLowerCase();
+
+let list=players.filter(p=>p.name.toLowerCase().includes(keyword));
+
+list.sort((a,b)=> sortAsc ? b.power-a.power : a.power-b.power);
+
+list.forEach((p,i)=>{
+
+let tr=document.createElement("tr");
+
+tr.innerHTML=`
+<td>${p.name}</td>
+<td>${powerText(p.power)}</td>
+<td>${p.range}/${p.style}</td>
+<td>${p.gear}</td>
+<td>${p.hero}</td>
+<td>${p.formation}</td>
+<td>${relic(p)}</td>
+`;
+
+tr.onclick=()=>openMenu(i);
+
+body.appendChild(tr);
+
+});
+}
+
+async function load(){
+
+players=[];
+ids=[];
+
+const snap=await getDocs(collection(db,"players"));
+
+snap.forEach(d=>{
+players.push(d.data());
+ids.push(d.id);
+});
+
+render();
+}
+
+function openMenu(i){
+selectedIndex=i;
+menuName.innerText=players[i].name;
+menu.style.display="flex";
+}
+
+window.closeMenu=()=>{
+menu.style.display="none";
+}
+
+window.moveLaneFromMenu=async(l)=>{
+await updateDoc(doc(db,"players",ids[selectedIndex]),{lane:l});
+closeMenu();
+load();
+}
+
+window.editFromMenu=()=>{
+editIndex=selectedIndex;
+let p=players[selectedIndex];
 
 name.value=p.name;
 power.value=p.power;
@@ -93,187 +145,24 @@ legend.value=p.legend;
 lane.value=p.lane;
 
 openEditor();
+closeMenu();
 }
 
-window.deletePlayer=async function(i){
-
-const ref=doc(db,"players",playerDocs[i]);
-
-await deleteDoc(ref);
-
-players.splice(i,1);
-playerDocs.splice(i,1);
-
-render();
+window.deleteFromMenu=async()=>{
+if(confirm("削除しますか？")){
+await deleteDoc(doc(db,"players",ids[selectedIndex]));
+load();
+}
+closeMenu();
 }
 
-window.sortPlayers=function(){
-
-players.sort((a,b)=>b.power-a.power);
-
-render();
-}
-
-function playerMenu(i){
-
-let action=prompt("edit または delete");
-
-if(action==="edit") editPlayer(i);
-
-if(action==="delete"){
-
-if(confirm("削除しますか？")) deletePlayer(i);
-
-}
-
-}
-
-function toggleLane(lane){
-collapsed[lane]=!collapsed[lane];
-render();
-}
-
-let dragIndex=null;
-
-function setupDrag(row,i){
-
-row.draggable=true;
-
-row.addEventListener("dragstart",()=>{
-dragIndex=i;
-row.classList.add("dragging");
+window.saveTableImage=()=>{
+html2canvas(document.getElementById("table")).then(canvas=>{
+let a=document.createElement("a");
+a.href=canvas.toDataURL();
+a.download="table.png";
+a.click();
 });
-
-row.addEventListener("dragend",()=>{
-row.classList.remove("dragging");
-});
-
-}
-
-function setupLongPress(row,i){
-
-let timer;
-
-row.addEventListener("touchstart",()=>{
-timer=setTimeout(()=>playerMenu(i),600);
-});
-
-row.addEventListener("touchend",()=>clearTimeout(timer));
-
-row.addEventListener("mousedown",()=>{
-timer=setTimeout(()=>playerMenu(i),600);
-});
-
-row.addEventListener("mouseup",()=>clearTimeout(timer));
-
-}
-
-function render(){
-
-const body=playerBody;
-
-body.innerHTML="";
-
-const keyword=search.value.toLowerCase();
-
-for(let lane=1;lane<=4;lane++){
-
-let lanePlayers=players.filter(p=>p.lane===lane && p.name.toLowerCase().includes(keyword));
-
-let laneName=lane===4?"控え":"レーン"+lane;
-
-let arrow=collapsed[lane]?"▶":"▼";
-
-let tr=document.createElement("tr");
-
-tr.classList.add("lane-header");
-
-tr.innerHTML=`<td colspan="7">${arrow} ${laneName} (${lanePlayers.length}${lane!==4?"/8":""})</td>`;
-
-tr.onclick=()=>toggleLane(lane);
-
-tr.ondragover=(e)=>e.preventDefault();
-
-tr.ondrop=async()=>{
-
-if(dragIndex!==null){
-
-players[dragIndex].lane=lane;
-
-await updateDoc(doc(db,"players",playerDocs[dragIndex]),{lane:lane});
-
-render();
-
-}
-
-};
-
-body.appendChild(tr);
-
-if(collapsed[lane]) continue;
-
-lanePlayers.sort((a,b)=>b.power-a.power);
-
-lanePlayers.forEach(p=>{
-
-let i=players.indexOf(p);
-
-let row=document.createElement("tr");
-
-row.innerHTML=`
-
-<td>${p.name}</td>
-<td>${powerText(p.power)}</td>
-<td>${p.range}/${p.style}</td>
-<td>${p.gear}</td>
-<td>${p.hero}</td>
-<td>${p.formation}</td>
-<td>${relicBuff(p.mythic,p.legend)}</td>
-
-`;
-
-setupDrag(row,i);
-setupLongPress(row,i);
-
-body.appendChild(row);
-
-});
-
-}
-
-}
-
-async function load(){
-
-const snapshot=await getDocs(collection(db,"players"));
-
-snapshot.forEach(d=>{
-
-players.push(d.data());
-playerDocs.push(d.id);
-
-});
-
-render();
-
 }
 
 load();
-
-window.saveTableImage=async function(){
-
-const canvas=await html2canvas(document.querySelector(".table-container"),{scale:3});
-
-canvas.toBlob(blob=>{
-
-const link=document.createElement("a");
-
-link.href=URL.createObjectURL(blob);
-
-link.download="expedition.png";
-
-link.click();
-
-});
-
-}
