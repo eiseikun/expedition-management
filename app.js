@@ -1,184 +1,206 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Firebase設定
 const firebaseConfig = {
-apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
-authDomain: "expedition-management-date.firebaseapp.com",
-projectId: "expedition-management-date",
-storageBucket: "expedition-management-date.firebasestorage.app",
-messagingSenderId: "394248951408",
-appId: "1:394248951408:web:21eed0b45aa19a18e146b5"
+  apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
+  authDomain: "expedition-management-date.firebaseapp.com",
+  projectId: "expedition-management-date",
+  storageBucket: "expedition-management-date.firebasestorage.app",
+  messagingSenderId: "394248951408",
+  appId: "1:394248951408:web:21eed0b45aa19a18e146b5"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let players=[];
-let ids=[];
-let editIndex=null;
-let selectedIndex=null;
-let sortAsc=true;
+let players=[], playerDocs=[], editIndex=null;
+const PASSWORD="1234";
 
-// ===== 編集画面 =====
-window.openEditor=()=>{
-document.getElementById("editor").style.display="flex";
-editIndex=null;
+// 編集画面表示
+window.unlockEdit=function(){
+  const p=prompt("パスワード");
+  if(p===PASSWORD){
+    document.getElementById("editor").style.display="block";
+    document.getElementById("modeIndicator").innerText="編集中モード";
+    document.getElementById("modeIndicator").style.background="#d32f2f";
+  }
 }
 
-window.closeEditor=()=>{
-document.getElementById("editor").style.display="none";
+// 遠征チェック切替
+window.toggleExpedition=function(i){
+  players[i].expedition=!players[i].expedition;
+  render();
 }
 
-// ===== 保存（修正済み）=====
-window.savePlayer=async()=>{
+// 聖物計算
+function relicBuff(m,l){ return Number((m*0.25 + l*0.025).toFixed(3)); }
 
-let data={
-name:name.value,
-power:Number(power.value),
-range:range.value,
-style:style.value,
-gear:gear.value,
-hero:hero.value,
-formation:formation.value,
-mythic:Number(mythic.value||0),
-legend:Number(legend.value||0),
-lane:Number(lane.value)
-};
-
-if(editIndex==null){
-await addDoc(collection(db,"players"),data);
-}else{
-await updateDoc(doc(db,"players",ids[editIndex]),data);
+// ルーン表示
+function runeHTML(name,quality,enchant){
+  if(quality==="none") return "";
+  const cls=quality==="mythic"?"rune rune-mythic":"rune rune-legend";
+  return `<span class="${cls}">${name}(${enchant})</span>`;
 }
 
-// 🔥 ここが重要（順番）
-await load();
-closeEditor();
-
+// 装備表示
+function gearText(gear,chaosArr){
+  if(!chaosArr || chaosArr.length===0) return gear;
+  return `${gear}/${chaosArr.join(',')}カオス`;
 }
 
-// ===== 計算 =====
-function relic(p){
-return (p.mythic*0.25 + p.legend*0.025).toFixed(2)+"%";
+// 保存ボタン
+window.savePlayer=async function(){
+  const chaosSelect=Array.from(document.getElementById("chaos").selectedOptions).map(o=>o.value);
+  let p={
+    name:document.getElementById("name").value,
+    power:Number(document.getElementById("power").value),
+    range:document.getElementById("range").value,
+    style:document.getElementById("style").value,
+    gear:document.getElementById("gear").value,
+    chaos:chaosSelect,
+    hero:document.getElementById("hero").value,
+    sharpQ:document.getElementById("sharpQuality").value,
+    sharpE:document.getElementById("sharpEnchant").value,
+    arrowQ:document.getElementById("arrowQuality").value,
+    arrowE:document.getElementById("arrowEnchant").value,
+    formation:document.getElementById("formation").value,
+    mythic:Number(document.getElementById("mythic").value),
+    legend:Number(document.getElementById("legend").value),
+    lane:Number(document.getElementById("lane").value),
+    expedition:false
+  };
+
+  if(editIndex===null){
+    const docRef=await addDoc(collection(db,"players"),p);
+    players.push(p);
+    playerDocs.push(docRef.id);
+  }else{
+    const ref=doc(db,"players",playerDocs[editIndex]);
+    await updateDoc(ref,p);
+    players[editIndex]=p;
+    editIndex=null;
+  }
+
+  closeEditor();
+  render();
 }
 
-function powerText(p){
-return p+"M";
+// 編集画面閉じる
+window.closeEditor=function(){
+  document.getElementById("editor").style.display="none";
+  document.getElementById("modeIndicator").innerText="通常モード";
+  document.getElementById("modeIndicator").style.background="transparent";
+  editIndex=null;
 }
 
-// ===== ソート =====
-window.sortPlayers=()=>{
-sortAsc=!sortAsc;
-render();
+// 編集画面呼び出し
+window.editPlayer=function(i){
+  const p=players[i];
+  editIndex=i;
+
+  document.getElementById("name").value=p.name;
+  document.getElementById("power").value=p.power;
+  document.getElementById("range").value=p.range;
+  document.getElementById("style").value=p.style;
+  document.getElementById("gear").value=p.gear;
+  document.getElementById("hero").value=p.hero;
+  document.getElementById("sharpQuality").value=p.sharpQ;
+  document.getElementById("sharpEnchant").value=p.sharpE;
+  document.getElementById("arrowQuality").value=p.arrowQ;
+  document.getElementById("arrowEnchant").value=p.arrowE;
+  document.getElementById("formation").value=p.formation;
+  document.getElementById("mythic").value=p.mythic;
+  document.getElementById("legend").value=p.legend;
+  document.getElementById("lane").value=p.lane;
+
+  Array.from(document.getElementById("chaos").options).forEach(opt=>opt.selected=p.chaos.includes(opt.value));
+
+  document.getElementById("editor").style.display="block";
+  document.getElementById("modeIndicator").innerText="編集中モード";
+  document.getElementById("modeIndicator").style.background="#d32f2f";
 }
 
-// ===== 描画 =====
+// プレイヤー削除
+window.deletePlayer=async function(i){
+  if(!confirm("削除しますか？")) return;
+  const ref=doc(db,"players",playerDocs[i]);
+  await deleteDoc(ref);
+  players.splice(i,1);
+  playerDocs.splice(i,1);
+  render();
+}
+
+// 画像保存
+window.saveTableImage=function(){
+  const table=document.querySelector(".table-container");
+  html2canvas(table,{scale:3}).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="archer_table.png";
+    link.href=canvas.toDataURL("image/png");
+    link.click();
+  });
+}
+
+// レーンごと表示
 function render(){
+  const body=document.getElementById("playerBody");
+  body.innerHTML="";
 
-let body=document.getElementById("playerBody");
-body.innerHTML="";
+  for(let laneNum=1; laneNum<=3; laneNum++){
+    const lanePlayers=players.filter(p=>p.lane===laneNum);
+    if(lanePlayers.length===0) continue;
 
-let keyword=search.value.toLowerCase();
+    const trLane=document.createElement("tr");
+    trLane.classList.add("lane-header");
+    trLane.innerHTML=`<td colspan="12">レーン${laneNum} (${lanePlayers.length}/8)</td>`;
+    body.appendChild(trLane);
 
-let list=players.filter(p=>p.name.toLowerCase().includes(keyword));
+    lanePlayers.sort((a,b)=>b.power-a.power);
 
-list.sort((a,b)=> sortAsc ? b.power-a.power : a.power-b.power);
-
-list.forEach((p)=>{
-
-let i = players.indexOf(p);
-
-let tr=document.createElement("tr");
-
-tr.innerHTML=`
-<td>${p.name}</td>
-<td>${powerText(p.power)}</td>
-<td>${p.range}/${p.style}</td>
-<td>${p.gear}</td>
-<td>${p.hero}</td>
-<td>${p.formation}</td>
-<td>${relic(p)}</td>
-`;
-
-tr.onclick=()=>openMenu(i);
-
-body.appendChild(tr);
-
-});
+    lanePlayers.forEach(p=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${p.name}</td>
+        <td>${p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power}</td>
+        <td>${p.range}/${p.style}</td>
+        <td>${gearText(p.gear,p.chaos)}</td>
+        <td>${p.hero}</td>
+        <td>${runeHTML("鋭利",p.sharpQ,p.sharpE)+runeHTML("アロレ",p.arrowQ,p.arrowE)}</td>
+        <td>${p.formation}</td>
+        <td>${relicBuff(p.mythic,p.legend)}</td>
+        <td>${p.lane}</td>
+        <td><input type="checkbox" onchange="toggleExpedition(${players.indexOf(p)})" ${p.expedition?"checked":""}></td>
+        <td><button onclick="editPlayer(${players.indexOf(p)})">編集</button></td>
+        <td><button onclick="deletePlayer(${players.indexOf(p)})">削除</button></td>
+      `;
+      body.appendChild(tr);
+    });
+  }
 }
 
-// ===== データ取得 =====
+// レーン内ソート
+window.sortLane=function(type){
+  for(let laneNum=1; laneNum<=3; laneNum++){
+    const lanePlayers=players.filter(p=>p.lane===laneNum);
+    if(type==="power") lanePlayers.sort((a,b)=>b.power-a.power);
+    else if(type==="relic") lanePlayers.sort((a,b)=>relicBuff(b.mythic,b.legend)-relicBuff(a.mythic,a.legend));
+    else if(type==="name") lanePlayers.sort((a,b)=>a.name.localeCompare(b.name));
+
+    lanePlayers.forEach(p=>{
+      const idx=players.findIndex(x=>x===p);
+      if(idx>-1) players[idx]=p;
+    });
+  }
+  render();
+}
+
+// データロード
 async function load(){
-
-players=[];
-ids=[];
-
-const snap=await getDocs(collection(db,"players"));
-
-snap.forEach(d=>{
-players.push(d.data());
-ids.push(d.id);
-});
-
-render();
+  const querySnapshot=await getDocs(collection(db,"players"));
+  querySnapshot.forEach(d=>{
+    players.push(d.data());
+    playerDocs.push(d.id);
+  });
+  render();
 }
-
-// ===== メニュー =====
-function openMenu(i){
-selectedIndex=i;
-menuName.innerText=players[i].name;
-menu.style.display="flex";
-}
-
-window.closeMenu=()=>{
-menu.style.display="none";
-}
-
-// ===== レーン移動 =====
-window.moveLaneFromMenu=async(l)=>{
-await updateDoc(doc(db,"players",ids[selectedIndex]),{lane:l});
-closeMenu();
-await load();
-}
-
-// ===== 編集 =====
-window.editFromMenu=()=>{
-editIndex=selectedIndex;
-let p=players[selectedIndex];
-
-name.value=p.name;
-power.value=p.power;
-range.value=p.range;
-style.value=p.style;
-gear.value=p.gear;
-hero.value=p.hero;
-formation.value=p.formation;
-mythic.value=p.mythic;
-legend.value=p.legend;
-lane.value=p.lane;
-
-openEditor();
-closeMenu();
-}
-
-// ===== 削除 =====
-window.deleteFromMenu=async()=>{
-if(confirm("削除しますか？")){
-await deleteDoc(doc(db,"players",ids[selectedIndex]));
-await load();
-}
-closeMenu();
-}
-
-// ===== 画像保存 =====
-window.saveTableImage=()=>{
-html2canvas(document.getElementById("table")).then(canvas=>{
-let a=document.createElement("a");
-a.href=canvas.toDataURL();
-a.download="table.png";
-a.click();
-});
-}
-
-// 初期ロード
 load();
