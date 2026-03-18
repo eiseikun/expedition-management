@@ -162,13 +162,14 @@ window.deletePlayer = async function(i){
 };
 
 // 画像保存
-window.saveTableImage=()=>{
-html2canvas(document.getElementById("table")).then(canvas=>{
-let a=document.createElement("a");
-a.href=canvas.toDataURL();
-a.download="table.png";
-a.click();
-});
+window.saveTableImage=function(){
+  const table=document.querySelector(".table-container");
+  html2canvas(table,{scale:3}).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="archer_table.png";
+    link.href=canvas.toDataURL("image/png");
+    link.click();
+  });
 }
 
 // ===== 描画 =====
