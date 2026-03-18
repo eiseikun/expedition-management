@@ -64,23 +64,57 @@
     <option>キメラ</option>
   </select>
 
-  <label>カオス部位</label>
-　 <div id="chaos">
-　  <label><input type="checkbox" value="武器">武器</label>
-　  <label><input type="checkbox" value="お守り">お守り</label>
-　  <label><input type="checkbox" value="指輪">指輪</label>
-　  <label><input type="checkbox" value="兜">兜</label>
-　  <label><input type="checkbox" value="鎧">鎧</label>
-　  <label><input type="checkbox" value="靴">靴</label>
-　　</div>
-  
-  <label>カオス品質</label>
-　<select id="chaosType">
-  <option value="chaos">カオス</option>
-  <option value="mythic">ミシック</option>
-  <option value="legend">レジェンド</option>
-　</select>
-
+<label>装備（部位ごと品質）</label>
+<div id="chaos" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+  <div>武器
+    <select data-part="武器">
+      <option value="">なし</option>
+      <option value="chaos">カオス</option>
+      <option value="mythic">ミシック</option>
+      <option value="legend">レジェンド</option>
+    </select>
+  </div>
+  <div>お守り
+    <select data-part="お守り">
+      <option value="">なし</option>
+      <option value="chaos">カオス</option>
+      <option value="mythic">ミシック</option>
+      <option value="legend">レジェンド</option>
+    </select>
+  </div>
+  <div>指輪
+    <select data-part="指輪">
+      <option value="">なし</option>
+      <option value="chaos">カオス</option>
+      <option value="mythic">ミシック</option>
+      <option value="legend">レジェンド</option>
+    </select>
+  </div>
+  <div>兜
+    <select data-part="兜">
+      <option value="">なし</option>
+      <option value="chaos">カオス</option>
+      <option value="mythic">ミシック</option>
+      <option value="legend">レジェンド</option>
+    </select>
+  </div>
+  <div>鎧
+    <select data-part="鎧">
+      <option value="">なし</option>
+      <option value="chaos">カオス</option>
+      <option value="mythic">ミシック</option>
+      <option value="legend">レジェンド</option>
+    </select>
+  </div>
+  <div>靴
+    <select data-part="靴">
+      <option value="">なし</option>
+      <option value="chaos">カオス</option>
+      <option value="mythic">ミシック</option>
+      <option value="legend">レジェンド</option>
+    </select>
+  </div>
+</div>
   <input id="hero" placeholder="主キャラ">
 
   <h3>鋭利の矢</h3>
