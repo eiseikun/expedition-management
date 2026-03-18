@@ -212,7 +212,7 @@ function render(){
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${p.name}</td>
-        <td>${p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power}</td>
+        <td>${formatPower(p.power)}</td>
         <td>${p.range}/${p.style}</td>
         <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
