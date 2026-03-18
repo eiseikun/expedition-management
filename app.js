@@ -19,7 +19,7 @@ let players=[], playerDocs=[], editIndex=null;
 // 編集画面表示
 window.unlockEdit=function(){
   document.getElementById("editor").style.display="block";
-  document.getElementById("modeIndicator").innerText="編集中モード";
+  document.getElementById("modeIndicator").innerText="プレイヤーの追加";
   document.getElementById("modeIndicator").style.background="#d32f2f";
 }
 }
@@ -114,7 +114,7 @@ window.editPlayer=function(i){
   Array.from(document.getElementById("chaos").options).forEach(opt=>opt.selected=p.chaos.includes(opt.value));
 
   document.getElementById("editor").style.display="block";
-  document.getElementById("modeIndicator").innerText="編集中モード";
+  document.getElementById("modeIndicator").innerText="プレイヤーの追加";
   document.getElementById("modeIndicator").style.background="#d32f2f";
 }
 
