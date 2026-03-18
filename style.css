@@ -93,16 +93,14 @@ button{ padding:6px 12px; margin:4px; cursor:pointer; }
   gap:3px;
   justify-content:center;
 }
+
 .cell{
   width:12px;
   height:12px;
   border-radius:2px;
 }
-.cell.empty{
-  background:#444;
-}
-.cell.chaos{
-  background:#9c27b0;
-}
+
+.cell.empty{ background:#444; }
+.cell.chaos{ background:#9c27b0; }
 .cell.mythic{ background:#d32f2f; }
 .cell.legend{ background:#fbc02d; }
