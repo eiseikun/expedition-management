@@ -14,7 +14,7 @@
 <div class="mode-indicator" id="modeIndicator">通常モード</div>
 
 <div class="top-buttons">
-  <button onclick="unlockEdit()">プレイヤーの追加</button>
+  <button onclick="openEditor()">プレイヤー追加</button>
   <button onclick="saveTableImage()">画像保存</button>
 </div>
 
@@ -41,7 +41,7 @@
 </div>
 
 <div id="editor" class="editor" style="display:none;">
-  <h2>プレイヤー編集</h2>
+  <h2>プレイヤー追加 / 編集</h2>
 
   <input id="name" placeholder="名前">
   <input id="power" placeholder="戦力">
@@ -59,13 +59,13 @@
     <option>取得優先</option>
   </select>
 
-  <!-- 装備 -->
   <select id="gear">
     <option>神託</option>
     <option>グリフォン</option>
     <option>ドラグーン</option>
     <option>キメラ</option>
   </select>
+
   <label>カオス部位</label>
   <select id="chaos" multiple>
     <option value="武器">武器</option>
@@ -91,7 +91,7 @@
     <option>主武器UP</option>
   </select>
 
-  <h3>アロレ</h3>
+  <h3>アロレルーン</h3>
   <select id="arrowQuality">
     <option>none</option>
     <option>legend</option>
