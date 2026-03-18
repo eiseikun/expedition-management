@@ -14,7 +14,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let players=[], playerDocs=[], editIndex=null;
-const PASSWORD="1234";
+
 
 // 編集画面表示
 window.unlockEdit=function(){
