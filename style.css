@@ -6,7 +6,6 @@ body{
   text-align:center;
   margin:0;
   padding:0;
-  box-sizing:border-box;
 }
 
 /* モード表示 */
@@ -60,31 +59,25 @@ tr.lane-header{
   padding:20px;
   border-radius:10px;
   z-index:100;
-  max-width:600px;   /* PC用に最大幅 */
-  width:90%;         /* スマホ用に画面幅に合わせる */
+  max-width:90%;
   max-height:90%;
   overflow-y:auto;
   text-align:left;
-  box-sizing:border-box;
 }
 
 /* 入力や選択 */
 input,select{
-  margin:8px auto;
+  margin:4px 0;
   padding:8px;
-  display:block;
-  width:90%;
   box-sizing:border-box;
-  font-size:14px;
 }
 
 /* ボタン */
 button{
   padding:10px 16px;
-  margin:6px 2%;
+  margin:4px 2px;
   cursor:pointer;
   font-size:14px;
-  display:inline-block;
 }
 
 /* ルーン */
@@ -133,7 +126,7 @@ button{
   /* テーブル */
   table{ font-size:12px; }
   th,td{ padding:6px; }
-
+  
   /* 入力フォーム・選択 */
   input,select{
     width:100%;
