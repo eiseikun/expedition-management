@@ -1,90 +1,73 @@
+/* 全体 */
 body{
-font-family:sans-serif;
-background:#0f172a;
-color:#fff;
-padding:10px;
+  font-family:sans-serif;
+  background:#111;
+  color:white;
+  text-align:center;
+  margin:0;
+  padding:0;
 }
 
-h1{
-text-align:center;
-color:#00cfff;
+/* モード表示 */
+.mode-indicator{
+  margin:10px 0;
+  padding:6px;
+  font-weight:bold;
 }
 
-input,select{
-width:100%;
-padding:8px;
-margin:5px 0;
-border-radius:6px;
-border:none;
-}
-
-button{
-background:#00cfff;
-border:none;
-padding:10px;
-border-radius:8px;
-margin:5px 0;
-width:100%;
-}
-
-.table-container{
-overflow-x:auto;
-}
-
+/* テーブル */
 table{
-width:100%;
-border-collapse:collapse;
-background:#162430;
+  width:100%;
+  border-collapse:collapse;
 }
-
 th,td{
-padding:8px;
-border-bottom:1px solid #333;
-text-align:center;
+  padding:8px;
+  border:1px solid #333;
+}
+th{
+  background:#222;
+  cursor:pointer;
+}
+tr:nth-child(even){ background:#1a1a1a; }
+
+/* レーンヘッダー行 */
+tr.lane-header{
+  background:#333;
+  font-weight:bold;
+  text-align:left;
 }
 
+/* 編集画面 */
 .editor{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:1000;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#222;
+  padding:20px;
+  border-radius:10px;
+  z-index:100;
+  max-width:90%;
 }
 
-.editor-box{
-background:#162430;
-padding:20px;
-border-radius:12px;
-width:90%;
-max-width:400px;
-max-height:90%;
-overflow-y:auto;
-}
+/* 入力や選択 */
+input,select{ margin:4px; padding:6px; }
 
-.menu{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:2000;
-}
+/* ボタン */
+button{ padding:6px 12px; margin:4px; cursor:pointer; }
 
-.menu-box{
-background:#162430;
-padding:20px;
-border-radius:12px;
-width:90%;
-max-width:350px;
-text-align:center;
-border:2px solid #00cfff;
+/* ルーン */
+.rune{ padding:3px 6px; border-radius:6px; font-weight:bold; margin-right:4px; }
+.rune-mythic{ background:#d32f2f; color:white; }
+.rune-legend{ background:#fbc02d; color:black; }
+
+/* テーブル横スクロール */
+.table-container{ overflow-x:auto; }
+
+/* スマホ用 */
+@media (max-width:700px){
+  table{ font-size:12px; }
+  th,td{ padding:4px; }
+  button{ font-size:12px; padding:4px 6px; }
+  input,select{ width:90%; }
 }
