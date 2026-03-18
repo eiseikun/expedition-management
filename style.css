@@ -1,4 +1,4 @@
-/* 全体 */
+/* ======================= 全体 ======================= */
 body{
   font-family:sans-serif;
   background:#111;
@@ -13,16 +13,22 @@ body{
   margin:10px 0;
   padding:6px;
   font-weight:bold;
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:transparent;
 }
 
-/* テーブル */
+/* ======================= テーブル ======================= */
 table{
   width:100%;
   border-collapse:collapse;
+  display:block; /* 横スクロール可能 */
 }
 th,td{
   padding:8px;
   border:1px solid #333;
+  text-align:center;
 }
 th{
   background:#222;
@@ -35,9 +41,15 @@ tr.lane-header{
   background:#333;
   font-weight:bold;
   text-align:left;
+  padding-left:6px;
 }
 
-/* 編集画面 */
+/* テーブル横スクロール */
+.table-container{
+  overflow-x:auto;
+}
+
+/* ======================= 編集画面 ======================= */
 .editor{
   position:fixed;
   top:50%;
@@ -48,30 +60,37 @@ tr.lane-header{
   border-radius:10px;
   z-index:100;
   max-width:90%;
+  max-height:90%;
+  overflow-y:auto;
+  text-align:left;
 }
 
 /* 入力や選択 */
-input,select{ margin:4px; padding:6px; }
+input,select{
+  margin:4px 0;
+  padding:8px;
+  box-sizing:border-box;
+}
 
 /* ボタン */
-button{ padding:6px 12px; margin:4px; cursor:pointer; }
+button{
+  padding:10px 16px;
+  margin:4px 2px;
+  cursor:pointer;
+  font-size:14px;
+}
 
 /* ルーン */
-.rune{ padding:3px 6px; border-radius:6px; font-weight:bold; margin-right:4px; }
+.rune{
+  padding:3px 6px;
+  border-radius:6px;
+  font-weight:bold;
+  margin-right:4px;
+}
 .rune-mythic{ background:#d32f2f; color:white; }
 .rune-legend{ background:#fbc02d; color:black; }
 
-/* テーブル横スクロール */
-.table-container{ overflow-x:auto; }
-
-/* スマホ用 */
-@media (max-width:700px){
-  table{ font-size:12px; }
-  th,td{ padding:4px; }
-  button{ font-size:12px; padding:4px 6px; }
-  input,select{ width:90%; }
-}
-
+/* ======================= 装備 ======================= */
 #chaos label{
   display:inline-block;
   margin:4px;
@@ -80,27 +99,65 @@ button{ padding:6px 12px; margin:4px; cursor:pointer; }
   border-radius:6px;
   cursor:pointer;
 }
-
 #chaos input{
   margin-right:4px;
 }
 
-/* 装備の項目 */
+/* 装備グリッド */
 .gear-box{
   display:grid;
-  grid-template-columns: repeat(2, 12px);
-  grid-template-rows: repeat(3, 12px);
-  gap:3px;
+  grid-template-columns: repeat(2, 16px);
+  grid-template-rows: repeat(3, 16px);
+  gap:4px;
   justify-content:center;
 }
-
 .cell{
-  width:12px;
-  height:12px;
+  width:16px;
+  height:16px;
   border-radius:2px;
 }
-
 .cell.empty{ background:#444; }
 .cell.chaos{ background:#9c27b0; }
 .cell.mythic{ background:#d32f2f; }
 .cell.legend{ background:#fbc02d; }
+
+/* ======================= スマホ用 ======================= */
+@media (max-width:700px){
+  /* テーブル */
+  table{ font-size:12px; }
+  th,td{ padding:6px; }
+  
+  /* 入力フォーム・選択 */
+  input,select{
+    width:100%;
+    font-size:16px;
+    padding:10px;
+  }
+
+  /* ボタン */
+  button{
+    width:48%;
+    font-size:16px;
+    padding:12px;
+    margin:4px 1%;
+  }
+
+  /* 編集モーダル */
+  .editor{
+    width:95%;
+    max-height:95%;
+    overflow-y:auto;
+    padding:16px;
+  }
+
+  /* 装備グリッド */
+  .gear-box{
+    grid-template-columns: repeat(3, 24px);
+    grid-template-rows: repeat(2, 24px);
+    gap:4px;
+  }
+  .cell{
+    width:24px;
+    height:24px;
+  }
+}
