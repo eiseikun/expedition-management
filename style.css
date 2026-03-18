@@ -6,6 +6,7 @@ body{
   text-align:center;
   margin:0;
   padding:0;
+  overflow-x:hidden; /* 横スクロール抑制 */
 }
 
 /* モード表示 */
@@ -36,10 +37,18 @@ tr.lane-header{
   text-align:left;
 }
 
+/* テーブル横スクロール */
+.table-container{
+  overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;                      
+  justify-content: center;
+}
+
 /* 編集画面（スクロール可・スマホ対応） */
 .editor{
   position: fixed;
-  top: 20px;  /* 上に少し余裕 */
+  top: 20px; /* 上に少し余裕 */
   left: 50%;
   transform: translateX(-50%);
   background: #222;
@@ -51,11 +60,13 @@ tr.lane-header{
   max-width: 400px;
   max-height: calc(100vh - 40px); /* 上下20pxずつ確保 */
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch; /* スムーズスクロール */
   box-sizing: border-box;
+
+  /* 背景スクロール禁止時は body overflow:hidden で制御 */
 }
 
-/* 入力・選択 */
+/* 入力・選択・ボタン */
 .editor input,
 .editor select,
 .editor button{
@@ -63,6 +74,19 @@ tr.lane-header{
   margin: 4px 0;
   padding: 6px;
   box-sizing: border-box;
+}
+
+/* 編集画面のボタン（最後に置く） */
+.editor-footer{
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.editor-footer button{
+  width: 48%;
+  padding: 10px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 /* 装備ラベル */
@@ -97,17 +121,14 @@ tr.lane-header{
 .cell.legend{ background:#fbc02d; }
 
 /* ルーン */
-.rune{ padding:3px 6px; border-radius:6px; font-weight:bold; margin-right:4px; }
+.rune{ 
+  padding:3px 6px; 
+  border-radius:6px; 
+  font-weight:bold; 
+  margin-right:4px; 
+}
 .rune-mythic{ background:#d32f2f; color:white; }
 .rune-legend{ background:#fbc02d; color:black; }
-
-/* テーブル横スクロール */
-.table-container{
-  overflow-x:auto;
-  -webkit-overflow-scrolling: touch;
-  display: flex;                      
-  justify-content: center;
-}
 
 /* スマホ用 */
 @media (max-width:700px){
@@ -118,17 +139,4 @@ tr.lane-header{
   th,td{ padding:4px; }
   button{ font-size:12px; padding:4px 6px; }
   input,select{ width:90%; }
-}
-
-/* 編集画面のボタン（最後に置く） */
-.editor-footer{
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-.editor-footer button{
-  width: 48%;
-  padding: 10px;
-  cursor: pointer;
-  font-weight: bold;
 }
