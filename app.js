@@ -162,15 +162,28 @@ window.deletePlayer = async function(i){
 };
 
 // 画像保存
-window.saveTableImage=function(){
-  const table=document.querySelector(".table-container");
-  html2canvas(table,{scale:3}).then(canvas=>{
-    const link=document.createElement("a");
-    link.download="archer_table.png";
-    link.href=canvas.toDataURL("image/png");
-    link.click();
+window.saveTableImage = function() {
+  const table = document.querySelector(".table-container");
+
+  html2canvas(table, { scale: 3 }).then(canvas => {
+
+    canvas.toBlob(function(blob) {
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "archer_table.png"; // 保存時のファイル名
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // メモリ解放
+      URL.revokeObjectURL(url);
+
+    }, "image/png");
+
   });
-}
+};
 
 // ===== 描画 =====
 function render(){
