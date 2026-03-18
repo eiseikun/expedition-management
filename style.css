@@ -39,17 +39,17 @@ tr.lane-header{
 /* 編集画面（スクロール可・スマホ対応） */
 .editor{
   position: fixed;
-  top: 5vh;
+  top: 20px;  /* 上に少し余裕 */
   left: 50%;
   transform: translateX(-50%);
   background: #222;
-  padding: 20px;
+  padding: 20px 20px 40px 20px; /* 下に余裕 */
   border-radius: 10px;
   z-index: 100;
 
   width: 90%;
   max-width: 400px;
-  max-height: 90vh;       /* モーダル内で縦スクロール可能 */
+  max-height: calc(100vh - 40px); /* 上下20pxずつ確保 */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
