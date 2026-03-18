@@ -19,11 +19,17 @@ let editIndex=null;
 let selectedIndex=null;
 let sortAsc=true;
 
+// ===== 編集画面 =====
 window.openEditor=()=>{
 document.getElementById("editor").style.display="flex";
 editIndex=null;
 }
 
+window.closeEditor=()=>{
+document.getElementById("editor").style.display="none";
+}
+
+// ===== 保存（修正済み）=====
 window.savePlayer=async()=>{
 
 let data={
@@ -45,13 +51,13 @@ await addDoc(collection(db,"players"),data);
 await updateDoc(doc(db,"players",ids[editIndex]),data);
 }
 
-window.closeEditor=()=>{
-document.getElementById("editor").style.display="none";
-}
-  
-load();
+// 🔥 ここが重要（順番）
+await load();
+closeEditor();
+
 }
 
+// ===== 計算 =====
 function relic(p){
 return (p.mythic*0.25 + p.legend*0.025).toFixed(2)+"%";
 }
@@ -60,11 +66,13 @@ function powerText(p){
 return p+"M";
 }
 
+// ===== ソート =====
 window.sortPlayers=()=>{
 sortAsc=!sortAsc;
 render();
 }
 
+// ===== 描画 =====
 function render(){
 
 let body=document.getElementById("playerBody");
@@ -99,6 +107,7 @@ body.appendChild(tr);
 });
 }
 
+// ===== データ取得 =====
 async function load(){
 
 players=[];
@@ -114,6 +123,7 @@ ids.push(d.id);
 render();
 }
 
+// ===== メニュー =====
 function openMenu(i){
 selectedIndex=i;
 menuName.innerText=players[i].name;
@@ -124,12 +134,14 @@ window.closeMenu=()=>{
 menu.style.display="none";
 }
 
+// ===== レーン移動 =====
 window.moveLaneFromMenu=async(l)=>{
 await updateDoc(doc(db,"players",ids[selectedIndex]),{lane:l});
 closeMenu();
-load();
+await load();
 }
 
+// ===== 編集 =====
 window.editFromMenu=()=>{
 editIndex=selectedIndex;
 let p=players[selectedIndex];
@@ -149,14 +161,16 @@ openEditor();
 closeMenu();
 }
 
+// ===== 削除 =====
 window.deleteFromMenu=async()=>{
 if(confirm("削除しますか？")){
 await deleteDoc(doc(db,"players",ids[selectedIndex]));
-load();
+await load();
 }
 closeMenu();
 }
 
+// ===== 画像保存 =====
 window.saveTableImage=()=>{
 html2canvas(document.getElementById("table")).then(canvas=>{
 let a=document.createElement("a");
@@ -166,4 +180,5 @@ a.click();
 });
 }
 
+// 初期ロード
 load();
