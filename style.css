@@ -62,16 +62,18 @@ button{ padding:6px 12px; margin:4px; cursor:pointer; }
 .rune-mythic{ background:#d32f2f; color:white; }
 .rune-legend{ background:#fbc02d; color:black; }
 
-/* テーブル横スクロール */
+/* テーブル横スクロール（PCは中央寄せ） */
 .table-container{
   overflow-x:auto;                    /* 横スクロール許可 */
   -webkit-overflow-scrolling: touch;  /* スマホでスムーズスクロール */
-  display: flex;                      /* フレックスで中央揃え */
+  display: flex;                      
   justify-content: center;            /* 水平方向中央 */
 }
-
 /* スマホ用 */
 @media (max-width:700px){
+  .table-container{
+    display: block;    /* 左寄せに切り替え */
+  }
   table{ font-size:12px; }     /* 小さめ文字で読みやすく */
   th,td{ padding:4px; }
   button{ font-size:12px; padding:4px 6px; }
