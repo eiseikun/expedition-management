@@ -45,8 +45,19 @@ function runeHTML(name, quality, enchant){
 
 // ===== 装備表示 =====
 function gearText(gear, chaosArr){
-  if(!chaosArr || chaosArr.length === 0) return gear;
-  return `${gear}/${chaosArr.join(',')}カオス`;
+  const parts = ["武器","お守り","指輪","兜","鎧","靴"];
+
+  return `
+    <div class="gear-box">
+      ${parts.map(p=>{
+        if(chaosArr.includes(p)){
+          return `<div class="cell chaos"></div>`;
+        }else{
+          return `<div class="cell empty"></div>`;
+        }
+      }).join("")}
+    </div>
+  `;
 }
 
 // ===== 保存 =====
