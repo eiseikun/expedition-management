@@ -42,7 +42,7 @@
   <h2>プレイヤー追加 / 編集</h2>
 
   <input id="name" placeholder="名前">
-  <input id="power" placeholder="戦力">
+  <input id="power" type="number" placeholder="戦力">
 
   <select id="range">
     <option>遠距離</option>
@@ -131,7 +131,7 @@
     <option>主武器UP</option>
   </select>
 
-  <h3>アロレ</h3>
+  <h3>アロレルーン</h3>
   <select id="arrowQuality">
     <option>none</option>
     <option>legend</option>
@@ -156,7 +156,6 @@
     <option value="3">レーン3</option>
   </select>
 
-  <!-- 保存・閉じるボタンは固定せずモーダル内の最後に置く -->
   <div class="editor-footer">
     <button onclick="savePlayer()">保存</button>
     <button onclick="closeEditor()">閉じる</button>
