@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase設定
+// ===== Firebase設定 =====
 const firebaseConfig = {
   apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
   authDomain: "expedition-management-date.firebaseapp.com",
@@ -26,7 +26,9 @@ window.openEditor = function(){
 
   document.querySelectorAll("#editor input").forEach(i => i.value = "");
   document.querySelectorAll("#editor select").forEach(s => s.selectedIndex = 0);
-  document.querySelectorAll("#chaos input").forEach(cb=>cb.checked=false);
+
+  // 装備リセット
+  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
 
   editIndex = null;
 };
@@ -43,7 +45,7 @@ function runeHTML(name,q,e){
   return `<span class="${cls}">${name}(${e})</span>`;
 }
 
-// ===== 装備（完成版） =====
+// ===== 装備（部位ごと品質） =====
 function gearText(gearDetail){
   const parts = ["武器","お守り","指輪","兜","鎧","靴"];
   gearDetail = Array.isArray(gearDetail) ? gearDetail : [];
@@ -64,7 +66,17 @@ function gearText(gearDetail){
 
 // ===== 保存 =====
 window.savePlayer = async function(){
-  const chaosSelect = Array.from(document.querySelectorAll("#chaos input:checked")).map(cb => cb.value);
+
+  // 装備取得
+  const gearDetail = [];
+  document.querySelectorAll("#chaos select").forEach(s=>{
+    if(s.value){
+      gearDetail.push({
+        part: s.dataset.part,
+        type: s.value
+      });
+    }
+  });
 
   let p = {
     name: document.getElementById("name").value,
@@ -72,8 +84,7 @@ window.savePlayer = async function(){
     range: document.getElementById("range").value,
     style: document.getElementById("style").value,
     gear: document.getElementById("gear").value,
-    chaos: chaosSelect,
-    chaosType: document.getElementById("chaosType").value,
+    gearDetail: gearDetail,
     hero: document.getElementById("hero").value,
     sharpQ: document.getElementById("sharpQuality").value,
     sharpE: document.getElementById("sharpEnchant").value,
@@ -126,10 +137,11 @@ window.editPlayer = function(i){
   document.getElementById("mythic").value = p.mythic;
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
-  document.getElementById("chaosType").value = p.chaosType || "chaos";
 
-  document.querySelectorAll("#chaos input").forEach(cb=>{
-    cb.checked = (p.chaos || []).includes(cb.value);
+  // 装備復元
+  document.querySelectorAll("#chaos select").forEach(s=>{
+    const found = (p.gearDetail || []).find(g=>g.part===s.dataset.part);
+    s.value = found ? found.type : "";
   });
 
   document.getElementById("editor").style.display = "block";
@@ -178,7 +190,7 @@ function render(){
         <td>${p.name}</td>
         <td>${p.power>=1000000? (p.power/1000000).toFixed(1)+"M":p.power}</td>
         <td>${p.range}/${p.style}</td>
-        <td>${gearText(p.gear,p.chaos,p.chaosType)}</td>
+        <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
         <td>${runeHTML("鋭利",p.sharpQ,p.sharpE)+runeHTML("アロレ",p.arrowQ,p.arrowE)}</td>
         <td>${p.formation}</td>
