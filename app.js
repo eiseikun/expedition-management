@@ -44,15 +44,16 @@ function runeHTML(name,q,e){
 }
 
 // ===== 装備（完成版） =====
-function gearText(gear, chaosArr, chaosType){
+function gearText(gearDetail){
   const parts = ["武器","お守り","指輪","兜","鎧","靴"];
-  chaosArr = Array.isArray(chaosArr) ? chaosArr : [];
+  gearDetail = Array.isArray(gearDetail) ? gearDetail : [];
 
   return `
     <div class="gear-box">
       ${parts.map(p=>{
-        if(chaosArr.includes(p)){
-          return `<div class="cell ${chaosType || "chaos"}"></div>`;
+        const found = gearDetail.find(g=>g.part===p);
+        if(found){
+          return `<div class="cell ${found.type}"></div>`;
         }else{
           return `<div class="cell empty"></div>`;
         }
