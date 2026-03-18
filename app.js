@@ -31,12 +31,6 @@ window.openEditor = function(){
   editIndex = null;
 };
 
-// ===== 遠征チェック =====
-window.toggleExpedition = function(i){
-  players[i].expedition = !players[i].expedition;
-  render();
-};
-
 // ===== 聖物計算 =====
 function relicBuff(m, l){
   return Number((m * 0.25 + l * 0.025).toFixed(3));
@@ -158,13 +152,23 @@ function render(){
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
 
-  for(let laneNum=1; laneNum<=3; laneNum++){
-    const lanePlayers = players.filter(p => p.lane === laneNum);
-    if(lanePlayers.length === 0) continue;
+  const laneNames = {
+    1: "レーン1",
+    2: "レーン2",
+    3: "レーン3",
+    0: "控え"
+  };
+
+  [1,2,3,0].forEach(laneNum=>{
+    const lanePlayers = players.filter(p => (p.lane ?? 0) === laneNum);
+    if(lanePlayers.length === 0) return;
 
     const trLane = document.createElement("tr");
     trLane.classList.add("lane-header");
-    trLane.innerHTML = `<td colspan="12">レーン${laneNum} (${lanePlayers.length}/8)</td>`;
+
+    const limitText = laneNum === 0 ? "" : ` (${lanePlayers.length}/8)`;
+
+    trLane.innerHTML = `<td colspan="10">${laneNames[laneNum]}${limitText}</td>`;
     body.appendChild(trLane);
 
     lanePlayers.sort((a,b)=>b.power-a.power);
@@ -182,14 +186,12 @@ function render(){
         <td>${runeHTML("鋭利",p.sharpQ,p.sharpE)+runeHTML("アロレ",p.arrowQ,p.arrowE)}</td>
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
-        <td>${p.lane}</td>
-        <td><input type="checkbox" onchange="toggleExpedition(${index})" ${p.expedition?"checked":""}></td>
         <td><button onclick="editPlayer(${index})">編集</button></td>
         <td><button onclick="deletePlayer(${index})">削除</button></td>
       `;
       body.appendChild(tr);
     });
-  }
+  });
 }
 
 // ===== ソート =====
