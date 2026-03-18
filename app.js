@@ -18,7 +18,7 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
-// ===== 追加モード（モーダル開閉 + 背景スクロール制御） =====
+// ===== モーダル開く（追加モード） =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
@@ -35,6 +35,7 @@ window.openEditor = function(){
   document.body.style.overflow = "hidden";
 };
 
+// ===== モーダル閉じる =====
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
@@ -42,44 +43,6 @@ window.closeEditor = function(){
 
   // 背景スクロール復活
   document.body.style.overflow = "auto";
-};
-
-// ===== 編集モードも背景スクロール止める =====
-window.editPlayer = function(i){
-  const p = players[i];
-  editIndex = i;
-
-  document.getElementById("name").value = p.name;
-  document.getElementById("power").value = p.power;
-  document.getElementById("range").value = p.range;
-  document.getElementById("style").value = p.style;
-  document.getElementById("gear").value = p.gear;
-  document.getElementById("hero").value = p.hero;
-  document.getElementById("sharpQuality").value = p.sharpQ;
-  document.getElementById("sharpEnchant").value = p.sharpE;
-  document.getElementById("arrowQuality").value = p.arrowQ;
-  document.getElementById("arrowEnchant").value = p.arrowE;
-  document.getElementById("formation").value = p.formation;
-  document.getElementById("mythic").value = p.mythic;
-  document.getElementById("legend").value = p.legend;
-  document.getElementById("lane").value = p.lane;
-
-  document.querySelectorAll("#chaos select").forEach(s=>{
-    const found = (p.gearDetail || []).find(g=>g.part===s.dataset.part);
-    s.value = found ? found.type : "";
-  });
-
-  document.getElementById("editor").style.display = "block";
-  document.getElementById("modeIndicator").innerText = "編集モード";
-  document.getElementById("modeIndicator").style.background = "#d32f2f";
-
-  document.body.style.overflow = "hidden";
-};
-
-  // 装備リセット
-  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
-
-  editIndex = null;
 };
 
 // ===== 聖物 =====
@@ -98,7 +61,6 @@ function runeHTML(name,q,e){
 function gearText(gearDetail){
   const parts = ["武器","兜","お守り","鎧","指輪","靴"];
   gearDetail = Array.isArray(gearDetail) ? gearDetail : [];
-
   return `
     <div class="gear-box">
       ${parts.map(p=>{
@@ -115,8 +77,6 @@ function gearText(gearDetail){
 
 // ===== 保存 =====
 window.savePlayer = async function(){
-
-  // 装備取得
   const gearDetail = [];
   document.querySelectorAll("#chaos select").forEach(s=>{
     if(s.value){
@@ -160,13 +120,6 @@ window.savePlayer = async function(){
   render();
 };
 
-// ===== 閉じる =====
-window.closeEditor = function(){
-  document.getElementById("editor").style.display = "none";
-  document.getElementById("modeIndicator").innerText = "通常モード";
-  document.getElementById("modeIndicator").style.background = "transparent";
-};
-
 // ===== 編集 =====
 window.editPlayer = function(i){
   const p = players[i];
@@ -187,7 +140,6 @@ window.editPlayer = function(i){
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
 
-  // 装備復元
   document.querySelectorAll("#chaos select").forEach(s=>{
     const found = (p.gearDetail || []).find(g=>g.part===s.dataset.part);
     s.value = found ? found.type : "";
@@ -196,6 +148,9 @@ window.editPlayer = function(i){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
   document.getElementById("modeIndicator").style.background = "#d32f2f";
+
+  // 背景スクロール禁止
+  document.body.style.overflow = "hidden";
 };
 
 // ===== 削除 =====
@@ -210,24 +165,22 @@ window.deletePlayer = async function(i){
   render();
 };
 
-// 画像保存
+// ===== 画像保存 =====
 window.saveTableImage = async function(){
-const table=document.querySelector(".table-container");
-const canvas=await html2canvas(table,{scale:3});
-canvas.toBlob(async blob=>{
-const file=new File([blob],"expedition.png",{type:"image/png"});
-if(navigator.share && navigator.canShare({files:[file]})){
-await navigator.share({
-files:[file]
-});
-}else{
-const link=document.createElement("a");
-link.href=URL.createObjectURL(blob);
-link.download="expedition.png";
-link.click();
-}
-});
-}
+  const table=document.querySelector(".table-container");
+  const canvas=await html2canvas(table,{scale:3});
+  canvas.toBlob(async blob=>{
+    const file=new File([blob],"expedition.png",{type:"image/png"});
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="expedition.png";
+      link.click();
+    }
+  });
+};
 
 // ===== 描画 =====
 function render(){
