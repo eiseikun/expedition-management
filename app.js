@@ -20,12 +20,8 @@ let selectedIndex=null;
 let sortAsc=true;
 
 window.openEditor=()=>{
-editor.style.display="flex";
+document.getElementById("editor").style.display="flex";
 editIndex=null;
-}
-
-window.closeEditor=()=>{
-editor.style.display="none";
 }
 
 window.savePlayer=async()=>{
@@ -49,7 +45,10 @@ await addDoc(collection(db,"players"),data);
 await updateDoc(doc(db,"players",ids[editIndex]),data);
 }
 
-closeEditor();
+window.closeEditor=()=>{
+document.getElementById("editor").style.display="none";
+}
+  
 load();
 }
 
@@ -77,7 +76,9 @@ let list=players.filter(p=>p.name.toLowerCase().includes(keyword));
 
 list.sort((a,b)=> sortAsc ? b.power-a.power : a.power-b.power);
 
-list.forEach((p,i)=>{
+list.forEach((p)=>{
+
+let i = players.indexOf(p);
 
 let tr=document.createElement("tr");
 
