@@ -162,14 +162,22 @@ window.deletePlayer = async function(i){
 };
 
 // 画像保存
-window.saveTableImage=function(){
-  const table=document.querySelector(".table-container");
-  html2canvas(table,{scale:3}).then(canvas=>{
-    const link=document.createElement("a");
-    link.download="archer_table.png";
-    link.href=canvas.toDataURL("image/png");
-    link.click();
-  });
+window.saveTableImage = async function(){
+const table=document.querySelector(".table-container");
+const canvas=await html2canvas(table,{scale:3});
+canvas.toBlob(async blob=>{
+const file=new File([blob],"expedition.png",{type:"image/png"});
+if(navigator.share && navigator.canShare({files:[file]})){
+await navigator.share({
+files:[file]
+});
+}else{
+const link=document.createElement("a");
+link.href=URL.createObjectURL(blob);
+link.download="expedition.png";
+link.click();
+}
+});
 }
 
 // ===== 描画 =====
