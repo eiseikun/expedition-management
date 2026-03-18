@@ -1,33 +1,30 @@
 body{
 font-family:sans-serif;
-background:linear-gradient(180deg,#0f1a24,#0a0f14);
-color:white;
-text-align:center;
-margin:0;
+background:#0f172a;
+color:#fff;
 padding:10px;
 }
 
 h1{
-color:#00d4ff;
+text-align:center;
+color:#00cfff;
 }
 
-#search{
-width:260px;
+input,select{
+width:100%;
 padding:8px;
-margin-bottom:10px;
-border-radius:8px;
+margin:5px 0;
+border-radius:6px;
 border:none;
-background:#0e1720;
-color:white;
 }
 
 button{
-background:linear-gradient(180deg,#00cfff,#0099cc);
+background:#00cfff;
 border:none;
-color:white;
-padding:8px 14px;
-margin:5px;
+padding:10px;
 border-radius:8px;
+margin:5px 0;
+width:100%;
 }
 
 .table-container{
@@ -37,33 +34,13 @@ overflow-x:auto;
 table{
 width:100%;
 border-collapse:collapse;
-background:#121c26;
+background:#162430;
 }
 
-th{
-background:#00bfff;
+th,td{
 padding:8px;
-cursor:pointer;
-}
-
-td{
-padding:6px;
-border-bottom:1px solid #1e2a35;
-}
-
-tr:nth-child(even){
-background:#0f1720;
-}
-
-tr{
-cursor:pointer;
-}
-
-.lane-header{
-background:#003b4f;
-font-weight:bold;
-color:#8be9ff;
-cursor:pointer;
+border-bottom:1px solid #333;
+text-align:center;
 }
 
 .editor{
@@ -72,8 +49,8 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,0.7);
-display:flex;
+background:rgba(0,0,0,0.6);
+display:none;
 justify-content:center;
 align-items:center;
 z-index:1000;
@@ -81,35 +58,33 @@ z-index:1000;
 
 .editor-box{
 background:#162430;
-width:95%;
-max-width:500px;
-max-height:90vh;
-overflow-y:auto;
 padding:20px;
 border-radius:12px;
+width:90%;
+max-width:400px;
+max-height:90%;
+overflow-y:auto;
+}
+
+.menu{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:2000;
+}
+
+.menu-box{
+background:#162430;
+padding:20px;
+border-radius:12px;
+width:90%;
+max-width:350px;
+text-align:center;
 border:2px solid #00cfff;
-}
-
-input,select{
-width:95%;
-margin:6px 0;
-padding:8px;
-border-radius:6px;
-border:none;
-background:#0e1720;
-color:white;
-font-size:16px;
-}
-
-.dragging{
-opacity:0.5;
-}
-
-@media (max-width:700px){
-table{
-font-size:11px;
-}
-th,td{
-padding:4px;
-}
 }
