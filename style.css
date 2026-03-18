@@ -17,7 +17,8 @@ body{
 
 /* テーブル */
 table{
-  width:100%;
+  min-width:900px; /* 横スクロール時に文字潰れ防止 */
+  width:auto;      /* 画面幅に縮小されない */
   border-collapse:collapse;
 }
 th,td{
@@ -62,11 +63,14 @@ button{ padding:6px 12px; margin:4px; cursor:pointer; }
 .rune-legend{ background:#fbc02d; color:black; }
 
 /* テーブル横スクロール */
-.table-container{ overflow-x:auto; }
+.table-container{
+  overflow-x:auto;                    /* 横スクロール許可 */
+  -webkit-overflow-scrolling: touch;  /* スマホでスムーズスクロール */
+}
 
 /* スマホ用 */
 @media (max-width:700px){
-  table{ font-size:12px; }
+  table{ font-size:12px; }     /* 小さめ文字で読みやすく */
   th,td{ padding:4px; }
   button{ font-size:12px; padding:4px 6px; }
   input,select{ width:90%; }
