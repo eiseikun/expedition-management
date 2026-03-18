@@ -66,6 +66,8 @@ button{ padding:6px 12px; margin:4px; cursor:pointer; }
 .table-container{
   overflow-x:auto;                    /* 横スクロール許可 */
   -webkit-overflow-scrolling: touch;  /* スマホでスムーズスクロール */
+  display: flex;                      /* フレックスで中央揃え */
+  justify-content: center;            /* 水平方向中央 */
 }
 
 /* スマホ用 */
