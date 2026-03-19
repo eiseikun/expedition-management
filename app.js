@@ -49,7 +49,7 @@ window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("overlay").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
-  document.body.style.overflow = "hidden"; // 背景スクロール禁止
+
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
