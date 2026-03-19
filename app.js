@@ -166,20 +166,28 @@ window.deletePlayer = async function(i){
 };
 
 // ===== 画像保存 =====
+// ===== 画像保存（スマホ最適化＋自動縮小） =====
 window.saveTableImage = async function() {
   const table = document.getElementById("playerTable");
-  const originalTableStyle = table.style.cssText;
-  window.saveTableImage = async function() {
-  const table = document.getElementById("playerTable");
-  const originalStyle = table.style.cssText;
-  table.style.width = table.scrollWidth + "px";
+  const originalStyle = table.getAttribute("style") || "";
+
+  // キャプチャ用スタイル
   table.style.tableLayout = "auto";
+  table.style.whiteSpace = "nowrap";
   table.style.wordBreak = "normal";
-  table.style.whiteSpace = "nowrap"; // 追加
 
   try {
+    // テーブル横幅取得
+    const tableWidth = table.scrollWidth;
+    const screenWidth = window.innerWidth * 0.95; // 少し余白
+    let scale = 3; // 基本高解像度
+
+    if (tableWidth > screenWidth) {
+      scale *= screenWidth / tableWidth; // 横幅に収める自動縮小
+    }
+
     const canvas = await html2canvas(table, {
-      scale: 3,
+      scale: scale,
       useCORS: true,
       scrollX: -window.scrollX,
       scrollY: -window.scrollY,
@@ -198,8 +206,12 @@ window.saveTableImage = async function() {
         link.click();
       }
     });
+
+  } catch(e) {
+    console.error("キャプチャ失敗", e);
+    alert("キャプチャに失敗しました。もう一度試してください。");
   } finally {
-    table.style.cssText = originalStyle;
+    table.setAttribute("style", originalStyle);
   }
 };
 
