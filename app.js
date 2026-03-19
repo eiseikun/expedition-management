@@ -153,7 +153,27 @@ window.saveTableImage = async function() {
 
   const tableStyle = table.getAttribute("style") || "";
   const containerStyle = container.getAttribute("style") || "";
-
+// ⭐ キャプチャ専用CSS追加
+const style = document.createElement("style");
+style.innerHTML = `
+  #playerTable {
+    background: #111 !important;
+  }
+  #playerTable tr {
+    background: #141414 !important;
+  }
+  #playerTable .tr-even {
+    background: #1b1b1b !important;
+  }
+  #playerTable th {
+    background: #2c2c2c !important;
+    color: #fff !important;
+  }
+  #playerTable td {
+    color: #fff !important;
+  }
+`;
+document.head.appendChild(style);
   try {
     container.style.display = "block";
     container.style.overflow = "visible";
@@ -192,9 +212,10 @@ window.saveTableImage = async function() {
     console.error(e);
     alert("画像保存失敗");
   } finally {
-    table.setAttribute("style", tableStyle);
-    container.setAttribute("style", containerStyle);
-  }
+  document.head.removeChild(style);
+  table.setAttribute("style", tableStyle);
+  container.setAttribute("style", containerStyle);
+}
 };
 
 // ===== 描画（←ここが重要修正済み） =====
