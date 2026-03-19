@@ -153,55 +153,32 @@ window.saveTableImage = async function() {
 
   const tableStyle = table.getAttribute("style") || "";
   const containerStyle = container.getAttribute("style") || "";
-// ⭐ キャプチャ専用CSS追加
-const style = document.createElement("style");
-style.innerHTML = `
-  #playerTable {
-    background: #111 !important;
-  }
-  #playerTable tr {
-    background: #141414 !important;
-  }
-  #playerTable .tr-even {
-    background: #1b1b1b !important;
-  }
-  #playerTable th {
-    background: #2c2c2c !important;
-    color: #fff !important;
-  }
-  #playerTable td {
-    color: #fff !important;
-  }
-`;
-document.head.appendChild(style);
+
+  // ⭐ キャプチャ専用CSS
+  const style = document.createElement("style");
+  style.innerHTML = `
+    #playerTable { background:#111 !important; }
+    #playerTable tr { background:#141414 !important; }
+    #playerTable .tr-even { background:#1b1b1b !important; }
+    #playerTable th { background:#2c2c2c !important; color:#fff !important; }
+  `;
+  document.head.appendChild(style);
+
   try {
     container.style.display = "block";
     container.style.overflow = "visible";
 
-    const width = table.scrollWidth;
-    const height = table.scrollHeight;
-
     const canvas = await html2canvas(table, {
-      scale: 2,
-      useCORS: true,
-      width: width,
-      height: height,
-      windowWidth: width,
-      windowHeight: height,
-      backgroundColor: "#111",
+      scale: 1.5,
+      backgroundColor: "#111"
     });
 
     canvas.toBlob(async blob => {
       const file = new File([blob], "expedition.png", { type: "image/png" });
 
-      // ⭐ スマホはこっち（カメラロール保存UI）
       if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: "遠征表",
-        });
+        await navigator.share({ files: [file] });
       } else {
-        // PCだけダウンロード
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = "expedition.png";
@@ -209,14 +186,14 @@ document.head.appendChild(style);
       }
     });
 
-  } catch(e) {
-    console.error(e);
-    alert("画像保存失敗");
   } finally {
-  document.head.removeChild(style);
-  table.setAttribute("style", tableStyle);
-  container.setAttribute("style", containerStyle);
-}
+    document.head.removeChild(style);
+    table.setAttribute("style", tableStyle);
+    container.setAttribute("style", containerStyle);
+
+    // ⭐ これ超重要（元に戻す）
+    container.style.overflow = "auto";
+  }
 };
 
 // ===== 描画（←ここが重要修正済み） =====
