@@ -78,3 +78,13 @@ body.modal-open{
 .editor{
   pointer-events:auto;
 }
+
+.rune-row{
+  display:flex;
+  gap:8px;
+  margin:5px 0;
+  align-items:center;
+}
+.rune-row span{
+  width:50px;
+}
