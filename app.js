@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ===== Firebase設定 =====
+// ===== Firebase =====
 const firebaseConfig = {
   apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
   authDomain: "expedition-management-date.firebaseapp.com",
@@ -14,6 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ===== データ =====
 let players = [];
 let playerDocs = [];
 let editIndex = null;
@@ -21,65 +22,64 @@ let editIndex = null;
 // ===== モーダル =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
+  document.getElementById("modeIndicator").innerText = "追加モード";
   document.body.style.overflow = "hidden";
+
+  document.querySelectorAll("#editor input").forEach(i=>i.value="");
+  document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
+  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
+
+  editIndex = null;
 };
 
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
+  document.getElementById("modeIndicator").innerText = "通常モード";
   document.body.style.overflow = "auto";
 };
 
-// ===== 補助 =====
+// ===== 計算 =====
 function relicBuff(m,l){
   return Number((m*0.25 + l*0.025).toFixed(3));
 }
 
+// ===== ルーン =====
 function runeHTML(name,q,e){
   if(q==="none") return "";
   const cls = q==="mythic"?"rune rune-mythic":"rune rune-legend";
-  return `<span class="${cls}">${name}(${e})</span>`;
+  return `<div class="${cls}">${name}<br>${e}</div>`;
 }
 
+// ===== 装備 =====
 function gearText(gearDetail){
   const parts = ["武器","兜","お守り","鎧","指輪","靴"];
-  gearDetail = Array.isArray(gearDetail) ? gearDetail : [];
   return `
     <div class="gear-box">
       ${parts.map(p=>{
-        const found = gearDetail.find(g=>g.part===p);
-        if(found){
-          return `<div class="cell ${found.type}"></div>`;
-        }else{
-          return `<div class="cell empty"></div>`;
-        }
+        const found = gearDetail?.find(g=>g.part===p);
+        return `<div class="cell ${found?found.type:"empty"}"></div>`;
       }).join("")}
     </div>
   `;
 }
 
-function formatPower(val){
-  return val.toFixed(2) + "M";
-}
-
 // ===== 保存 =====
 window.savePlayer = async function(){
+
   const gearDetail = [];
   document.querySelectorAll("#chaos select").forEach(s=>{
     if(s.value){
-      gearDetail.push({
-        part: s.dataset.part,
-        type: s.value
-      });
+      gearDetail.push({part:s.dataset.part,type:s.value});
     }
   });
 
-  let p = {
+  const p = {
     name: document.getElementById("name").value,
     power: Number(document.getElementById("power").value),
     range: document.getElementById("range").value,
     style: document.getElementById("style").value,
     gear: document.getElementById("gear").value,
-    gearDetail: gearDetail,
+    gearDetail,
     hero: document.getElementById("hero").value,
     sharpQ: document.getElementById("sharpQuality").value,
     sharpE: document.getElementById("sharpEnchant").value,
@@ -91,7 +91,7 @@ window.savePlayer = async function(){
     lane: Number(document.getElementById("lane").value)
   };
 
-  if(editIndex === null){
+  if(editIndex===null){
     const docRef = await addDoc(collection(db,"players"), p);
     players.push(p);
     playerDocs.push(docRef.id);
@@ -127,11 +127,13 @@ window.editPlayer = function(i){
   document.getElementById("lane").value = p.lane;
 
   document.querySelectorAll("#chaos select").forEach(s=>{
-    const found = (p.gearDetail || []).find(g=>g.part===s.dataset.part);
+    const found = p.gearDetail?.find(g=>g.part===s.dataset.part);
     s.value = found ? found.type : "";
   });
 
   document.getElementById("editor").style.display = "block";
+  document.getElementById("modeIndicator").innerText = "編集モード";
+  document.body.style.overflow = "hidden";
 };
 
 // ===== 削除 =====
@@ -143,113 +145,76 @@ window.deletePlayer = async function(i){
 
   players.splice(i,1);
   playerDocs.splice(i,1);
+
   render();
 };
 
-// ===== 画像保存（安定版） =====
-window.saveTableImage = async function() {
-  const table = document.getElementById("playerTable");
-  const container = document.querySelector(".table-container");
+// ===== 画像保存（完全版） =====
+window.saveTableImage = async function(){
 
-  const tableStyle = table.getAttribute("style") || "";
-  const containerStyle = container.getAttribute("style") || "";
-// ⭐ キャプチャ専用CSS追加
-const style = document.createElement("style");
-style.innerHTML = `
-  #playerTable {
-    background: #111 !important;
-  }
-  #playerTable tr {
-    background: #141414 !important;
-  }
-  #playerTable .tr-even {
-    background: #1b1b1b !important;
-  }
-  #playerTable th {
-    background: #2c2c2c !important;
-    color: #fff !important;
-  }
-  #playerTable td {
-    color: #fff !important;
-  }
-`;
-document.head.appendChild(style);
-  try {
-    container.style.display = "block";
-    container.style.overflow = "visible";
+  const original = document.getElementById("captureArea");
 
-    const width = table.scrollWidth;
-    const height = table.scrollHeight;
+  const clone = original.cloneNode(true);
 
-    const canvas = await html2canvas(table, {
-      scale: 2,
-      useCORS: true,
-      width: width,
-      height: height,
-      windowWidth: width,
-      windowHeight: height,
-      backgroundColor: "#111",
-    });
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
 
-    canvas.toBlob(async blob => {
-      const file = new File([blob], "expedition.png", { type: "image/png" });
+  document.body.appendChild(clone);
 
-      // ⭐ スマホはこっち（カメラロール保存UI）
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: "遠征表",
-        });
-      } else {
-        // PCだけダウンロード
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "expedition.png";
-        link.click();
-      }
-    });
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111",
+    width:clone.scrollWidth
+  });
 
-  } catch(e) {
-    console.error(e);
-    alert("画像保存失敗");
-  } finally {
-  document.head.removeChild(style);
-  table.setAttribute("style", tableStyle);
-  container.setAttribute("style", containerStyle);
-}
+  document.body.removeChild(clone);
+
+  canvas.toBlob(async blob=>{
+    const file=new File([blob],"expedition.png",{type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="expedition.png";
+      link.click();
+    }
+  });
 };
 
-// ===== 描画（←ここが重要修正済み） =====
+// ===== 表示 =====
+function formatPower(val){
+  return val.toFixed(2)+"M";
+}
+
 function render(){
+
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
 
   const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(laneNum=>{
-    const lanePlayers = players.filter(p => (p.lane ?? 0) === laneNum);
-    if(lanePlayers.length === 0) return;
+
+    const lanePlayers = players.filter(p=>p.lane===laneNum);
+    if(lanePlayers.length===0) return;
 
     const trLane = document.createElement("tr");
     trLane.classList.add("lane-header");
-
-    const limitText = laneNum === 0 ? "" : ` (${lanePlayers.length}/8)`;
-
-    trLane.innerHTML = `<td colspan="10">${laneNames[laneNum]}${limitText}</td>`;
+    trLane.innerHTML = `<td colspan="10">${laneNames[laneNum]} (${lanePlayers.length})</td>`;
     body.appendChild(trLane);
 
     lanePlayers.sort((a,b)=>b.power-a.power);
 
-    lanePlayers.forEach((p,i)=>{
-      const index = players.findIndex(x => x === p);
+    lanePlayers.forEach(p=>{
+
+      const index = players.indexOf(p);
 
       const tr = document.createElement("tr");
-
-      // ⭐ nth-childの代わり（今回の修正）
-      if(i % 2 === 1){
-        tr.classList.add("tr-even");
-      }
-
       tr.innerHTML = `
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
@@ -269,8 +234,8 @@ function render(){
 
 // ===== 初期ロード =====
 async function load(){
-  const querySnapshot = await getDocs(collection(db,"players"));
-  querySnapshot.forEach(d=>{
+  const snapshot = await getDocs(collection(db,"players"));
+  snapshot.forEach(d=>{
     players.push(d.data());
     playerDocs.push(d.id);
   });
