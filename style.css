@@ -16,7 +16,7 @@ table{
 th,td{
   padding:8px;
   border:1px solid #333;
-  white-space:nowrap; /* ← 改行禁止 */
+  white-space:nowrap;
 }
 
 th{ background:#222; }
@@ -34,12 +34,14 @@ tr:nth-child(even){ background:#1a1a1a; }
   overflow-x:auto;
 }
 
-/* 装備 */
+/* 装備（←ここ修正） */
 .gear-box{
   display:grid;
   grid-template-columns:repeat(2,12px);
   gap:3px;
+  pointer-events:none; /* ←追加 */
 }
+
 .cell{ width:12px;height:12px; }
 .cell.empty{ background:#444; }
 .cell.chaos{ background:#9c27b0; }
@@ -51,12 +53,8 @@ td:nth-child(6){
   white-space:normal;
 }
 
-/* 編集ボタン対策（今回の重要ポイント） */
-td{
-  position:relative;
-}
 
-/* モーダル */
+/* モーダル（強化） */
 .editor{
   position:fixed;
   top:10px;
@@ -69,5 +67,14 @@ td{
   max-width:400px;
   max-height:90vh;
   overflow:auto;
-  z-index:100;
+  z-index:9999; /* ←強化 */
+}
+
+/* モーダル中は背景操作禁止 */
+body.modal-open{
+  pointer-events:none;
+}
+
+.editor{
+  pointer-events:auto;
 }
