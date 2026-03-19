@@ -1,7 +1,7 @@
+// ===== Firebase =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ===== Firebase =====
 const firebaseConfig = {
   apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
   authDomain: "expedition-management-date.firebaseapp.com",
@@ -44,12 +44,11 @@ function gearText(gearDetail){
   `;
 }
 
-// ===== モーダル =====
+// ===== モーダル開閉 =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("overlay").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
-
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
@@ -62,10 +61,9 @@ window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.getElementById("overlay").style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
-  document.body.style.overflow = "auto";
 };
 
-// ===== モーダル内スクロール制御（iOSバウンス防止） =====
+// ===== モーダル内スクロール制御（iOS / Android バウンス防止） =====
 const editor = document.getElementById("editor");
 let startY = 0;
 
@@ -81,8 +79,8 @@ editor.addEventListener('touchmove', function(e){
   const scrollHeight = editor.scrollHeight;
   const offsetHeight = editor.offsetHeight;
 
-  const isScrollable = scrollHeight > offsetHeight; // スクロールできるか判定
-  if(!isScrollable) return; // スクロール不可なら何もしない
+  const isScrollable = scrollHeight > offsetHeight;
+  if(!isScrollable) return;
 
   const currentY = e.touches[0].clientY;
   const isAtTop = scrollTop === 0;
@@ -91,13 +89,12 @@ editor.addEventListener('touchmove', function(e){
   const isScrollingUp = currentY < startY;
 
   if ((isAtTop && isScrollingDown) || (isAtBottom && isScrollingUp)) {
-    e.preventDefault(); // 背景に伝わらない
+    e.preventDefault();
   }
 }, { passive:false });
 
 // ===== 保存 =====
 window.savePlayer = async function(){
-
   const gearDetail = [];
   document.querySelectorAll("#chaos select").forEach(s=>{
     if(s.value){
@@ -177,36 +174,29 @@ window.editPlayer = function(i){
   document.getElementById("editor").style.display = "block";
   document.getElementById("overlay").style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
-  document.body.style.overflow = "hidden";
 };
 
 // ===== 削除 =====
 window.deletePlayer = async function(i){
   if(!confirm("削除しますか？")) return;
-
   try{
     const ref = doc(db,"players",playerDocs[i]);
     await deleteDoc(ref);
-
     players.splice(i,1);
     playerDocs.splice(i,1);
   }catch(e){
     alert("削除に失敗しました");
     return;
   }
-
   render();
 };
 
 // ===== 表示 =====
-function formatPower(val){
-  return val.toFixed(2)+"M";
-}
+function formatPower(val){ return val.toFixed(2)+"M"; }
 
 function render(){
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
-
   const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(laneNum=>{
@@ -219,10 +209,8 @@ function render(){
     body.appendChild(trLane);
 
     lanePlayers.sort((a,b)=>b.power-a.power);
-
     lanePlayers.forEach((p)=>{
       const index = players.findIndex(x => x === p);
-
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${p.name}</td>
