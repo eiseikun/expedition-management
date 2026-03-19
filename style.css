@@ -1,11 +1,10 @@
-/* 全体 */
 body{
   font-family:sans-serif;
   background:#111;
   color:white;
   text-align:center;
   margin:0;
-  overflow-x:hidden; /* ページ全体の横スクロール禁止 */
+  overflow-x:hidden;
 }
 
 /* テーブル */
@@ -77,8 +76,8 @@ td:nth-child(6){
   width:90%;
   max-width:400px;
   max-height:90vh;
-  overflow-y:auto;     /* 縦スクロールのみ */
-  overflow-x:hidden;   /* 横スクロール禁止 */
+  overflow-y:auto;
+  overflow-x:hidden;
   z-index:9999;
   box-sizing:border-box;
 }
@@ -93,14 +92,12 @@ body.modal-open{
   pointer-events:auto;
 }
 
-/* モーダル内のinput/selectは幅100% */
 #editor input,
 #editor select{
   width:100%;
   box-sizing:border-box;
 }
 
-/* モーダルの下部ボタン */
 .editor-footer{
   margin-top:10px;
   display:flex;
