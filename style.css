@@ -21,6 +21,7 @@ th,td{
   border:1px solid #333;
   white-space:nowrap;
   text-align:center;
+  position:relative; /* ←クリック安定化 */
 }
 
 th{
@@ -38,23 +39,30 @@ th{
   overflow-x:auto;
 }
 
-/* 装備 */
+/* ===== 装備 ===== */
 .gear-box{
   display:grid;
   grid-template-columns:repeat(2,12px);
   gap:3px;
   justify-content:center;
+
+  width:30px;
+  margin:auto;
+
+  pointer-events:none; /* ⭐ クリック妨害防止（超重要） */
 }
+
 .cell{
   width:12px;
   height:12px;
 }
+
 .cell.empty{ background:#444; }
 .cell.chaos{ background:#9c27b0; }
 .cell.mythic{ background:#d32f2f; }
 .cell.legend{ background:#fbc02d; }
 
-/* モーダル */
+/* ===== モーダル ===== */
 .editor{
   position:fixed;
   top:10px;
@@ -67,6 +75,8 @@ th{
   max-width:400px;
   max-height:90vh;
   overflow:auto;
+
+  z-index:9999; /* ⭐ 最前面固定 */
 }
 
 .editor input,
@@ -82,36 +92,28 @@ th{
   justify-content:space-between;
 }
 
-/*ルーン列だけ折り返しOKにする */
+/* ===== ルーン ===== */
 td:nth-child(6){
   white-space:normal;
   word-break:break-word;
   overflow-wrap:anywhere;
 }
 
-/*ルーンの1つ1つを安全に表示 */
 .rune{
   display:inline-block;
   margin:2px;
 }
 
-/* ⭐ ② 装備グリッドのサイズ固定（被り防止） */
-.gear-box{
-  width:30px;
-  margin:auto;
-  pointer-events:none;
-}
-
-/* ⭐ ③ ボタンを最前面に（クリック復活） */
-button{
-  position:relative;
-  z-index:100;
-}
-
-/* ⭐ ④ ルーン色をちゃんと表示 */
 .rune-mythic{
   color:#ff5252;
 }
+
 .rune-legend{
   color:#ffd54f;
+}
+
+/* ===== ボタン ===== */
+button{
+  position:relative;
+  z-index:1; /* ⭐ 上げすぎない（重要） */
 }
