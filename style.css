@@ -41,8 +41,10 @@ tr.lane-header{
 .table-container{
   overflow-x:auto;
   -webkit-overflow-scrolling: touch;
-  display: flex;                      
-  justify-content: center;
+  display:block;
+}
+table {
+  margin: 0 auto;
 }
 
 /* 編集画面（スクロール可・スマホ対応） */
