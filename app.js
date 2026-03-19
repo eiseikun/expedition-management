@@ -165,34 +165,30 @@ window.deletePlayer = async function(i){
   render();
 };
 
-// ===== 画像保存 =====
 // ===== 画像保存（スマホ最適化＋自動縮小） =====
 window.saveTableImage = async function() {
   const table = document.getElementById("playerTable");
-  const originalStyle = table.getAttribute("style") || "";
+  const container = document.querySelector(".table-container");
 
-  // キャプチャ用スタイル
-  table.style.tableLayout = "auto";
-  table.style.whiteSpace = "nowrap";
-  table.style.wordBreak = "normal";
+  const tableStyle = table.getAttribute("style") || "";
+  const containerStyle = container.getAttribute("style") || "";
 
   try {
-    // テーブル横幅取得
-    const tableWidth = table.scrollWidth;
-    const screenWidth = window.innerWidth * 0.95; // 少し余白
-    let scale = 3; // 基本高解像度
+    container.style.display = "block";
+    container.style.overflow = "visible";
 
-    if (tableWidth > screenWidth) {
-      scale *= screenWidth / tableWidth; // 横幅に収める自動縮小
-    }
+    table.style.width = table.scrollWidth + "px";
+    table.style.tableLayout = "fixed";
+    table.style.whiteSpace = "nowrap";
 
     const canvas = await html2canvas(table, {
-      scale: scale,
+      scale: 2, // ←ここ重要（3だとバグりやすい）
       useCORS: true,
-      scrollX: -window.scrollX,
-      scrollY: -window.scrollY,
+      scrollX: 0,
+      scrollY: 0,
       windowWidth: table.scrollWidth,
-      windowHeight: table.scrollHeight
+      windowHeight: table.scrollHeight,
+      removeContainer: true
     });
 
     canvas.toBlob(blob => {
@@ -206,12 +202,13 @@ window.saveTableImage = async function() {
         link.click();
       }
     });
-
   } catch(e) {
     console.error("キャプチャ失敗", e);
-    alert("キャプチャに失敗しました。もう一度試してください。");
+    alert("画像保存に失敗しました");
   } finally {
-    table.setAttribute("style", originalStyle);
+    // ===== 元に戻す =====
+    table.setAttribute("style", tableStyle);
+    container.setAttribute("style", containerStyle);
   }
 };
 
