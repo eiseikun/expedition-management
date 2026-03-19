@@ -75,7 +75,7 @@ td:nth-child(6){
   border-radius:10px;
   width:90%;
   max-width:400px;
-  max-height:90vh;
+  max-height: calc(100vh - 20px);
   overflow-y:auto;
   overflow-x:hidden;
   z-index:9999;
