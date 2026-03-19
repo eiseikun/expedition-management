@@ -24,6 +24,7 @@ window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
   document.body.style.overflow = "hidden";
+  document.body.classList.add("modal-open");
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
@@ -36,6 +37,7 @@ window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
   document.body.style.overflow = "auto";
+  document.body.classList.remove("modal-open");
 };
 
 // ===== 計算 =====
@@ -74,7 +76,7 @@ window.savePlayer = async function(){
   });
 
   const p = {
-    name: document.getElementById("name").value,
+    name: document.getElementById("name").value.trim(),
     power: Number(document.getElementById("power").value),
     range: document.getElementById("range").value,
     style: document.getElementById("style").value,
@@ -91,15 +93,27 @@ window.savePlayer = async function(){
     lane: Number(document.getElementById("lane").value)
   };
 
-  if(editIndex===null){
-    const docRef = await addDoc(collection(db,"players"), p);
-    players.push(p);
-    playerDocs.push(docRef.id);
-  }else{
-    const ref = doc(db,"players",playerDocs[editIndex]);
-    await updateDoc(ref, p);
-    players[editIndex] = p;
-    editIndex = null;
+  // ✅ 入力チェック
+  if(!p.name || isNaN(p.power)){
+    alert("名前と戦力は必須です");
+    return;
+  }
+
+  try{
+    if(editIndex===null){
+      const docRef = await addDoc(collection(db,"players"), p);
+      players.push(p);
+      playerDocs.push(docRef.id);
+    }else{
+      const ref = doc(db,"players",playerDocs[editIndex]);
+      await updateDoc(ref, p);
+      players[editIndex] = p;
+      editIndex = null;
+    }
+  }catch(e){
+    alert("保存に失敗しました");
+    console.error(e);
+    return;
   }
 
   closeEditor();
@@ -134,56 +148,25 @@ window.editPlayer = function(i){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
   document.body.style.overflow = "hidden";
+  document.body.classList.add("modal-open");
 };
 
 // ===== 削除 =====
 window.deletePlayer = async function(i){
   if(!confirm("削除しますか？")) return;
 
-  const ref = doc(db,"players",playerDocs[i]);
-  await deleteDoc(ref);
+  try{
+    const ref = doc(db,"players",playerDocs[i]);
+    await deleteDoc(ref);
 
-  players.splice(i,1);
-  playerDocs.splice(i,1);
+    players.splice(i,1);
+    playerDocs.splice(i,1);
+  }catch(e){
+    alert("削除に失敗しました");
+    return;
+  }
 
   render();
-};
-
-// ===== 画像保存（完全版） =====
-window.saveTableImage = async function(){
-
-  const original = document.getElementById("captureArea");
-
-  const clone = original.cloneNode(true);
-
-  clone.style.width = original.scrollWidth + "px";
-  clone.style.background = "#111";
-  clone.style.color = "white";
-  clone.style.position = "absolute";
-  clone.style.top = "-9999px";
-
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone,{
-    scale:3,
-    backgroundColor:"#111",
-    width:clone.scrollWidth
-  });
-
-  document.body.removeChild(clone);
-
-  canvas.toBlob(async blob=>{
-    const file=new File([blob],"expedition.png",{type:"image/png"});
-
-    if(navigator.share && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file]});
-    }else{
-      const link=document.createElement("a");
-      link.href=URL.createObjectURL(blob);
-      link.download="expedition.png";
-      link.click();
-    }
-  });
 };
 
 // ===== 表示 =====
@@ -210,9 +193,8 @@ function render(){
 
     lanePlayers.sort((a,b)=>b.power-a.power);
 
-    lanePlayers.forEach(p=>{
-
-      const index = players.indexOf(p);
+    lanePlayers.forEach((p)=>{
+      const index = players.findIndex(x => x === p); // ✅ 安全化
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
