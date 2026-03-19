@@ -19,6 +19,27 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
+// ===== モーダル =====
+window.openEditor = function(){
+  document.getElementById("editor").style.display = "block";
+  document.getElementById("modeIndicator").innerText = "追加モード";
+  document.body.style.overflow = "hidden";
+  document.body.classList.add("modal-open");
+
+  document.querySelectorAll("#editor input").forEach(i=>i.value="");
+  document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
+  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
+
+  editIndex = null;
+};
+
+window.closeEditor = function(){
+  document.getElementById("editor").style.display = "none";
+  document.getElementById("modeIndicator").innerText = "通常モード";
+  document.body.style.overflow = "auto";
+  document.body.classList.remove("modal-open");
+};
+
 // ===== 計算 =====
 function relicBuff(m,l){
   return Number((m*0.25 + l*0.025).toFixed(3));
@@ -44,55 +65,9 @@ function gearText(gearDetail){
   `;
 }
 
-// ===== モーダル制御 =====
-const editor = document.getElementById("editor");
-const overlay = document.getElementById("overlay");
-
-window.openEditor = function(){
-  document.getElementById("editor").style.display = "block";
-  overlay.style.display = "block";
-  document.getElementById("modeIndicator").innerText = "追加モード";
-  document.body.style.overflow = "hidden"; // 背景スクロール禁止
-
-  document.querySelectorAll("#editor input").forEach(i=>i.value="");
-  document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
-  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
-
-  editIndex = null;
-};
-
-window.closeEditor = function(){
-  editor.style.display = "none";
-  overlay.style.display = "none";
-  document.getElementById("modeIndicator").innerText = "通常モード";
-  document.body.style.overflow = "auto";
-};
-
-// ===== iOS / Android バウンス防止 =====
-let startY = 0;
-editor.addEventListener('touchstart', e => {
-  if(e.touches.length !== 1) return;
-  startY = e.touches[0].clientY;
-}, {passive:true});
-
-editor.addEventListener('touchmove', e => {
-  if(e.touches.length !== 1) return;
-  const scrollTop = editor.scrollTop;
-  const scrollHeight = editor.scrollHeight;
-  const offsetHeight = editor.offsetHeight;
-  const currentY = e.touches[0].clientY;
-  const isAtTop = scrollTop === 0;
-  const isAtBottom = scrollTop + offsetHeight >= scrollHeight - 1;
-  const isScrollingDown = currentY > startY;
-  const isScrollingUp = currentY < startY;
-
-  if ((isAtTop && isScrollingDown) || (isAtBottom && isScrollingUp)) {
-    e.preventDefault(); // 背景に伝わらない
-  }
-}, {passive:false});
-
 // ===== 保存 =====
 window.savePlayer = async function(){
+
   const gearDetail = [];
   document.querySelectorAll("#chaos select").forEach(s=>{
     if(s.value){
@@ -118,6 +93,7 @@ window.savePlayer = async function(){
     lane: Number(document.getElementById("lane").value)
   };
 
+  // ✅ 入力チェック
   if(!p.name || isNaN(p.power)){
     alert("名前と戦力は必須です");
     return;
@@ -128,7 +104,7 @@ window.savePlayer = async function(){
       const docRef = await addDoc(collection(db,"players"), p);
       players.push(p);
       playerDocs.push(docRef.id);
-    } else {
+    }else{
       const ref = doc(db,"players",playerDocs[editIndex]);
       await updateDoc(ref, p);
       players[editIndex] = p;
@@ -169,10 +145,10 @@ window.editPlayer = function(i){
     s.value = found ? found.type : "";
   });
 
-  editor.style.display = "block";
-  overlay.style.display = "block";
+  document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
   document.body.style.overflow = "hidden";
+  document.body.classList.add("modal-open");
 };
 
 // ===== 削除 =====
@@ -182,6 +158,7 @@ window.deletePlayer = async function(i){
   try{
     const ref = doc(db,"players",playerDocs[i]);
     await deleteDoc(ref);
+
     players.splice(i,1);
     playerDocs.splice(i,1);
   }catch(e){
@@ -193,15 +170,19 @@ window.deletePlayer = async function(i){
 };
 
 // ===== 表示 =====
-function formatPower(val){ return val.toFixed(2)+"M"; }
+function formatPower(val){
+  return val.toFixed(2)+"M";
+}
 
 function render(){
+
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
 
   const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(laneNum=>{
+
     const lanePlayers = players.filter(p=>p.lane===laneNum);
     if(lanePlayers.length===0) return;
 
@@ -213,7 +194,8 @@ function render(){
     lanePlayers.sort((a,b)=>b.power-a.power);
 
     lanePlayers.forEach((p)=>{
-      const index = players.findIndex(x => x === p);
+      const index = players.findIndex(x => x === p); // ✅ 安全化
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${p.name}</td>
