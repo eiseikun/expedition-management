@@ -168,14 +168,14 @@ window.deletePlayer = async function(i){
 // ===== 画像保存 =====
 window.saveTableImage = async function() {
   const table = document.getElementById("playerTable");
-
-  // 元のスタイルを保存
   const originalTableStyle = table.style.cssText;
-
-  // キャプチャ用にテーブルを横幅全開に
+  window.saveTableImage = async function() {
+  const table = document.getElementById("playerTable");
+  const originalStyle = table.style.cssText;
   table.style.width = table.scrollWidth + "px";
-  table.style.tableLayout = "auto"; // セル幅自動調整
-  table.style.wordBreak = "normal"; // テキスト改行抑制
+  table.style.tableLayout = "auto";
+  table.style.wordBreak = "normal";
+  table.style.whiteSpace = "nowrap"; // 追加
 
   try {
     const canvas = await html2canvas(table, {
@@ -199,8 +199,7 @@ window.saveTableImage = async function() {
       }
     });
   } finally {
-    // 元のスタイルに戻す
-    table.style.cssText = originalTableStyle;
+    table.style.cssText = originalStyle;
   }
 };
 
