@@ -23,13 +23,13 @@
     <thead>
       <tr>
         <th>名前</th>
-        <th onclick="sortLane('power')">戦力</th>
+        <th>戦力</th>
         <th>戦術</th>
         <th>装備</th>
         <th>主キャラ</th>
         <th>ルーン</th>
         <th>編成</th>
-        <th onclick="sortLane('relic')">聖物%</th>
+        <th>聖物%</th>
         <th>編集</th>
         <th>削除</th>
       </tr>
@@ -64,91 +64,22 @@
     <option>キメラ</option>
   </select>
 
-  <label>装備（部位ごと品質）</label>
+  <label>装備</label>
   <div id="chaos" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-    <div>武器
-      <select data-part="武器">
-        <option value="">なし</option>
-        <option value="chaos">カオス</option>
-        <option value="mythic">ミシック</option>
-        <option value="legend">レジェンド</option>
-      </select>
-    </div>
-    <div>兜
-      <select data-part="兜">
-        <option value="">なし</option>
-        <option value="chaos">カオス</option>
-        <option value="mythic">ミシック</option>
-        <option value="legend">レジェンド</option>
-      </select>
-    </div>
-    <div>お守り
-      <select data-part="お守り">
-        <option value="">なし</option>
-        <option value="chaos">カオス</option>
-        <option value="mythic">ミシック</option>
-        <option value="legend">レジェンド</option>
-      </select>
-    </div>
-    <div>鎧
-      <select data-part="鎧">
-        <option value="">なし</option>
-        <option value="chaos">カオス</option>
-        <option value="mythic">ミシック</option>
-        <option value="legend">レジェンド</option>
-      </select>
-    </div>
-    <div>指輪
-      <select data-part="指輪">
-        <option value="">なし</option>
-        <option value="chaos">カオス</option>
-        <option value="mythic">ミシック</option>
-        <option value="legend">レジェンド</option>
-      </select>
-    </div>
-    <div>靴
-      <select data-part="靴">
-        <option value="">なし</option>
-        <option value="chaos">カオス</option>
-        <option value="mythic">ミシック</option>
-        <option value="legend">レジェンド</option>
-      </select>
-    </div>
+    <div>武器<select data-part="武器"></select></div>
+    <div>兜<select data-part="兜"></select></div>
+    <div>お守り<select data-part="お守り"></select></div>
+    <div>鎧<select data-part="鎧"></select></div>
+    <div>指輪<select data-part="指輪"></select></div>
+    <div>靴<select data-part="靴"></select></div>
   </div>
 
   <input id="hero" placeholder="主キャラ">
-
-  <h3>鋭利の矢</h3>
-  <select id="sharpQuality">
-    <option>none</option>
-    <option>legend</option>
-    <option>mythic</option>
-  </select>
-  <select id="sharpEnchant">
-    <option>跳ね返り</option>
-    <option>クリダメUP</option>
-    <option>主武器会心率UP</option>
-    <option>主武器UP</option>
-  </select>
-
-  <h3>アロレルーン</h3>
-  <select id="arrowQuality">
-    <option>none</option>
-    <option>legend</option>
-    <option>mythic</option>
-  </select>
-  <select id="arrowEnchant">
-    <option>固有</option>
-    <option>クリダメ軽減</option>
-    <option>主武器会心ダメUP</option>
-    <option>主武器UP</option>
-  </select>
 
   <input id="formation" placeholder="編成">
   <input id="mythic" placeholder="ミシック数">
   <input id="legend" placeholder="レジェンド数">
 
-  <label>レーン</label>
   <select id="lane">
     <option value="0">控え</option>
     <option value="1">レーン1</option>
