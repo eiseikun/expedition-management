@@ -4,13 +4,10 @@ body{
   color:white;
   text-align:center;
   margin:0;
+  overflow-x:hidden;
 }
 
-/* 交互行（JSで付与） */
-.tr-even{
-  background:#1a1a1a;
-}
-
+/* テーブル */
 table{
   min-width:900px;
   border-collapse:collapse;
@@ -19,13 +16,12 @@ table{
 th,td{
   padding:8px;
   border:1px solid #333;
-  white-space:nowrap;
-  text-align:center;
+  white-space:nowrap; /* ← 改行禁止 */
 }
 
-th{
-  background:#222;
-}
+th{ background:#222; }
+
+tr:nth-child(even){ background:#1a1a1a; }
 
 .lane-header{
   background:#333;
@@ -43,16 +39,22 @@ th{
   display:grid;
   grid-template-columns:repeat(2,12px);
   gap:3px;
-  justify-content:center;
 }
-.cell{
-  width:12px;
-  height:12px;
-}
+.cell{ width:12px;height:12px; }
 .cell.empty{ background:#444; }
 .cell.chaos{ background:#9c27b0; }
 .cell.mythic{ background:#d32f2f; }
 .cell.legend{ background:#fbc02d; }
+
+/* ルーンだけ改行OK */
+td:nth-child(6){
+  white-space:normal;
+}
+
+/* 編集ボタン対策（今回の重要ポイント） */
+td{
+  position:relative;
+}
 
 /* モーダル */
 .editor{
@@ -67,17 +69,5 @@ th{
   max-width:400px;
   max-height:90vh;
   overflow:auto;
-}
-
-.editor input,
-.editor select,
-.editor button{
-  width:100%;
-  margin:5px 0;
-  padding:6px;
-}
-
-.editor-footer{
-  display:flex;
-  justify-content:space-between;
+  z-index:100;
 }
