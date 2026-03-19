@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ねこ海賊団 遠征管理</title>
-
 <link rel="stylesheet" href="style.css">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
@@ -40,28 +38,27 @@
   </table>
 </div>
 
-<!-- 背景オーバーレイ -->
-<div id="overlay" class="overlay" style="display:none;"></div>
+<!-- オーバーレイ -->
+<div id="overlay" class="overlay" onclick="closeEditor()"></div>
 
+<!-- 編集モーダル -->
 <div id="editor" class="editor" style="display:none;">
  <h2>プレイヤー追加 / 編集</h2>
 
+ <!-- 入力フォームここまで既存と同じ -->
  <input id="name" placeholder="名前">
  <input id="power" type="number" placeholder="戦力">
-
  <select id="range">
    <option>遠距離</option>
    <option>中距離</option>
    <option>近距離</option>
  </select>
-
  <select id="style">
    <option>バランス</option>
    <option>攻撃優先</option>
    <option>移動優先</option>
    <option>取得優先</option>
  </select>
-
  <select id="gear">
    <option>神託</option>
    <option>グリフォン</option>
@@ -72,52 +69,25 @@
  <!-- 装備 -->
  <h3>装備</h3>
  <div id="chaos" class="gear-grid">
-   <div><label>武器</label><select data-part="武器">
-     <option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option>
-   </select></div>
-   <div><label>兜</label><select data-part="兜">
-     <option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option>
-   </select></div>
-   <div><label>お守り</label><select data-part="お守り">
-     <option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option>
-   </select></div>
-   <div><label>鎧</label><select data-part="鎧">
-     <option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option>
-   </select></div>
-   <div><label>指輪</label><select data-part="指輪">
-     <option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option>
-   </select></div>
-   <div><label>靴</label><select data-part="靴">
-     <option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option>
-   </select></div>
+   <div><label>武器</label><select data-part="武器"><option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option></select></div>
+   <div><label>兜</label><select data-part="兜"><option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option></select></div>
+   <div><label>お守り</label><select data-part="お守り"><option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option></select></div>
+   <div><label>鎧</label><select data-part="鎧"><option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option></select></div>
+   <div><label>指輪</label><select data-part="指輪"><option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option></select></div>
+   <div><label>靴</label><select data-part="靴"><option value="">なし</option><option value="chaos">カオス</option><option value="mythic">ミシック</option><option value="legend">レジェンド</option></select></div>
  </div>
 
  <!-- ルーン -->
  <h3>ルーン</h3>
  <div class="rune-row">
    <span>鋭利</span>
-   <select id="sharpQuality">
-     <option value="none">なし</option>
-     <option value="legend">レジェンド</option>
-     <option value="mythic">ミシック</option>
-   </select>
-   <select id="sharpEnchant">
-     <option>跳ね返り</option>
-     <option>クリダメUP</option>
-   </select>
+   <select id="sharpQuality"><option value="none">なし</option><option value="legend">レジェンド</option><option value="mythic">ミシック</option></select>
+   <select id="sharpEnchant"><option>跳ね返り</option><option>クリダメUP</option></select>
  </div>
-
  <div class="rune-row">
    <span>アロレ</span>
-   <select id="arrowQuality">
-     <option value="none">なし</option>
-     <option value="legend">レジェンド</option>
-     <option value="mythic">ミシック</option>
-   </select>
-   <select id="arrowEnchant">
-     <option>固有</option>
-     <option>主武器UP</option>
-   </select>
+   <select id="arrowQuality"><option value="none">なし</option><option value="legend">レジェンド</option><option value="mythic">ミシック</option></select>
+   <select id="arrowEnchant"><option>固有</option><option>主武器UP</option></select>
  </div>
 
  <!-- その他 -->
@@ -126,7 +96,6 @@
  <input id="formation" placeholder="編成">
  <input id="mythic" placeholder="ミシック数">
  <input id="legend" placeholder="レジェンド数">
-
  <select id="lane">
    <option value="0">控え</option>
    <option value="1">レーン1</option>
