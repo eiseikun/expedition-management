@@ -53,13 +53,14 @@ td:nth-child(6){
   white-space:normal;
 }
 
-/* オーバーレイ */
+/* モーダル背景オーバーレイ */
 .overlay{
   position:fixed;
   top:0; left:0;
   width:100%; height:100%;
-  background:rgba(0,0,0,0.5);
-  z-index:99;
+  background:rgba(0,0,0,0.3);
+  display:none;
+  z-index:50;
 }
 
 /* モーダル */
@@ -71,18 +72,16 @@ td:nth-child(6){
   background:#222;
   padding:20px;
   border-radius:10px;
-
   width:90%;
   max-width:400px;
-
   max-height:90vh;
-  min-height:200px; /* 最低高さを確保 */
-  overflow-y:auto;   /* 縦スクロール */
-  overflow-x:hidden; /* 横スクロール防止 */
+  overflow-y:auto;  
+  overflow-x:hidden;
+  min-height:200px;
 
   z-index:100;
 
-  touch-action: pan-y;               /* 縦スクロールのみ許可 */
+  touch-action: pan-y;               
   -webkit-overflow-scrolling: touch; /* iOSスムーズスクロール */
 }
 }
