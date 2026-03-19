@@ -155,24 +155,31 @@ window.saveTableImage = async function() {
   const containerStyle = container.getAttribute("style") || "";
 
   try {
+    // スクロール解除
     container.style.display = "block";
     container.style.overflow = "visible";
 
-    table.style.width = table.scrollWidth + "px";
+    // ⭐ 横幅をそのまま使う（折り返しなし）
+    const width = table.scrollWidth;
+    const height = table.scrollHeight;
 
     const canvas = await html2canvas(table, {
-      scale: 1.5,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: table.scrollWidth,
-      windowHeight: table.scrollHeight
+      scale: 2, // 解像度アップ
+      useCORS: true,
+      width: width,
+      height: height,
+      windowWidth: width,
+      windowHeight: height
     });
 
     const link = document.createElement("a");
-    link.href = canvas.toDataURL();
+    link.href = canvas.toDataURL("image/png");
     link.download = "expedition.png";
     link.click();
 
+  } catch(e) {
+    console.error(e);
+    alert("画像保存失敗");
   } finally {
     table.setAttribute("style", tableStyle);
     container.setAttribute("style", containerStyle);
