@@ -1,150 +1,83 @@
-/* 全体 */
 body{
   font-family:sans-serif;
   background:#111;
   color:white;
   text-align:center;
   margin:0;
-  padding:0;
-  overflow-x:hidden; /* 横スクロール抑制 */
 }
 
-/* モード表示 */
-.mode-indicator{
-  margin:10px 0;
-  padding:6px;
-  font-weight:bold;
+/* 交互行（JSで付与） */
+.tr-even{
+  background:#1a1a1a;
 }
 
-/* テーブル */
 table{
   min-width:900px;
-  width:auto;
   border-collapse:collapse;
 }
+
 th,td{
   padding:8px;
   border:1px solid #333;
+  white-space:nowrap;
+  text-align:center;
 }
+
 th{
   background:#222;
-  cursor:pointer;
 }
-tr:nth-child(even){ background:#1a1a1a; }
-tr.lane-header{
+
+.lane-header{
   background:#333;
   font-weight:bold;
   text-align:left;
 }
 
-/* テーブル横スクロール */
+/* スクロール */
 .table-container{
   overflow-x:auto;
-  -webkit-overflow-scrolling: touch;
-  display:block;
-}
-table {
-  margin: 0 auto;
 }
 
-/* 編集画面（スクロール可・スマホ対応） */
-.editor{
-  position: fixed;
-  top: 10px; /* 上の余白 */
-  left: 50%;
-  transform: translateX(-50%);
-  background: #222;
-  padding: 20px 20px 120px 20px; /* 下に余裕 */
-  border-radius: 10px;
-  z-index: 100;
-
-  width: 90%;
-  max-width: 400px;
-  max-height: 95vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* スムーズスクロール */
-  box-sizing: border-box; /* 背景スクロール禁止時は body overflow:hidden で制御 */
-}
-
-/* 入力・選択・ボタン */
-.editor input,
-.editor select,
-.editor button{
-  width: 100%;
-  margin: 4px 0;
-  padding: 6px;
-  box-sizing: border-box;
-}
-
-/* 編集画面のボタン（最後に置く） */
-.editor-footer{
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-.editor-footer button{
-  width: 48%;
-  padding: 10px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/* 装備ラベル */
-#chaos label{
-  display:inline-block;
-  margin:4px;
-  padding:4px 8px;
-  background:#333;
-  border-radius:6px;
-  cursor:pointer;
-}
-#chaos input{
-  margin-right:4px;
-}
-
-/* 装備のセル */
+/* 装備 */
 .gear-box{
   display:grid;
-  grid-template-columns: repeat(2, 12px);
-  grid-template-rows: repeat(3, 12px);
+  grid-template-columns:repeat(2,12px);
   gap:3px;
   justify-content:center;
 }
 .cell{
   width:12px;
   height:12px;
-  border-radius:2px;
 }
 .cell.empty{ background:#444; }
 .cell.chaos{ background:#9c27b0; }
 .cell.mythic{ background:#d32f2f; }
 .cell.legend{ background:#fbc02d; }
 
-/* ルーン */
-.rune{ 
-  padding:3px 6px; 
-  border-radius:6px; 
-  font-weight:bold; 
-  margin-right:4px; 
-}
-.rune-mythic{ background:#d32f2f; color:white; }
-.rune-legend{ background:#fbc02d; color:black; }
-
-/* スマホ用 */
-@media (max-width:700px){
-  .table-container{
-    display: block;
-  }
-  table{ font-size:12px; }
-  th,td{ padding:4px; }
-  button{ font-size:12px; padding:4px 6px; }
-  input,select{ width:90%; }
+/* モーダル */
+.editor{
+  position:fixed;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#222;
+  padding:20px;
+  border-radius:10px;
+  width:90%;
+  max-width:400px;
+  max-height:90vh;
+  overflow:auto;
 }
 
-/* テーブルセルの改行防止＋最小幅 */
-table td, table th {
-  min-width: 50px;       /* 必要に応じて縮小 */
-  white-space: nowrap;   /* 改行禁止 */
-  word-break: normal;    /* 改行禁止 */
-  text-align: center;
+.editor input,
+.editor select,
+.editor button{
+  width:100%;
+  margin:5px 0;
+  padding:6px;
+}
+
+.editor-footer{
+  display:flex;
+  justify-content:space-between;
 }
