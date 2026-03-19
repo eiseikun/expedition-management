@@ -187,7 +187,8 @@ document.head.appendChild(style);
       width: width,
       height: height,
       windowWidth: width,
-      windowHeight: height
+      windowHeight: height,
+      backgroundColor: "#111",
     });
 
     canvas.toBlob(async blob => {
