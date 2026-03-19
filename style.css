@@ -34,12 +34,12 @@ tr:nth-child(even){ background:#1a1a1a; }
   overflow-x:auto;
 }
 
-/* 装備（←ここ修正） */
+/* 装備 */
 .gear-box{
   display:grid;
   grid-template-columns:repeat(2,12px);
   gap:3px;
-  pointer-events:none; /* ←追加 */
+  pointer-events:none;
 }
 
 .cell{ width:12px;height:12px; }
@@ -53,8 +53,16 @@ td:nth-child(6){
   white-space:normal;
 }
 
+/* オーバーレイ */
+.overlay{
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  z-index:99;
+}
 
-/* モーダル（強化） */
+/* モーダル */
 .editor{
   position:fixed;
   top:10px;
@@ -63,21 +71,10 @@ td:nth-child(6){
   background:#222;
   padding:20px;
   border-radius:10px;
-
   width:90%;
   max-width:400px;
-
   max-height:90vh;
-  overflow-y:auto;   /* ← ここ重要（縦だけスクロール） */
-  overflow-x:hidden; /* ← 横スクロール防止 */
+  overflow-y:auto;   
+  overflow-x:hidden;
   z-index:100;
-}
-
-/* モーダル中は背景操作禁止 */
-body.modal-open{
-  pointer-events:none;
-}
-
-.editor{
-  pointer-events:auto;
 }
