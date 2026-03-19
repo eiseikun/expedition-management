@@ -77,14 +77,18 @@ editor.addEventListener('touchstart', function(e){
 editor.addEventListener('touchmove', function(e){
   if(e.touches.length !== 1) return;
 
-  const currentY = e.touches[0].clientY;
   const scrollTop = editor.scrollTop;
   const scrollHeight = editor.scrollHeight;
   const offsetHeight = editor.offsetHeight;
-  const isAtTop = (scrollTop === 0);
-  const isAtBottom = (scrollTop + offsetHeight >= scrollHeight - 1);
-  const isScrollingDown = (currentY > startY);
-  const isScrollingUp = (currentY < startY);
+
+  const isScrollable = scrollHeight > offsetHeight; // スクロールできるか判定
+  if(!isScrollable) return; // スクロール不可なら何もしない
+
+  const currentY = e.touches[0].clientY;
+  const isAtTop = scrollTop === 0;
+  const isAtBottom = scrollTop + offsetHeight >= scrollHeight - 1;
+  const isScrollingDown = currentY > startY;
+  const isScrollingUp = currentY < startY;
 
   if ((isAtTop && isScrollingDown) || (isAtBottom && isScrollingUp)) {
     e.preventDefault(); // 背景に伝わらない
