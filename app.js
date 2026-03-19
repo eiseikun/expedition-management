@@ -167,28 +167,30 @@ window.deletePlayer = async function(i){
 
 // ===== 画像保存 =====
 window.saveTableImage = async function() {
-  const tableContainer = document.querySelector(".table-container");
   const table = document.getElementById("playerTable");
 
-  // 一時的にテーブル幅を最大化してスクロール無視
-  const originalWidth = table.style.width;
+  // 元のスタイルを保存
+  const originalTableStyle = table.style.cssText;
+
+  // キャプチャ用にテーブルを横幅全開に
   table.style.width = table.scrollWidth + "px";
+  table.style.tableLayout = "auto"; // セル幅自動調整
+  table.style.wordBreak = "normal"; // テキスト改行抑制
 
   try {
     const canvas = await html2canvas(table, {
-      scale: 3,                   // 高解像度
-      useCORS: true,              // 画像があればクロスオリジン対応
+      scale: 3,
+      useCORS: true,
       scrollX: -window.scrollX,
       scrollY: -window.scrollY,
       windowWidth: table.scrollWidth,
       windowHeight: table.scrollHeight
     });
 
-    canvas.toBlob(async blob => {
+    canvas.toBlob(blob => {
       const file = new File([blob], "expedition.png", { type: "image/png" });
-
       if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file] });
+        navigator.share({ files: [file] });
       } else {
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
@@ -197,8 +199,8 @@ window.saveTableImage = async function() {
       }
     });
   } finally {
-    // 元の幅に戻す
-    table.style.width = originalWidth;
+    // 元のスタイルに戻す
+    table.style.cssText = originalTableStyle;
   }
 };
 
