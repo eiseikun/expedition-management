@@ -95,21 +95,17 @@ td:nth-child(6){
   margin:2px;
 }
 
-/* ⭐ ① セルのはみ出し防止 */
-td{
-  overflow:hidden;
-}
-
 /* ⭐ ② 装備グリッドのサイズ固定（被り防止） */
 .gear-box{
   width:30px;
   margin:auto;
+  pointer-events:none;
 }
 
 /* ⭐ ③ ボタンを最前面に（クリック復活） */
 button{
   position:relative;
-  z-index:10;
+  z-index:100;
 }
 
 /* ⭐ ④ ルーン色をちゃんと表示 */
