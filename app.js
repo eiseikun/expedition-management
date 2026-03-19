@@ -93,7 +93,7 @@ window.savePlayer = async function(){
     lane: Number(document.getElementById("lane").value)
   };
 
-  // ✅ 入力チェック
+  //入力チェック
   if(!p.name || isNaN(p.power)){
     alert("名前と戦力は必須です");
     return;
@@ -167,6 +167,43 @@ window.deletePlayer = async function(i){
   }
 
   render();
+};
+
+// ===== 画像保存（完全版） =====
+window.saveTableImage = async function(){
+
+  const original = document.getElementById("captureArea");
+
+  const clone = original.cloneNode(true);
+
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111",
+    width:clone.scrollWidth
+  });
+
+  document.body.removeChild(clone);
+
+  canvas.toBlob(async blob=>{
+    const file=new File([blob],"expedition.png",{type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="expedition.png";
+      link.click();
+    }
+  });
 };
 
 // ===== 表示 =====
