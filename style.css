@@ -138,3 +138,9 @@ tr.lane-header{
   button{ font-size:12px; padding:4px 6px; }
   input,select{ width:90%; }
 }
+
+/* スクショ時の改行問題 */
+table td, table th {
+  min-width: 60px; /* ここで1セルの最小幅を指定 */
+  white-space: nowrap; /* 改行禁止 */
+}
