@@ -1,10 +1,11 @@
+/* 全体 */
 body{
   font-family:sans-serif;
   background:#111;
   color:white;
   text-align:center;
   margin:0;
-  overflow-x:hidden;
+  overflow-x:hidden; /* ページ全体の横スクロール禁止 */
 }
 
 /* テーブル */
@@ -20,26 +21,37 @@ th,td{
 }
 
 th{ background:#222; }
-
 tr:nth-child(even){ background:#1a1a1a; }
-
 .lane-header{
   background:#333;
   font-weight:bold;
   text-align:left;
 }
 
-/* スクロール */
+/* テーブル横スクロール */
 .table-container{
   overflow-x:auto;
 }
 
-/* 装備（←ここ修正） */
+/* 装備グリッド */
+.gear-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr); /* 2列固定 */
+  gap:8px;
+  width:100%;
+  box-sizing:border-box;
+}
+
+.gear-grid select{
+  width:100%;
+  box-sizing:border-box;
+}
+
 .gear-box{
   display:grid;
   grid-template-columns:repeat(2,12px);
   gap:3px;
-  pointer-events:none; /* ←追加 */
+  pointer-events:none; 
 }
 
 .cell{ width:12px;height:12px; }
@@ -53,8 +65,7 @@ td:nth-child(6){
   white-space:normal;
 }
 
-
-/* モーダル（強化） */
+/* モーダル */
 .editor{
   position:fixed;
   top:10px;
@@ -66,8 +77,10 @@ td:nth-child(6){
   width:90%;
   max-width:400px;
   max-height:90vh;
-  overflow:auto;
-  z-index:9999; /* ←強化 */
+  overflow-y:auto;     /* 縦スクロールのみ */
+  overflow-x:hidden;   /* 横スクロール禁止 */
+  z-index:9999;
+  box-sizing:border-box;
 }
 
 /* モーダル中は背景操作禁止 */
@@ -75,6 +88,22 @@ body.modal-open{
   pointer-events:none;
 }
 
+/* モーダル自体は操作可能 */
 .editor{
   pointer-events:auto;
+}
+
+/* モーダル内のinput/selectは幅100% */
+#editor input,
+#editor select{
+  width:100%;
+  box-sizing:border-box;
+}
+
+/* モーダルの下部ボタン */
+.editor-footer{
+  margin-top:10px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
 }
