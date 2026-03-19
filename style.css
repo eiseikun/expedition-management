@@ -67,15 +67,15 @@ td:nth-child(6){
 /* モーダル */
 .editor{
   position:fixed;
-  top:10px;
+  top:0px;
   left:50%;
   transform:translateX(-50%);
   background:#222;
-  padding:20px;
+  padding:10px;
   border-radius:10px;
   width:90%;
   max-width:400px;
-  max-height: calc(100vh - 20px);
+  max-height:100vh;
   overflow-y:auto;
   overflow-x:hidden;
   z-index:9999;
