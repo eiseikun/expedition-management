@@ -155,16 +155,14 @@ window.saveTableImage = async function() {
   const containerStyle = container.getAttribute("style") || "";
 
   try {
-    // スクロール解除
     container.style.display = "block";
     container.style.overflow = "visible";
 
-    // ⭐ 横幅をそのまま使う（折り返しなし）
     const width = table.scrollWidth;
     const height = table.scrollHeight;
 
     const canvas = await html2canvas(table, {
-      scale: 2, // 解像度アップ
+      scale: 2,
       useCORS: true,
       width: width,
       height: height,
@@ -172,10 +170,23 @@ window.saveTableImage = async function() {
       windowHeight: height
     });
 
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = "expedition.png";
-    link.click();
+    canvas.toBlob(async blob => {
+      const file = new File([blob], "expedition.png", { type: "image/png" });
+
+      // ⭐ スマホはこっち（カメラロール保存UI）
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "遠征表",
+        });
+      } else {
+        // PCだけダウンロード
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "expedition.png";
+        link.click();
+      }
+    });
 
   } catch(e) {
     console.error(e);
