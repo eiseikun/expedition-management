@@ -81,6 +81,20 @@ th{
   display:flex;
   justify-content:space-between;
 }
+
+/*ルーン列だけ折り返しOKにする */
+td:nth-child(6){
+  white-space:normal;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+
+/*ルーンの1つ1つを安全に表示 */
+.rune{
+  display:inline-block;
+  margin:2px;
+}
+
 /* ⭐ ① セルのはみ出し防止 */
 td{
   overflow:hidden;
