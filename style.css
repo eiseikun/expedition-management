@@ -20,19 +20,28 @@ th,td{
 }
 
 th{ background:#222; }
+
 tr:nth-child(even){ background:#1a1a1a; }
-.lane-header{ background:#333; font-weight:bold; text-align:left; }
+
+.lane-header{
+  background:#333;
+  font-weight:bold;
+  text-align:left;
+}
 
 /* スクロール */
-.table-container{ overflow-x:auto; }
+.table-container{
+  overflow-x:auto;
+}
 
-/* 装備 */
+/* 装備（←ここ修正） */
 .gear-box{
   display:grid;
   grid-template-columns:repeat(2,12px);
   gap:3px;
-  pointer-events:none;
+  pointer-events:none; /* ←追加 */
 }
+
 .cell{ width:12px;height:12px; }
 .cell.empty{ background:#444; }
 .cell.chaos{ background:#9c27b0; }
@@ -40,40 +49,32 @@ tr:nth-child(even){ background:#1a1a1a; }
 .cell.legend{ background:#fbc02d; }
 
 /* ルーンだけ改行OK */
-td:nth-child(6){ white-space:normal; }
-
-/* オーバーレイ */
-.overlay{
-  position: fixed;
-  top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.5);
-  display:none;
-  z-index:99;
+td:nth-child(6){
+  white-space:normal;
 }
 
-/* モーダル */
+
+/* モーダル（強化） */
 .editor{
-  position: fixed;
+  position:fixed;
   top:10px;
   left:50%;
-  transform: translateX(-50%);
+  transform:translateX(-50%);
   background:#222;
   padding:20px;
   border-radius:10px;
-
   width:90%;
   max-width:400px;
   max-height:90vh;
-  overflow-y:auto;
-  overflow-x:hidden;
-
-  z-index:100;
+  overflow:auto;
+  z-index:9999; /* ←強化 */
 }
 
-/* ルーン行 */
-.rune-row{ display:flex; gap:8px; margin:5px 0; align-items:center; }
-.rune-row span{ width:50px; }
-
 /* モーダル中は背景操作禁止 */
-body.modal-open{ pointer-events:none; }
-.editor{ pointer-events:auto; }
+body.modal-open{
+  pointer-events:none;
+}
+
+.editor{
+  pointer-events:auto;
+}
