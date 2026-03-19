@@ -63,11 +63,14 @@ td:nth-child(6){
   background:#222;
   padding:20px;
   border-radius:10px;
+
   width:90%;
   max-width:400px;
+
   max-height:90vh;
-  overflow:auto;
-  z-index:9999; /* ←強化 */
+  overflow-y:auto;   /* ← ここ重要（縦だけスクロール） */
+  overflow-x:hidden; /* ← 横スクロール防止 */
+  z-index:100;
 }
 
 /* モーダル中は背景操作禁止 */
