@@ -139,8 +139,10 @@ tr.lane-header{
   input,select{ width:90%; }
 }
 
-/* スクショ時の改行問題 */
+/* テーブルセルの改行防止＋最小幅 */
 table td, table th {
-  min-width: 60px; /* ここで1セルの最小幅を指定 */
-  white-space: nowrap; /* 改行禁止 */
+  min-width: 50px;       /* 必要に応じて縮小 */
+  white-space: nowrap;   /* 改行禁止 */
+  word-break: normal;    /* 改行禁止 */
+  text-align: center;
 }
