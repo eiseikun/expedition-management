@@ -81,3 +81,27 @@ th{
   display:flex;
   justify-content:space-between;
 }
+/* ⭐ ① セルのはみ出し防止 */
+td{
+  overflow:hidden;
+}
+
+/* ⭐ ② 装備グリッドのサイズ固定（被り防止） */
+.gear-box{
+  width:30px;
+  margin:auto;
+}
+
+/* ⭐ ③ ボタンを最前面に（クリック復活） */
+button{
+  position:relative;
+  z-index:10;
+}
+
+/* ⭐ ④ ルーン色をちゃんと表示 */
+.rune-mythic{
+  color:#ff5252;
+}
+.rune-legend{
+  color:#ffd54f;
+}
