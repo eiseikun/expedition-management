@@ -1,7 +1,7 @@
-// ===== Firebase =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ===== Firebase =====
 const firebaseConfig = {
   apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
   authDomain: "expedition-management-date.firebaseapp.com",
@@ -44,11 +44,15 @@ function gearText(gearDetail){
   `;
 }
 
-// ===== モーダル開閉 =====
+// ===== モーダル制御 =====
+const editor = document.getElementById("editor");
+const overlay = document.getElementById("overlay");
+
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
-  document.getElementById("overlay").style.display = "block";
+  overlay.style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
+  document.body.style.overflow = "hidden"; // 背景スクロール禁止
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
@@ -58,30 +62,24 @@ window.openEditor = function(){
 };
 
 window.closeEditor = function(){
-  document.getElementById("editor").style.display = "none";
-  document.getElementById("overlay").style.display = "none";
+  editor.style.display = "none";
+  overlay.style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
+  document.body.style.overflow = "auto";
 };
 
-// ===== モーダル内スクロール制御（iOS / Android バウンス防止） =====
-const editor = document.getElementById("editor");
+// ===== iOS / Android バウンス防止 =====
 let startY = 0;
-
-editor.addEventListener('touchstart', function(e){
+editor.addEventListener('touchstart', e => {
   if(e.touches.length !== 1) return;
   startY = e.touches[0].clientY;
-}, { passive:true });
+}, {passive:true});
 
-editor.addEventListener('touchmove', function(e){
+editor.addEventListener('touchmove', e => {
   if(e.touches.length !== 1) return;
-
   const scrollTop = editor.scrollTop;
   const scrollHeight = editor.scrollHeight;
   const offsetHeight = editor.offsetHeight;
-
-  const isScrollable = scrollHeight > offsetHeight;
-  if(!isScrollable) return;
-
   const currentY = e.touches[0].clientY;
   const isAtTop = scrollTop === 0;
   const isAtBottom = scrollTop + offsetHeight >= scrollHeight - 1;
@@ -89,9 +87,9 @@ editor.addEventListener('touchmove', function(e){
   const isScrollingUp = currentY < startY;
 
   if ((isAtTop && isScrollingDown) || (isAtBottom && isScrollingUp)) {
-    e.preventDefault();
+    e.preventDefault(); // 背景に伝わらない
   }
-}, { passive:false });
+}, {passive:false});
 
 // ===== 保存 =====
 window.savePlayer = async function(){
@@ -130,7 +128,7 @@ window.savePlayer = async function(){
       const docRef = await addDoc(collection(db,"players"), p);
       players.push(p);
       playerDocs.push(docRef.id);
-    }else{
+    } else {
       const ref = doc(db,"players",playerDocs[editIndex]);
       await updateDoc(ref, p);
       players[editIndex] = p;
@@ -171,14 +169,16 @@ window.editPlayer = function(i){
     s.value = found ? found.type : "";
   });
 
-  document.getElementById("editor").style.display = "block";
-  document.getElementById("overlay").style.display = "block";
+  editor.style.display = "block";
+  overlay.style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
+  document.body.style.overflow = "hidden";
 };
 
 // ===== 削除 =====
 window.deletePlayer = async function(i){
   if(!confirm("削除しますか？")) return;
+
   try{
     const ref = doc(db,"players",playerDocs[i]);
     await deleteDoc(ref);
@@ -188,6 +188,7 @@ window.deletePlayer = async function(i){
     alert("削除に失敗しました");
     return;
   }
+
   render();
 };
 
@@ -197,6 +198,7 @@ function formatPower(val){ return val.toFixed(2)+"M"; }
 function render(){
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
+
   const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(laneNum=>{
@@ -209,6 +211,7 @@ function render(){
     body.appendChild(trLane);
 
     lanePlayers.sort((a,b)=>b.power-a.power);
+
     lanePlayers.forEach((p)=>{
       const index = players.findIndex(x => x === p);
       const tr = document.createElement("tr");
