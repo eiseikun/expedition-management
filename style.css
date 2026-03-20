@@ -58,6 +58,7 @@ tr:nth-child(even){ background:#1a1a1a; }
 .cell.chaos{ background:#9c27b0; }
 .cell.mythic{ background:#d32f2f; }
 .cell.legend{ background:#fbc02d; }
+.cell.epic{background:#7e57c2;}
 
 .cell{
   display:flex;
