@@ -53,13 +53,37 @@ function runeHTML(name,q,e){
 }
 
 // ===== 装備 =====
-function gearText(gearDetail){
+function gearText(gearDetail, gearType){
   const parts = ["武器","兜","お守り","鎧","指輪","靴"];
+  const gearMark = {
+    神託: "神",
+    ドラグーン: "ド",
+    グリフォン: "グ",
+    キメラ: ""
+  };
+
+  const partMark = {
+    chaos: "混",
+    mythic: "神",
+    legend: "伝"
+  };
+
   return `
     <div class="gear-box">
       ${parts.map(p=>{
         const found = gearDetail?.find(g=>g.part===p);
-        return `<div class="cell ${found?found.type:"empty"}"></div>`;
+
+        let text = "";
+
+        if(gearType === "キメラ"){
+          // キメラは部位ごと
+          text = found ? partMark[found.type] : "";
+        }else{
+          // それ以外はセット1文字
+          text = gearMark[gearType];
+        }
+
+        return `<div class="cell ${found?found.type:"empty"}">${text}</div>`;
       }).join("")}
     </div>
   `;
