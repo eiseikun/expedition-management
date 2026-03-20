@@ -70,7 +70,25 @@ tr:nth-child(even){ background:#1a1a1a; }
 td:nth-child(6){
   white-space:normal;
 }
-
+/* ルーンの色変更 */
+.rune{
+  display:inline-block;
+  padding:4px 6px;
+  margin:2px;
+  border-radius:4px;
+  font-size:12px;
+  font-weight:bold;
+}
+/* レジェンド（黄色） */
+.rune-legend{
+  background:#fbc02d;
+  color:#000;
+}
+/* ミシック（赤） */
+.rune-mythic{
+  background:#d32f2f;
+  color:#fff;
+}
 /* モーダル */
 .editor {
   position: fixed;
