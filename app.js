@@ -38,8 +38,14 @@ window.closeEditor = function(){
 
 // ===== ルーン =====
 const runeOptions = {
-  守護: ["ダメ軽減","HP増加"],
-  迅速: ["移動速度UP","回避率UP"]
+  炎毒の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
+  氷雷の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
+  ドラスト: ["キャノドラ"],
+  苦痛の輪: ["サークルダメup","サークル会心ダメup","固有","クリダメ軽減"],
+  炎毒の触: ["エレダメup","エレ会心ダメup","固有","クリダメ軽減"],
+  氷雷の触: ["エレダメup","エレ会心ダメup","固有","クリダメ軽減"],
+  ストポショ: ["無敵効果"]
+  
 };
 
 function updateEnchant(nameSelect, enchantSelect){
@@ -47,7 +53,7 @@ function updateEnchant(nameSelect, enchantSelect){
   enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
 }
 
-window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
+window.addSelectRune = function(rune = {name:"炎毒の印", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
 
