@@ -19,7 +19,7 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
-// ===== ルーンUI =====
+// ===== 追加ルーンUI =====
 window.addRune = function(rune = {name:"", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
@@ -51,9 +51,12 @@ window.openEditor = function(){
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
   document.querySelectorAll("#chaos select").forEach(s=>s.value="");
 
-  // ルーン初期化
+  // 固定ルーン初期化
+  document.getElementById("sharpQuality").value = "none";
+  document.getElementById("arrowQuality").value = "none";
+
+  // 追加ルーン初期化
   document.getElementById("runeContainer").innerHTML = "";
-  addRune();
 
   editIndex = null;
 };
@@ -125,9 +128,29 @@ function gearText(gearDetail, gearType){
 // ===== 保存 =====
 window.savePlayer = async function(){
 
-  // ===== ルーン取得 =====
   const runes = [];
-  document.querySelectorAll(".rune-row").forEach(row=>{
+
+  // 固定ルーン
+  const sharpQ = document.getElementById("sharpQuality").value;
+  if(sharpQ !== "none"){
+    runes.push({
+      name:"鋭利",
+      q: sharpQ,
+      e: document.getElementById("sharpEnchant").value
+    });
+  }
+
+  const arrowQ = document.getElementById("arrowQuality").value;
+  if(arrowQ !== "none"){
+    runes.push({
+      name:"アロレ",
+      q: arrowQ,
+      e: document.getElementById("arrowEnchant").value
+    });
+  }
+
+  // 追加ルーン
+  document.querySelectorAll("#runeContainer .rune-row").forEach(row=>{
     const name = row.querySelector(".rune-name").value;
     const q = row.querySelector(".rune-q").value;
     const e = row.querySelector(".rune-e").value;
@@ -137,7 +160,7 @@ window.savePlayer = async function(){
     }
   });
 
-  // ===== 装備 =====
+  // 装備
   const gearDetail = [];
   document.querySelectorAll("#chaos div").forEach(div=>{
     const setEl = div.querySelector("[data-type='set']");
@@ -227,11 +250,22 @@ window.editPlayer = function(i){
   });
 
   // ルーン復元
+  document.getElementById("sharpQuality").value = "none";
+  document.getElementById("arrowQuality").value = "none";
   document.getElementById("runeContainer").innerHTML = "";
-  if(p.runes && p.runes.length){
-    p.runes.forEach(r => addRune(r));
-  }else{
-    addRune();
+
+  if(p.runes){
+    p.runes.forEach(r=>{
+      if(r.name === "鋭利"){
+        document.getElementById("sharpQuality").value = r.q;
+        document.getElementById("sharpEnchant").value = r.e;
+      }else if(r.name === "アロレ"){
+        document.getElementById("arrowQuality").value = r.q;
+        document.getElementById("arrowEnchant").value = r.e;
+      }else{
+        addRune(r);
+      }
+    });
   }
 
   document.getElementById("editor").style.display = "block";
@@ -256,63 +290,6 @@ window.deletePlayer = async function(i){
   }
 
   render();
-};
-
-// ===== 画像保存 =====
-window.saveTableImage = async function(){
-  const original = document.getElementById("captureArea");
-  const clone = original.cloneNode(true);
-
-  const rows = clone.querySelectorAll("tr");
-  let hide = false;
-  rows.forEach(row=>{
-    if(row.classList.contains("lane-header")){
-      if(row.innerText.includes("控え")){
-        hide = true;
-        row.remove();
-        return;
-      }else{
-        hide = false;
-      }
-    }
-    if(hide) row.remove();
-  });
-
-  clone.querySelectorAll("tr").forEach(row=>{
-    const cells = row.querySelectorAll("th, td");
-    if(cells.length >= 10){
-      cells[9].remove();
-      cells[8].remove();
-    }
-  });
-
-  clone.style.width = original.scrollWidth + "px";
-  clone.style.background = "#111";
-  clone.style.color = "white";
-  clone.style.position = "absolute";
-  clone.style.top = "-9999px";
-
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone,{
-    scale:3,
-    backgroundColor:"#111",
-    width:clone.scrollWidth
-  });
-
-  document.body.removeChild(clone);
-
-  canvas.toBlob(async blob=>{
-    const file=new File([blob],"expedition.png",{type:"image/png"});
-    if(navigator.share && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file]});
-    }else{
-      const link=document.createElement("a");
-      link.href=URL.createObjectURL(blob);
-      link.download="expedition.png";
-      link.click();
-    }
-  });
 };
 
 // ===== 表示 =====
