@@ -52,13 +52,20 @@ tr:nth-child(even){ background:#1a1a1a; }
   gap:3px;
   pointer-events:none; 
 }
-
+/* 0320追加 */
 .cell{ width:12px;height:12px; }
 .cell.empty{ background:#444; }
 .cell.chaos{ background:#9c27b0; }
 .cell.mythic{ background:#d32f2f; }
 .cell.legend{ background:#fbc02d; }
 
+.cell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:8px;
+  font-weight:bold;
+}
 /* ルーンだけ改行OK */
 td:nth-child(6){
   white-space:normal;
