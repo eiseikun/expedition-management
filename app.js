@@ -80,7 +80,6 @@ function runeHTML(name,q,e){
   let cls = "rune ";
   if(q==="mythic") cls += "rune-mythic";
   else if(q==="legend") cls += "rune-legend";
-  else if(q==="epic") cls += "rune-epic";
 
   return `<div class="${cls}">${name}<br>${e}</div>`;
 }
@@ -104,7 +103,6 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
     <option value="chaos">カオス</option>
     <option value="mythic">ミシック</option>
     <option value="legend">レジェンド</option>
-    <option value="epic">エピック</option>
   </select>
 </div>
 `).join("");
