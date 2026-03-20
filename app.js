@@ -46,7 +46,7 @@ function updateEnchant(nameSelect, enchantSelect){
   enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
 }
 
-window.addSelectRune = function(){
+window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
 
@@ -64,29 +64,36 @@ window.addSelectRune = function(){
   `;
 
   const nameSel = div.querySelector(".rune-name");
+  const qSel = div.querySelector(".rune-q");
   const eSel = div.querySelector(".rune-e");
 
+  nameSel.value = rune.name;
+  qSel.value = rune.q;
+
   updateEnchant(nameSel, eSel);
+  eSel.value = rune.e;
+
   nameSel.onchange = () => updateEnchant(nameSel, eSel);
 
   document.getElementById("runeContainer").appendChild(div);
 };
 
-window.addFreeRune = function(){
+window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
 
   div.innerHTML = `
-    <input class="rune-name" placeholder="ルーン名">
+    <input class="rune-name" placeholder="ルーン名" value="${rune.name}">
     <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
     </select>
-    <input class="rune-e" placeholder="効果">
+    <input class="rune-e" placeholder="効果" value="${rune.e}">
     <button onclick="this.parentNode.remove()">削除</button>
   `;
 
+  div.querySelector(".rune-q").value = rune.q;
   document.getElementById("runeContainer").appendChild(div);
 };
 
@@ -107,7 +114,6 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
     <option value="chaos">カオス</option>
     <option value="mythic">ミシック</option>
     <option value="legend">レジェンド</option>
-    <option value="epic">エピック</option>
   </select>
 </div>
 `).join("");
@@ -202,9 +208,11 @@ window.savePlayer = async function(){
   render();
 };
 
-// ===== 編集（←これが無かった） =====
+// ===== 編集 =====
 window.editPlayer = function(i){
   const p = players[i];
+
+  openEditor();
   editIndex = i;
 
   document.getElementById("name").value = p.name;
@@ -217,21 +225,41 @@ window.editPlayer = function(i){
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
 
-  openEditor();
+  // 装備復元
+  document.querySelectorAll("#chaos div").forEach(div=>{
+    const part = div.querySelector("[data-type='set']").dataset.part;
+    const g = p.gearDetail?.find(x=>x.part===part);
+
+    div.querySelector("[data-type='set']").value = g?.set || "";
+    div.querySelector("[data-type='quality']").value = g?.type || "";
+  });
+
+  // ルーン復元
+  document.getElementById("runeContainer").innerHTML = "";
+  document.getElementById("sharpQuality").value = "none";
+  document.getElementById("arrowQuality").value = "none";
+
+  (p.runes || []).forEach(r=>{
+    if(r.name === "鋭利"){
+      document.getElementById("sharpQuality").value = r.q;
+      document.getElementById("sharpEnchant").value = r.e;
+    }else if(r.name === "アロレ"){
+      document.getElementById("arrowQuality").value = r.q;
+      document.getElementById("arrowEnchant").value = r.e;
+    }else if(runeOptions[r.name]){
+      addSelectRune(r);
+    }else{
+      addFreeRune(r);
+    }
+  });
 };
 
 // ===== 削除 =====
 window.deletePlayer = async function(i){
   if(!confirm("削除しますか？")) return;
-  try{
-    const ref = doc(db,"players",playerDocs[i]);
-    await deleteDoc(ref);
-    players.splice(i,1);
-    playerDocs.splice(i,1);
-  }catch(e){
-    alert("削除に失敗しました");
-    return;
-  }
+  await deleteDoc(doc(db,"players",playerDocs[i]));
+  players.splice(i,1);
+  playerDocs.splice(i,1);
   render();
 };
 
@@ -240,7 +268,6 @@ window.saveTableImage = async function(){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
 
-  // ===== 控え削除 =====
   const rows = clone.querySelectorAll("tr");
   let hide = false;
   rows.forEach(row=>{
@@ -256,7 +283,6 @@ window.saveTableImage = async function(){
     if(hide) row.remove();
   });
 
-  // ===== 編集・削除列削除 =====
   clone.querySelectorAll("tr").forEach(row=>{
     const cells = row.querySelectorAll("th, td");
     if(cells.length >= 10){
@@ -282,16 +308,10 @@ window.saveTableImage = async function(){
   document.body.removeChild(clone);
 
   canvas.toBlob(blob=>{
-    const file=new File([blob],"expedition.png",{type:"image/png"});
-
-    if(navigator.share && navigator.canShare({files:[file]})){
-      navigator.share({files:[file]});
-    }else{
-      const link=document.createElement("a");
-      link.href=URL.createObjectURL(blob);
-      link.download="expedition.png";
-      link.click();
-    }
+    const link=document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download="expedition.png";
+    link.click();
   });
 };
 
@@ -316,9 +336,10 @@ function render(){
 
     list.sort((a,b)=>b.power-a.power);
 
-    list.forEach((p, i)=>{
-      const row=document.createElement("tr");
+    list.forEach(p=>{
+      const i=players.indexOf(p);
 
+      const row=document.createElement("tr");
       row.innerHTML=`
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
@@ -328,8 +349,8 @@ function render(){
         <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
-        <td><button onclick="editPlayer(${players.indexOf(p)})">編集</button></td>
-        <td><button onclick="deletePlayer(${players.indexOf(p)})">削除</button></td>
+        <td><button onclick="editPlayer(${i})">編集</button></td>
+        <td><button onclick="deletePlayer(${i})">削除</button></td>
       `;
       body.appendChild(row);
     });
