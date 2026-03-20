@@ -234,9 +234,10 @@ window.deletePlayer = async function(i){
 window.saveTableImage = async function(){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
+
+  // ===== 控え削除 =====
   const rows = clone.querySelectorAll("tr");
   let hide = false;
-
   rows.forEach(row=>{
     if(row.classList.contains("lane-header")){
       if(row.innerText.includes("控え")){
@@ -251,6 +252,17 @@ window.saveTableImage = async function(){
       row.remove(); // 控えプレイヤー削除
     }
   });
+  // ===== 編集・削除列削除 =====
+  const rows2 = clone.querySelectorAll("tr");
+  rows2.forEach(row=>{
+    const cells = row.querySelectorAll("th, td");
+    // 後ろから削除（順番大事）
+    if(cells.length >= 10){
+      cells[9].remove(); // 削除
+      cells[8].remove(); // 編集
+    }
+  });
+  // ===== 画像保存（描画設定） =====
   clone.style.width = original.scrollWidth + "px";
   clone.style.background = "#111";
   clone.style.color = "white";
