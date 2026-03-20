@@ -171,11 +171,25 @@ window.deletePlayer = async function(i){
 
 // ===== 画像保存（完全版） =====
 window.saveTableImage = async function(){
-
   const original = document.getElementById("captureArea");
-
   const clone = original.cloneNode(true);
+  const rows = clone.querySelectorAll("tr");
+  let hide = false;
 
+  rows.forEach(row=>{
+    if(row.classList.contains("lane-header")){
+      if(row.innerText.includes("控え")){
+        hide = true;
+        row.remove(); // 控えヘッダー削除
+        return;
+      }else{
+        hide = false;
+      }
+    }
+    if(hide){
+      row.remove(); // 控えプレイヤー削除
+    }
+  });
   clone.style.width = original.scrollWidth + "px";
   clone.style.background = "#111";
   clone.style.color = "white";
