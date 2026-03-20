@@ -311,7 +311,7 @@ function render(){
 
     const tr=document.createElement("tr");
     tr.className="lane-header";
-    tr.innerHTML=`<td colspan="9">${laneNames[l]} (${list.length})</td>`;
+    tr.innerHTML=`<td colspan="10">${laneNames[l]} (${list.length})</td>`;
     body.appendChild(tr);
 
     list.sort((a,b)=>b.power-a.power);
@@ -323,6 +323,7 @@ function render(){
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
         <td>${p.range}/${p.style}</td>
+        <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
         <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
         <td>${p.formation}</td>
