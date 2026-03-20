@@ -113,10 +113,6 @@ td:nth-child(6){
   box-sizing: border-box;
 }
 
-/* モーダル中は背景操作禁止 */
-body.modal-open{
-  pointer-events:none;
-}
 
 /* モーダル自体は操作可能 */
 .editor{
