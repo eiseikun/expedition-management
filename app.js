@@ -220,10 +220,16 @@ window.editPlayer = function(i){
 
 // ===== 削除 =====
 window.deletePlayer = async function(i){
-  if(!confirm("削除する？")) return;
-  await deleteDoc(doc(db,"players",playerDocs[i]));
-  players.splice(i,1);
-  playerDocs.splice(i,1);
+  if(!confirm("削除しますか？")) return;
+  try{
+    const ref = doc(db,"players",playerDocs[i]);
+    await deleteDoc(ref);
+    players.splice(i,1);
+    playerDocs.splice(i,1);
+  }catch(e){
+    alert("削除に失敗しました");
+    return;
+  }
   render();
 };
 
@@ -251,9 +257,9 @@ window.saveTableImage = async function(){
   // ===== 編集・削除列削除 =====
   clone.querySelectorAll("tr").forEach(row=>{
     const cells = row.querySelectorAll("th, td");
-    if(cells.length >= 9){
+    if(cells.length >= 10){
+      cells[9]?.remove();
       cells[8]?.remove();
-      cells[7]?.remove();
     }
   });
 
