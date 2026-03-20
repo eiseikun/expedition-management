@@ -51,21 +51,38 @@ function runeHTML(name,q,e){
   const cls = q==="mythic"?"rune rune-mythic":"rune rune-legend";
   return `<div class="${cls}">${name}<br>${e}</div>`;
 }
+// ===== 320追加 =====
+const parts = ["武器","兜","お守り","鎧","指輪","靴"];
+
+document.getElementById("chaos").innerHTML = parts.map(p=>`
+<div>
+  <label>${p}</label>
+
+  <select data-part="${p}" data-type="set">
+    <option value="">なし</option>
+    <option>神託</option>
+    <option>ドラグーン</option>
+    <option>グリフォン</option>
+  </select>
+
+  <select data-part="${p}" data-type="quality">
+    <option value="">なし</option>
+    <option value="chaos">カオス</option>
+    <option value="mythic">ミシック</option>
+    <option value="legend">レジェンド</option>
+  </select>
+</div>
+`).join("");
 
 // ===== 装備 =====
 function gearText(gearDetail, gearType){
+
   const parts = ["武器","兜","お守り","鎧","指輪","靴"];
-  const gearMark = {
+
+  const setMark = {
     神託: "神",
     ドラグーン: "ド",
-    グリフォン: "グ",
-    キメラ: ""
-  };
-
-  const partMark = {
-    chaos: "混",
-    mythic: "神",
-    legend: "伝"
+    グリフォン: "グ"
   };
 
   return `
@@ -73,15 +90,10 @@ function gearText(gearDetail, gearType){
       ${parts.map(p=>{
         const found = gearDetail?.find(g=>g.part===p);
 
-        let text = "";
+        // ★旧データ対応
+        const set = found?.set || gearType;
 
-        if(gearType === "キメラ"){
-          // キメラは部位ごと
-          text = found ? partMark[found.type] : "";
-        }else{
-          // それ以外はセット1文字
-          text = gearMark[gearType];
-        }
+        const text = setMark[set] || "";
 
         return `<div class="cell ${found?found.type:"empty"}">${text}</div>`;
       }).join("")}
@@ -93,11 +105,20 @@ function gearText(gearDetail, gearType){
 window.savePlayer = async function(){
 
   const gearDetail = [];
-  document.querySelectorAll("#chaos select").forEach(s=>{
-    if(s.value){
-      gearDetail.push({part:s.dataset.part,type:s.value});
-    }
-  });
+
+document.querySelectorAll("#chaos div").forEach(div=>{
+  const setEl = div.querySelector("[data-type='set']");
+  const qEl = div.querySelector("[data-type='quality']");
+
+  const part = setEl.dataset.part;
+  const set = setEl.value;
+  const type = qEl.value;
+
+  if(set && type){
+    gearDetail.push({part, type, set});
+  }
+});
+
 
   const p = {
     name: document.getElementById("name").value.trim(),
@@ -163,10 +184,26 @@ window.editPlayer = function(i){
   document.getElementById("mythic").value = p.mythic;
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
-
+ 
   document.querySelectorAll("#chaos select").forEach(s=>{
     const found = p.gearDetail?.find(g=>g.part===s.dataset.part);
     s.value = found ? found.type : "";
+       // ===== 0320追加 ===== 
+  document.querySelectorAll("#chaos div").forEach(div=>{
+  const setEl = div.querySelector("[data-type='set']");
+  const qEl = div.querySelector("[data-type='quality']");
+  const part = setEl.dataset.part;
+
+  const found = p.gearDetail?.find(g=>g.part===part);
+
+  if(found){
+    setEl.value = found.set || p.gear;
+    qEl.value = found.type;
+  }else{
+    setEl.value = "";
+    qEl.value = "";
+  }
+});
   });
 
   document.getElementById("editor").style.display = "block";
@@ -276,7 +313,7 @@ function render(){
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
         <td>${p.range}/${p.style}</td>
-        <td>${gearText(p.gearDetail)}</td>
+        <td>${gearText(p.gearDetail, p.gear)}</td>
         <td>${p.hero}</td>
         <td>${runeHTML("鋭利",p.sharpQ,p.sharpE)+runeHTML("アロレ",p.arrowQ,p.arrowE)}</td>
         <td>${p.formation}</td>
