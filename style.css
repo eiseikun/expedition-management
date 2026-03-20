@@ -90,6 +90,12 @@ td:nth-child(6){
   background:#c11333;
   color:#fff;
 }
+/* ルーンを区切る */
+#runeContainer{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #555;
+}
 /* モーダル */
 .editor {
   position: fixed;
