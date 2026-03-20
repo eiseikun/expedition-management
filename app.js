@@ -33,6 +33,7 @@ window.openEditor = function(){
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.body.classList.remove("modal-open");
+  document.body.style.overflow = "auto";
 };
 
 // ===== ルーン =====
