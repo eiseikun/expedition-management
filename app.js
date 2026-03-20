@@ -334,7 +334,7 @@ function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
 function render(){
   const body=document.getElementById("playerBody");
   body.innerHTML="";
-
+  const total = players.length;
   const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(l=>{
@@ -343,7 +343,11 @@ function render(){
 
     const tr=document.createElement("tr");
     tr.className="lane-header";
-    tr.innerHTML=`<td colspan="10">${laneNames[l]} (${list.length})</td>`;
+    if(l === 0){
+      tr.innerHTML = `<td colspan="10">${laneNames[l]} (${list.length})</td>`;
+    }else{
+      tr.innerHTML = `<td colspan="10">${laneNames[l]} (${list.length} / ${total})</td>`;
+    }
     body.appendChild(tr);
 
     list.sort((a,b)=>b.power-a.power);
