@@ -19,8 +19,56 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
-// ===== 追加ルーンUI =====
-window.addRune = function(rune = {name:"", q:"none", e:""}){
+// ===== ルーン定義 =====
+const runeOptions = {
+  守護: ["ダメ軽減","HP増加"],
+  迅速: ["移動速度UP","回避率UP"]
+};
+
+// ===== 効果更新 =====
+function updateEnchant(nameSelect, enchantSelect){
+  const effects = runeOptions[nameSelect.value] || [];
+  enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
+}
+
+// ===== 選択ルーン追加 =====
+window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
+  const div = document.createElement("div");
+  div.className = "rune-row";
+
+  div.innerHTML = `
+    <select class="rune-name">
+      ${Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("")}
+    </select>
+
+    <select class="rune-q">
+      <option value="none">なし</option>
+      <option value="legend">レジェンド</option>
+      <option value="mythic">ミシック</option>
+    </select>
+
+    <select class="rune-e"></select>
+
+    <button onclick="this.parentNode.remove()">削除</button>
+  `;
+
+  const nameSel = div.querySelector(".rune-name");
+  const qSel = div.querySelector(".rune-q");
+  const eSel = div.querySelector(".rune-e");
+
+  nameSel.value = rune.name;
+  qSel.value = rune.q;
+
+  updateEnchant(nameSel, eSel);
+  eSel.value = rune.e;
+
+  nameSel.onchange = () => updateEnchant(nameSel, eSel);
+
+  document.getElementById("runeContainer").appendChild(div);
+};
+
+// ===== 自由ルーン追加 =====
+window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
 
@@ -30,7 +78,6 @@ window.addRune = function(rune = {name:"", q:"none", e:""}){
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
-      <option value="epic">エピック</option>
     </select>
     <input placeholder="効果" class="rune-e" value="${rune.e}">
     <button onclick="this.parentNode.remove()">削除</button>
@@ -44,18 +91,14 @@ window.addRune = function(rune = {name:"", q:"none", e:""}){
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
-  document.body.style.overflow = "hidden";
-  document.body.classList.add("modal-open");
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
   document.querySelectorAll("#chaos select").forEach(s=>s.value="");
 
-  // 固定ルーン初期化
   document.getElementById("sharpQuality").value = "none";
   document.getElementById("arrowQuality").value = "none";
 
-  // 追加ルーン初期化
   document.getElementById("runeContainer").innerHTML = "";
 
   editIndex = null;
@@ -64,8 +107,6 @@ window.openEditor = function(){
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
-  document.body.style.overflow = "auto";
-  document.body.classList.remove("modal-open");
 };
 
 // ===== 計算 =====
@@ -84,44 +125,27 @@ function runeHTML(name,q,e){
   return `<div class="${cls}">${name}<br>${e}</div>`;
 }
 
-// ===== 装備パーツ =====
+// ===== 装備 =====
 const parts = ["武器","兜","お守り","鎧","指輪","靴"];
 
 document.getElementById("chaos").innerHTML = parts.map(p=>`
 <div>
   <label>${p}</label>
-
   <select data-part="${p}" data-type="set">
     <option value="">なし</option>
     <option>神託</option>
     <option>ドラグーン</option>
     <option>グリフォン</option>
   </select>
-
   <select data-part="${p}" data-type="quality">
     <option value="">なし</option>
     <option value="chaos">カオス</option>
     <option value="mythic">ミシック</option>
     <option value="legend">レジェンド</option>
+    <option value="epic">エピック</option>
   </select>
 </div>
 `).join("");
-
-// ===== 装備表示 =====
-function gearText(gearDetail, gearType){
-  const setMark = { 神託:"神", ドラグーン:"ド", グリフォン:"グ" };
-
-  return `
-    <div class="gear-box">
-      ${parts.map(p=>{
-        const found = gearDetail?.find(g=>g.part===p);
-        const set = found?.set || gearType;
-        const text = setMark[set] || "";
-        return `<div class="cell ${found?found.type:"empty"}">${text}</div>`;
-      }).join("")}
-    </div>
-  `;
-}
 
 // ===== 保存 =====
 window.savePlayer = async function(){
@@ -131,27 +155,22 @@ window.savePlayer = async function(){
   // 固定ルーン
   const sharpQ = document.getElementById("sharpQuality").value;
   if(sharpQ !== "none"){
-    runes.push({
-      name:"鋭利",
-      q: sharpQ,
-      e: document.getElementById("sharpEnchant").value
-    });
+    runes.push({name:"鋭利", q:sharpQ, e:document.getElementById("sharpEnchant").value});
   }
 
   const arrowQ = document.getElementById("arrowQuality").value;
   if(arrowQ !== "none"){
-    runes.push({
-      name:"アロレ",
-      q: arrowQ,
-      e: document.getElementById("arrowEnchant").value
-    });
+    runes.push({name:"アロレ", q:arrowQ, e:document.getElementById("arrowEnchant").value});
   }
 
   // 追加ルーン
   document.querySelectorAll("#runeContainer .rune-row").forEach(row=>{
-    const name = row.querySelector(".rune-name").value;
+    const nameEl = row.querySelector(".rune-name");
     const q = row.querySelector(".rune-q").value;
-    const e = row.querySelector(".rune-e").value;
+    const eEl = row.querySelector(".rune-e");
+
+    const name = nameEl.value;
+    const e = eEl.value;
 
     if(name && q !== "none"){
       runes.push({name, q, e});
@@ -163,13 +182,12 @@ window.savePlayer = async function(){
   document.querySelectorAll("#chaos div").forEach(div=>{
     const setEl = div.querySelector("[data-type='set']");
     const qEl = div.querySelector("[data-type='quality']");
-
-    const part = setEl.dataset.part;
-    const set = setEl.value;
-    const type = qEl.value;
-
-    if(set && type){
-      gearDetail.push({part, type, set});
+    if(setEl.value && qEl.value){
+      gearDetail.push({
+        part:setEl.dataset.part,
+        set:setEl.value,
+        type:qEl.value
+      });
     }
   });
 
@@ -199,14 +217,12 @@ window.savePlayer = async function(){
       players.push(p);
       playerDocs.push(docRef.id);
     }else{
-      const ref = doc(db,"players",playerDocs[editIndex]);
-      await updateDoc(ref, p);
+      await updateDoc(doc(db,"players",playerDocs[editIndex]), p);
       players[editIndex] = p;
       editIndex = null;
     }
   }catch(e){
-    alert("保存に失敗しました");
-    console.error(e);
+    alert("保存失敗");
     return;
   }
 
@@ -214,86 +230,8 @@ window.savePlayer = async function(){
   render();
 };
 
-// ===== 編集 =====
-window.editPlayer = function(i){
-  const p = players[i];
-  editIndex = i;
-
-  document.getElementById("name").value = p.name;
-  document.getElementById("power").value = p.power;
-  document.getElementById("range").value = p.range;
-  document.getElementById("style").value = p.style;
-  document.getElementById("gear").value = p.gear;
-  document.getElementById("hero").value = p.hero;
-  document.getElementById("formation").value = p.formation;
-  document.getElementById("mythic").value = p.mythic;
-  document.getElementById("legend").value = p.legend;
-  document.getElementById("lane").value = p.lane;
-
-  // 装備復元
-  document.querySelectorAll("#chaos div").forEach(div=>{
-    const setEl = div.querySelector("[data-type='set']");
-    const qEl = div.querySelector("[data-type='quality']");
-    const part = setEl.dataset.part;
-
-    const found = p.gearDetail?.find(g=>g.part===part);
-
-    if(found){
-      setEl.value = found.set || p.gear;
-      qEl.value = found.type;
-    }else{
-      setEl.value = "";
-      qEl.value = "";
-    }
-  });
-
-  // ルーン復元
-  document.getElementById("sharpQuality").value = "none";
-  document.getElementById("arrowQuality").value = "none";
-  document.getElementById("runeContainer").innerHTML = "";
-
-  if(p.runes){
-    p.runes.forEach(r=>{
-      if(r.name === "鋭利"){
-        document.getElementById("sharpQuality").value = r.q;
-        document.getElementById("sharpEnchant").value = r.e;
-      }else if(r.name === "アロレ"){
-        document.getElementById("arrowQuality").value = r.q;
-        document.getElementById("arrowEnchant").value = r.e;
-      }else{
-        addRune(r);
-      }
-    });
-  }
-
-  document.getElementById("editor").style.display = "block";
-  document.getElementById("modeIndicator").innerText = "編集モード";
-  document.body.style.overflow = "hidden";
-  document.body.classList.add("modal-open");
-};
-
-// ===== 削除 =====
-window.deletePlayer = async function(i){
-  if(!confirm("削除しますか？")) return;
-
-  try{
-    const ref = doc(db,"players",playerDocs[i]);
-    await deleteDoc(ref);
-
-    players.splice(i,1);
-    playerDocs.splice(i,1);
-  }catch(e){
-    alert("削除に失敗しました");
-    return;
-  }
-
-  render();
-};
-
 // ===== 表示 =====
-function formatPower(val){
-  return val.toFixed(2)+"M";
-}
+function formatPower(val){ return val.toFixed(2)+"M"; }
 
 function render(){
   const body = document.getElementById("playerBody");
@@ -301,32 +239,31 @@ function render(){
 
   const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
-  [1,2,3,0].forEach(laneNum=>{
-    const lanePlayers = players.filter(p=>p.lane===laneNum);
-    if(lanePlayers.length===0) return;
+  [1,2,3,0].forEach(l=>{
+    const list = players.filter(p=>p.lane===l);
+    if(!list.length) return;
 
     const trLane = document.createElement("tr");
     trLane.classList.add("lane-header");
-    trLane.innerHTML = `<td colspan="10">${laneNames[laneNum]} (${lanePlayers.length})</td>`;
+    trLane.innerHTML = `<td colspan="10">${laneNames[l]} (${list.length})</td>`;
     body.appendChild(trLane);
 
-    lanePlayers.sort((a,b)=>b.power-a.power);
+    list.sort((a,b)=>b.power-a.power);
 
-    lanePlayers.forEach((p)=>{
-      const index = players.findIndex(x => x === p);
+    list.forEach(p=>{
+      const i = players.findIndex(x=>x===p);
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
         <td>${p.range}/${p.style}</td>
-        <td>${gearText(p.gearDetail, p.gear)}</td>
         <td>${p.hero}</td>
-        <td>${p.runes?.map(r => runeHTML(r.name, r.q, r.e)).join("") || ""}</td>
+        <td>${p.runes.map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
-        <td><button onclick="editPlayer(${index})">編集</button></td>
-        <td><button onclick="deletePlayer(${index})">削除</button></td>
+        <td><button onclick="editPlayer(${i})">編集</button></td>
+        <td><button onclick="deletePlayer(${i})">削除</button></td>
       `;
       body.appendChild(tr);
     });
