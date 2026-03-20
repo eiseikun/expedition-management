@@ -232,6 +232,23 @@ window.saveTableImage = async function(){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
 
+  // ===== 控え削除 =====
+  const rows = clone.querySelectorAll("tr");
+  let hide = false;
+  rows.forEach(row=>{
+    if(row.classList.contains("lane-header")){
+      if(row.innerText.includes("控え")){
+        hide = true;
+        row.remove();
+        return;
+      }else{
+        hide = false;
+      }
+    }
+    if(hide) row.remove();
+  });
+
+  // ===== 編集・削除列削除 =====
   clone.querySelectorAll("tr").forEach(row=>{
     const cells = row.querySelectorAll("th, td");
     if(cells.length >= 9){
@@ -240,17 +257,34 @@ window.saveTableImage = async function(){
     }
   });
 
-  clone.style.position="absolute";
-  clone.style.top="-9999px";
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
   document.body.appendChild(clone);
 
-  const canvas = await html2canvas(clone,{scale:3});
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111",
+    width:clone.scrollWidth
+  });
+
   document.body.removeChild(clone);
 
-  const link=document.createElement("a");
-  link.href=canvas.toDataURL();
-  link.download="expedition.png";
-  link.click();
+  canvas.toBlob(blob=>{
+    const file=new File([blob],"expedition.png",{type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      navigator.share({files:[file]});
+    }else{
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="expedition.png";
+      link.click();
+    }
+  });
 };
 
 // ===== 表示 =====
@@ -269,13 +303,12 @@ function render(){
 
     const tr=document.createElement("tr");
     tr.className="lane-header";
-    tr.innerHTML=`<td colspan="10">${laneNames[l]} (${list.length})</td>`;
+    tr.innerHTML=`<td colspan="9">${laneNames[l]} (${list.length})</td>`;
     body.appendChild(tr);
 
     list.sort((a,b)=>b.power-a.power);
 
-    list.forEach(p=>{
-      const i=players.indexOf(p);
+    list.forEach((p, i)=>{
       const row=document.createElement("tr");
 
       row.innerHTML=`
@@ -283,11 +316,11 @@ function render(){
         <td>${formatPower(p.power)}</td>
         <td>${p.range}/${p.style}</td>
         <td>${p.hero}</td>
-        <td>${p.runes.map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
+        <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
-        <td><button onclick="editPlayer(${i})">編集</button></td>
-        <td><button onclick="deletePlayer(${i})">削除</button></td>
+        <td><button onclick="editPlayer(${players.indexOf(p)})">編集</button></td>
+        <td><button onclick="deletePlayer(${players.indexOf(p)})">削除</button></td>
       `;
       body.appendChild(row);
     });
