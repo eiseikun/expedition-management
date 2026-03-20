@@ -16,20 +16,35 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
-// ===== ルーン定義 =====
+// ===== モーダル =====
+window.openEditor = function(){
+  document.getElementById("editor").style.display = "block";
+  document.body.classList.add("modal-open");
+
+  document.querySelectorAll("#editor input").forEach(i=>i.value="");
+  document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
+  document.getElementById("runeContainer").innerHTML = "";
+
+  editIndex = null;
+};
+
+window.closeEditor = function(){
+  document.getElementById("editor").style.display = "none";
+  document.body.classList.remove("modal-open");
+};
+
+// ===== ルーン =====
 const runeOptions = {
   守護: ["ダメ軽減","HP増加"],
   迅速: ["移動速度UP","回避率UP"]
 };
 
-// ===== 効果更新 =====
 function updateEnchant(nameSelect, enchantSelect){
   const effects = runeOptions[nameSelect.value] || [];
   enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
 }
 
-// ===== ルーン追加 =====
-window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
+window.addSelectRune = function(){
   const div = document.createElement("div");
   div.className = "rune-row";
 
@@ -47,36 +62,29 @@ window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
   `;
 
   const nameSel = div.querySelector(".rune-name");
-  const qSel = div.querySelector(".rune-q");
   const eSel = div.querySelector(".rune-e");
 
-  nameSel.value = rune.name;
-  qSel.value = rune.q;
-
   updateEnchant(nameSel, eSel);
-  eSel.value = rune.e;
-
   nameSel.onchange = () => updateEnchant(nameSel, eSel);
 
   document.getElementById("runeContainer").appendChild(div);
 };
 
-window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
+window.addFreeRune = function(){
   const div = document.createElement("div");
   div.className = "rune-row";
 
   div.innerHTML = `
-    <input class="rune-name" placeholder="ルーン名" value="${rune.name}">
+    <input class="rune-name" placeholder="ルーン名">
     <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
     </select>
-    <input class="rune-e" placeholder="効果" value="${rune.e}">
+    <input class="rune-e" placeholder="効果">
     <button onclick="this.parentNode.remove()">削除</button>
   `;
 
-  div.querySelector(".rune-q").value = rune.q;
   document.getElementById("runeContainer").appendChild(div);
 };
 
@@ -102,20 +110,19 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
 </div>
 `).join("");
 
-// ===== 装備表示 =====
+// ===== 表示 =====
 function gearText(gearDetail){
   const mark = {神託:"神",ドラグーン:"ド",グリフォン:"グ"};
 
   return `
   <div class="gear-box">
     ${parts.map(p=>{
-      const g = gearDetail.find(x=>x.part===p);
+      const g = gearDetail?.find(x=>x.part===p);
       return `<div class="cell ${g?.type||"empty"}">${g?mark[g.set]:""}</div>`;
     }).join("")}
   </div>`;
 }
 
-// ===== ルーン表示 =====
 function runeHTML(name,q,e){
   if(q==="none") return "";
   let cls = "rune ";
@@ -123,61 +130,6 @@ function runeHTML(name,q,e){
   else if(q==="legend") cls+="rune-legend";
   return `<div class="${cls}">${name}<br>${e}</div>`;
 }
-
-// ===== 画像保存 =====
-window.saveTableImage = async function(){
-  const original = document.getElementById("captureArea");
-  const clone = original.cloneNode(true);
-
-  // 控え削除
-  const rows = clone.querySelectorAll("tr");
-  let hide = false;
-
-  rows.forEach(row=>{
-    if(row.classList.contains("lane-header")){
-      if(row.innerText.includes("控え")){
-        hide = true;
-        row.remove();
-        return;
-      }else{
-        hide = false;
-      }
-    }
-    if(hide) row.remove();
-  });
-
-  // 編集・削除列削除（今は9列）
-  clone.querySelectorAll("tr").forEach(row=>{
-    const cells = row.querySelectorAll("th, td");
-    if(cells.length >= 9){
-      cells[8].remove(); // 削除
-      cells[7].remove(); // 編集
-    }
-  });
-
-  clone.style.width = original.scrollWidth + "px";
-  clone.style.background = "#111";
-  clone.style.color = "white";
-  clone.style.position = "absolute";
-  clone.style.top = "-9999px";
-
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone,{
-    scale:3,
-    backgroundColor:"#111",
-    width:clone.scrollWidth
-  });
-
-  document.body.removeChild(clone);
-
-  canvas.toBlob(blob=>{
-    const link=document.createElement("a");
-    link.href=URL.createObjectURL(blob);
-    link.download="expedition.png";
-    link.click();
-  });
-};
 
 // ===== 保存 =====
 window.savePlayer = async function(){
@@ -248,6 +200,24 @@ window.savePlayer = async function(){
   render();
 };
 
+// ===== 編集（←これが無かった） =====
+window.editPlayer = function(i){
+  const p = players[i];
+  editIndex = i;
+
+  document.getElementById("name").value = p.name;
+  document.getElementById("power").value = p.power;
+  document.getElementById("range").value = p.range;
+  document.getElementById("style").value = p.style;
+  document.getElementById("hero").value = p.hero;
+  document.getElementById("formation").value = p.formation;
+  document.getElementById("mythic").value = p.mythic;
+  document.getElementById("legend").value = p.legend;
+  document.getElementById("lane").value = p.lane;
+
+  openEditor();
+};
+
 // ===== 削除 =====
 window.deletePlayer = async function(i){
   if(!confirm("削除する？")) return;
@@ -255,6 +225,32 @@ window.deletePlayer = async function(i){
   players.splice(i,1);
   playerDocs.splice(i,1);
   render();
+};
+
+// ===== 画像保存 =====
+window.saveTableImage = async function(){
+  const original = document.getElementById("captureArea");
+  const clone = original.cloneNode(true);
+
+  clone.querySelectorAll("tr").forEach(row=>{
+    const cells = row.querySelectorAll("th, td");
+    if(cells.length >= 9){
+      cells[8]?.remove();
+      cells[7]?.remove();
+    }
+  });
+
+  clone.style.position="absolute";
+  clone.style.top="-9999px";
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{scale:3});
+  document.body.removeChild(clone);
+
+  const link=document.createElement("a");
+  link.href=canvas.toDataURL();
+  link.download="expedition.png";
+  link.click();
 };
 
 // ===== 表示 =====
@@ -273,7 +269,7 @@ function render(){
 
     const tr=document.createElement("tr");
     tr.className="lane-header";
-    tr.innerHTML=`<td colspan="9">${laneNames[l]} (${list.length})</td>`;
+    tr.innerHTML=`<td colspan="10">${laneNames[l]} (${list.length})</td>`;
     body.appendChild(tr);
 
     list.sort((a,b)=>b.power-a.power);
@@ -286,7 +282,6 @@ function render(){
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
         <td>${p.range}/${p.style}</td>
-        <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
         <td>${p.runes.map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
         <td>${p.formation}</td>
