@@ -131,3 +131,10 @@ td:nth-child(6){
   justify-content:space-between;
   gap:8px;
 }
+/* ボタンと表に隙間 */
+.top-buttons{
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
