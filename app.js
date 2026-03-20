@@ -306,12 +306,17 @@ window.saveTableImage = async function(){
   });
 
   document.body.removeChild(clone);
+  canvas.toBlob(async blob=>{
+    const file=new File([blob],"expedition.png",{type:"image/png"});
 
-  canvas.toBlob(blob=>{
-    const link=document.createElement("a");
-    link.href=URL.createObjectURL(blob);
-    link.download="expedition.png";
-    link.click();
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="expedition.png";
+      link.click();
+    }
   });
 };
 
