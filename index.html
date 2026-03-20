@@ -63,25 +63,9 @@
  
 
   <h3>ルーン</h3>
-  <div class="rune-row">
-    <span>鋭利</span>
-    <select id="sharpQuality">
-      <option value="none">なし</option><option value="legend">レジェンド</option><option value="mythic">ミシック</option>
-    </select>
-    <select id="sharpEnchant">
-      <option>跳ね返り</option><option>クリダメUP</option>
-    </select>
-  </div>
-
-  <div class="rune-row">
-    <span>アロレ</span>
-    <select id="arrowQuality">
-      <option value="none">なし</option><option value="legend">レジェンド</option><option value="mythic">ミシック</option>
-    </select>
-    <select id="arrowEnchant">
-      <option>固有</option><option>主武器UP</option>
-    </select>
-  </div>
+  <div id="runeContainer"></div>
+  <button onclick="addRune()">ルーン追加</button>
+  
 
   <h3>その他</h3>
   <input id="hero" placeholder="主キャラ">
