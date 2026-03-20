@@ -55,10 +55,10 @@ tr:nth-child(even){ background:#1a1a1a; }
 /* 0320追加 */
 .cell{ width:12px;height:12px; }
 .cell.empty{ background:#444; }
-.cell.chaos{ background:#9c27b0; }
-.cell.mythic{ background:#d32f2f; }
-.cell.legend{ background:#fbc02d; }
-.cell.epic{background:#7e57c2;}
+.cell.chaos{ background:#75004f; }
+.cell.mythic{ background:#c11333; }
+.cell.legend{ background:#db9000; }
+.cell.epic{background:#8223c4;}
 
 .cell{
   display:flex;
@@ -82,12 +82,12 @@ td:nth-child(6){
 }
 /* レジェンド（黄色） */
 .rune-legend{
-  background:#fbc02d;
+  background:#db9000;
   color:#000;
 }
 /* ミシック（赤） */
 .rune-mythic{
-  background:#d32f2f;
+  background:#c11333;
   color:#fff;
 }
 /* モーダル */
