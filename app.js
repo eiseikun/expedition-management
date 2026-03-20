@@ -19,6 +19,8 @@ let editIndex = null;
 // ===== モーダル =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
+  document.getElementById("modeIndicator").innerText = "追加モード";
+  document.body.style.overflow = "hidden";
   document.body.classList.add("modal-open");
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
