@@ -70,6 +70,7 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
     <option value="chaos">カオス</option>
     <option value="mythic">ミシック</option>
     <option value="legend">レジェンド</option>
+    <option value="epic">エピック</option>
   </select>
 </div>
 `).join("");
