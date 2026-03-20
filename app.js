@@ -19,6 +19,27 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
+// ===== ルーンUI =====
+window.addRune = function(rune = {name:"", q:"none", e:""}){
+  const div = document.createElement("div");
+  div.className = "rune-row";
+
+  div.innerHTML = `
+    <input placeholder="ルーン名" class="rune-name" value="${rune.name}">
+    <select class="rune-q">
+      <option value="none">なし</option>
+      <option value="legend">レジェンド</option>
+      <option value="mythic">ミシック</option>
+      <option value="epic">エピック</option>
+    </select>
+    <input placeholder="効果" class="rune-e" value="${rune.e}">
+    <button onclick="this.parentNode.remove()">削除</button>
+  `;
+
+  div.querySelector(".rune-q").value = rune.q;
+  document.getElementById("runeContainer").appendChild(div);
+};
+
 // ===== モーダル =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
@@ -29,6 +50,10 @@ window.openEditor = function(){
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
   document.querySelectorAll("#chaos select").forEach(s=>s.value="");
+
+  // ルーン初期化
+  document.getElementById("runeContainer").innerHTML = "";
+  addRune();
 
   editIndex = null;
 };
@@ -45,13 +70,19 @@ function relicBuff(m,l){
   return Number((m*0.25 + l*0.025).toFixed(3));
 }
 
-// ===== ルーン =====
+// ===== ルーン表示 =====
 function runeHTML(name,q,e){
   if(q==="none") return "";
-  const cls = q==="mythic"?"rune rune-mythic":"rune rune-legend";
+
+  let cls = "rune ";
+  if(q==="mythic") cls += "rune-mythic";
+  else if(q==="legend") cls += "rune-legend";
+  else if(q==="epic") cls += "rune-epic";
+
   return `<div class="${cls}">${name}<br>${e}</div>`;
 }
-// ===== 320追加 =====
+
+// ===== 装備パーツ =====
 const parts = ["武器","兜","お守り","鎧","指輪","靴"];
 
 document.getElementById("chaos").innerHTML = parts.map(p=>`
@@ -75,27 +106,16 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
 </div>
 `).join("");
 
-// ===== 装備 =====
+// ===== 装備表示 =====
 function gearText(gearDetail, gearType){
-
-  const parts = ["武器","兜","お守り","鎧","指輪","靴"];
-
-  const setMark = {
-    神託: "神",
-    ドラグーン: "ド",
-    グリフォン: "グ"
-  };
+  const setMark = { 神託:"神", ドラグーン:"ド", グリフォン:"グ" };
 
   return `
     <div class="gear-box">
       ${parts.map(p=>{
         const found = gearDetail?.find(g=>g.part===p);
-
-        // ★旧データ対応
         const set = found?.set || gearType;
-
         const text = setMark[set] || "";
-
         return `<div class="cell ${found?found.type:"empty"}">${text}</div>`;
       }).join("")}
     </div>
@@ -105,21 +125,32 @@ function gearText(gearDetail, gearType){
 // ===== 保存 =====
 window.savePlayer = async function(){
 
+  // ===== ルーン取得 =====
+  const runes = [];
+  document.querySelectorAll(".rune-row").forEach(row=>{
+    const name = row.querySelector(".rune-name").value;
+    const q = row.querySelector(".rune-q").value;
+    const e = row.querySelector(".rune-e").value;
+
+    if(name && q !== "none"){
+      runes.push({name, q, e});
+    }
+  });
+
+  // ===== 装備 =====
   const gearDetail = [];
+  document.querySelectorAll("#chaos div").forEach(div=>{
+    const setEl = div.querySelector("[data-type='set']");
+    const qEl = div.querySelector("[data-type='quality']");
 
-document.querySelectorAll("#chaos div").forEach(div=>{
-  const setEl = div.querySelector("[data-type='set']");
-  const qEl = div.querySelector("[data-type='quality']");
+    const part = setEl.dataset.part;
+    const set = setEl.value;
+    const type = qEl.value;
 
-  const part = setEl.dataset.part;
-  const set = setEl.value;
-  const type = qEl.value;
-
-  if(set && type){
-    gearDetail.push({part, type, set});
-  }
-});
-
+    if(set && type){
+      gearDetail.push({part, type, set});
+    }
+  });
 
   const p = {
     name: document.getElementById("name").value.trim(),
@@ -129,17 +160,13 @@ document.querySelectorAll("#chaos div").forEach(div=>{
     gear: document.getElementById("gear").value,
     gearDetail,
     hero: document.getElementById("hero").value,
-    sharpQ: document.getElementById("sharpQuality").value,
-    sharpE: document.getElementById("sharpEnchant").value,
-    arrowQ: document.getElementById("arrowQuality").value,
-    arrowE: document.getElementById("arrowEnchant").value,
     formation: document.getElementById("formation").value,
     mythic: Number(document.getElementById("mythic").value),
     legend: Number(document.getElementById("legend").value),
-    lane: Number(document.getElementById("lane").value)
+    lane: Number(document.getElementById("lane").value),
+    runes
   };
 
-  //入力チェック
   if(!p.name || isNaN(p.power)){
     alert("名前と戦力は必須です");
     return;
@@ -177,35 +204,35 @@ window.editPlayer = function(i){
   document.getElementById("style").value = p.style;
   document.getElementById("gear").value = p.gear;
   document.getElementById("hero").value = p.hero;
-  document.getElementById("sharpQuality").value = p.sharpQ;
-  document.getElementById("sharpEnchant").value = p.sharpE;
-  document.getElementById("arrowQuality").value = p.arrowQ;
-  document.getElementById("arrowEnchant").value = p.arrowE;
   document.getElementById("formation").value = p.formation;
   document.getElementById("mythic").value = p.mythic;
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
- 
-  document.querySelectorAll("#chaos select").forEach(s=>{
-    const found = p.gearDetail?.find(g=>g.part===s.dataset.part);
-    s.value = found ? found.type : "";
-       // ===== 0320追加 ===== 
+
+  // 装備復元
   document.querySelectorAll("#chaos div").forEach(div=>{
-  const setEl = div.querySelector("[data-type='set']");
-  const qEl = div.querySelector("[data-type='quality']");
-  const part = setEl.dataset.part;
+    const setEl = div.querySelector("[data-type='set']");
+    const qEl = div.querySelector("[data-type='quality']");
+    const part = setEl.dataset.part;
 
-  const found = p.gearDetail?.find(g=>g.part===part);
+    const found = p.gearDetail?.find(g=>g.part===part);
 
-  if(found){
-    setEl.value = found.set || p.gear;
-    qEl.value = found.type;
-  }else{
-    setEl.value = "";
-    qEl.value = "";
-  }
-});
+    if(found){
+      setEl.value = found.set || p.gear;
+      qEl.value = found.type;
+    }else{
+      setEl.value = "";
+      qEl.value = "";
+    }
   });
+
+  // ルーン復元
+  document.getElementById("runeContainer").innerHTML = "";
+  if(p.runes && p.runes.length){
+    p.runes.forEach(r => addRune(r));
+  }else{
+    addRune();
+  }
 
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "編集モード";
@@ -231,39 +258,34 @@ window.deletePlayer = async function(i){
   render();
 };
 
-// ===== 画像保存（完全版） =====
+// ===== 画像保存 =====
 window.saveTableImage = async function(){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
 
-  // ===== 控え削除 =====
   const rows = clone.querySelectorAll("tr");
   let hide = false;
   rows.forEach(row=>{
     if(row.classList.contains("lane-header")){
       if(row.innerText.includes("控え")){
         hide = true;
-        row.remove(); // 控えヘッダー削除
+        row.remove();
         return;
       }else{
         hide = false;
       }
     }
-    if(hide){
-      row.remove(); // 控えプレイヤー削除
-    }
+    if(hide) row.remove();
   });
-  // ===== 編集・削除列削除 =====
-  const rows2 = clone.querySelectorAll("tr");
-  rows2.forEach(row=>{
+
+  clone.querySelectorAll("tr").forEach(row=>{
     const cells = row.querySelectorAll("th, td");
-    // 後ろから削除（順番大事）
     if(cells.length >= 10){
-      cells[9].remove(); // 削除
-      cells[8].remove(); // 編集
+      cells[9].remove();
+      cells[8].remove();
     }
   });
-  // ===== 画像保存（描画設定） =====
+
   clone.style.width = original.scrollWidth + "px";
   clone.style.background = "#111";
   clone.style.color = "white";
@@ -282,7 +304,6 @@ window.saveTableImage = async function(){
 
   canvas.toBlob(async blob=>{
     const file=new File([blob],"expedition.png",{type:"image/png"});
-
     if(navigator.share && navigator.canShare({files:[file]})){
       await navigator.share({files:[file]});
     }else{
@@ -300,14 +321,12 @@ function formatPower(val){
 }
 
 function render(){
-
   const body = document.getElementById("playerBody");
   body.innerHTML = "";
 
   const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(laneNum=>{
-
     const lanePlayers = players.filter(p=>p.lane===laneNum);
     if(lanePlayers.length===0) return;
 
@@ -319,7 +338,7 @@ function render(){
     lanePlayers.sort((a,b)=>b.power-a.power);
 
     lanePlayers.forEach((p)=>{
-      const index = players.findIndex(x => x === p); // ✅ 安全化
+      const index = players.findIndex(x => x === p);
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -328,7 +347,7 @@ function render(){
         <td>${p.range}/${p.style}</td>
         <td>${gearText(p.gearDetail, p.gear)}</td>
         <td>${p.hero}</td>
-        <td>${runeHTML("鋭利",p.sharpQ,p.sharpE)+runeHTML("アロレ",p.arrowQ,p.arrowE)}</td>
+        <td>${p.runes?.map(r => runeHTML(r.name, r.q, r.e)).join("") || ""}</td>
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
         <td><button onclick="editPlayer(${index})">編集</button></td>
