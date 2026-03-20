@@ -3,12 +3,9 @@ import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } 
 
 // ===== Firebase =====
 const firebaseConfig = {
-  apiKey: "AIzaSyCfLhFHEMcgqfkr6Dhp4SwLC1A8dmcMWWE",
+  apiKey: "AIzaSy...",
   authDomain: "expedition-management-date.firebaseapp.com",
   projectId: "expedition-management-date",
-  storageBucket: "expedition-management-date.firebasestorage.app",
-  messagingSenderId: "394248951408",
-  appId: "1:394248951408:web:21eed0b45aa19a18e146b5"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -31,7 +28,7 @@ function updateEnchant(nameSelect, enchantSelect){
   enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
 }
 
-// ===== 選択ルーン追加 =====
+// ===== ルーン追加 =====
 window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
@@ -40,15 +37,12 @@ window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
     <select class="rune-name">
       ${Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("")}
     </select>
-
     <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
     </select>
-
     <select class="rune-e"></select>
-
     <button onclick="this.parentNode.remove()">削除</button>
   `;
 
@@ -67,63 +61,24 @@ window.addSelectRune = function(rune = {name:"守護", q:"none", e:""}){
   document.getElementById("runeContainer").appendChild(div);
 };
 
-// ===== 自由ルーン追加 =====
 window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
 
   div.innerHTML = `
-    <input placeholder="ルーン名" class="rune-name" value="${rune.name}">
+    <input class="rune-name" placeholder="ルーン名" value="${rune.name}">
     <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
     </select>
-    <input placeholder="効果" class="rune-e" value="${rune.e}">
+    <input class="rune-e" placeholder="効果" value="${rune.e}">
     <button onclick="this.parentNode.remove()">削除</button>
   `;
 
   div.querySelector(".rune-q").value = rune.q;
   document.getElementById("runeContainer").appendChild(div);
 };
-
-// ===== モーダル =====
-window.openEditor = function(){
-  document.getElementById("editor").style.display = "block";
-  document.getElementById("modeIndicator").innerText = "追加モード";
-
-  document.querySelectorAll("#editor input").forEach(i=>i.value="");
-  document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
-  document.querySelectorAll("#chaos select").forEach(s=>s.value="");
-
-  document.getElementById("sharpQuality").value = "none";
-  document.getElementById("arrowQuality").value = "none";
-
-  document.getElementById("runeContainer").innerHTML = "";
-
-  editIndex = null;
-};
-
-window.closeEditor = function(){
-  document.getElementById("editor").style.display = "none";
-  document.getElementById("modeIndicator").innerText = "通常モード";
-};
-
-// ===== 計算 =====
-function relicBuff(m,l){
-  return Number((m*0.25 + l*0.025).toFixed(3));
-}
-
-// ===== ルーン表示 =====
-function runeHTML(name,q,e){
-  if(q==="none") return "";
-
-  let cls = "rune ";
-  if(q==="mythic") cls += "rune-mythic";
-  else if(q==="legend") cls += "rune-legend";
-
-  return `<div class="${cls}">${name}<br>${e}</div>`;
-}
 
 // ===== 装備 =====
 const parts = ["武器","兜","お守り","鎧","指輪","靴"];
@@ -147,48 +102,117 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
 </div>
 `).join("");
 
+// ===== 装備表示 =====
+function gearText(gearDetail){
+  const mark = {神託:"神",ドラグーン:"ド",グリフォン:"グ"};
+
+  return `
+  <div class="gear-box">
+    ${parts.map(p=>{
+      const g = gearDetail.find(x=>x.part===p);
+      return `<div class="cell ${g?.type||"empty"}">${g?mark[g.set]:""}</div>`;
+    }).join("")}
+  </div>`;
+}
+
+// ===== ルーン表示 =====
+function runeHTML(name,q,e){
+  if(q==="none") return "";
+  let cls = "rune ";
+  if(q==="mythic") cls+="rune-mythic";
+  else if(q==="legend") cls+="rune-legend";
+  return `<div class="${cls}">${name}<br>${e}</div>`;
+}
+
+// ===== 画像保存 =====
+window.saveTableImage = async function(){
+  const original = document.getElementById("captureArea");
+  const clone = original.cloneNode(true);
+
+  // 控え削除
+  const rows = clone.querySelectorAll("tr");
+  let hide = false;
+
+  rows.forEach(row=>{
+    if(row.classList.contains("lane-header")){
+      if(row.innerText.includes("控え")){
+        hide = true;
+        row.remove();
+        return;
+      }else{
+        hide = false;
+      }
+    }
+    if(hide) row.remove();
+  });
+
+  // 編集・削除列削除（今は9列）
+  clone.querySelectorAll("tr").forEach(row=>{
+    const cells = row.querySelectorAll("th, td");
+    if(cells.length >= 9){
+      cells[8].remove(); // 削除
+      cells[7].remove(); // 編集
+    }
+  });
+
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111",
+    width:clone.scrollWidth
+  });
+
+  document.body.removeChild(clone);
+
+  canvas.toBlob(blob=>{
+    const link=document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download="expedition.png";
+    link.click();
+  });
+};
+
 // ===== 保存 =====
 window.savePlayer = async function(){
 
   const runes = [];
 
-  // 固定ルーン
-  const sharpQ = document.getElementById("sharpQuality").value;
-  if(sharpQ !== "none"){
-    runes.push({name:"鋭利", q:sharpQ, e:document.getElementById("sharpEnchant").value});
+  if(document.getElementById("sharpQuality").value!=="none"){
+    runes.push({
+      name:"鋭利",
+      q:document.getElementById("sharpQuality").value,
+      e:document.getElementById("sharpEnchant").value
+    });
   }
 
-  const arrowQ = document.getElementById("arrowQuality").value;
-  if(arrowQ !== "none"){
-    runes.push({name:"アロレ", q:arrowQ, e:document.getElementById("arrowEnchant").value});
+  if(document.getElementById("arrowQuality").value!=="none"){
+    runes.push({
+      name:"アロレ",
+      q:document.getElementById("arrowQuality").value,
+      e:document.getElementById("arrowEnchant").value
+    });
   }
 
-  // 追加ルーン
   document.querySelectorAll("#runeContainer .rune-row").forEach(row=>{
-    const nameEl = row.querySelector(".rune-name");
+    const name = row.querySelector(".rune-name").value;
     const q = row.querySelector(".rune-q").value;
-    const eEl = row.querySelector(".rune-e");
-
-    const name = nameEl.value;
-    const e = eEl.value;
-
-    if(name && q !== "none"){
-      runes.push({name, q, e});
-    }
+    const e = row.querySelector(".rune-e").value;
+    if(name && q!=="none") runes.push({name,q,e});
   });
 
-  // 装備
   const gearDetail = [];
   document.querySelectorAll("#chaos div").forEach(div=>{
-    const setEl = div.querySelector("[data-type='set']");
-    const qEl = div.querySelector("[data-type='quality']");
-    if(setEl.value && qEl.value){
-      gearDetail.push({
-        part:setEl.dataset.part,
-        set:setEl.value,
-        type:qEl.value
-      });
-    }
+    const set = div.querySelector("[data-type='set']").value;
+    const type = div.querySelector("[data-type='quality']").value;
+    const part = div.querySelector("[data-type='set']").dataset.part;
+    if(set && type) gearDetail.push({part,set,type});
   });
 
   const p = {
@@ -196,68 +220,73 @@ window.savePlayer = async function(){
     power: Number(document.getElementById("power").value),
     range: document.getElementById("range").value,
     style: document.getElementById("style").value,
-    gear: document.getElementById("gear").value,
-    gearDetail,
     hero: document.getElementById("hero").value,
     formation: document.getElementById("formation").value,
     mythic: Number(document.getElementById("mythic").value),
     legend: Number(document.getElementById("legend").value),
     lane: Number(document.getElementById("lane").value),
+    gearDetail,
     runes
   };
 
   if(!p.name || isNaN(p.power)){
-    alert("名前と戦力は必須です");
+    alert("名前と戦力必須");
     return;
   }
 
-  try{
-    if(editIndex===null){
-      const docRef = await addDoc(collection(db,"players"), p);
-      players.push(p);
-      playerDocs.push(docRef.id);
-    }else{
-      await updateDoc(doc(db,"players",playerDocs[editIndex]), p);
-      players[editIndex] = p;
-      editIndex = null;
-    }
-  }catch(e){
-    alert("保存失敗");
-    return;
+  if(editIndex===null){
+    const docRef = await addDoc(collection(db,"players"), p);
+    players.push(p);
+    playerDocs.push(docRef.id);
+  }else{
+    await updateDoc(doc(db,"players",playerDocs[editIndex]), p);
+    players[editIndex]=p;
+    editIndex=null;
   }
 
   closeEditor();
   render();
 };
 
+// ===== 削除 =====
+window.deletePlayer = async function(i){
+  if(!confirm("削除する？")) return;
+  await deleteDoc(doc(db,"players",playerDocs[i]));
+  players.splice(i,1);
+  playerDocs.splice(i,1);
+  render();
+};
+
 // ===== 表示 =====
-function formatPower(val){ return val.toFixed(2)+"M"; }
+function formatPower(v){return v.toFixed(2)+"M";}
+function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
 
 function render(){
-  const body = document.getElementById("playerBody");
-  body.innerHTML = "";
+  const body=document.getElementById("playerBody");
+  body.innerHTML="";
 
-  const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
+  const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(l=>{
-    const list = players.filter(p=>p.lane===l);
-    if(!list.length) return;
+    const list=players.filter(p=>p.lane===l);
+    if(!list.length)return;
 
-    const trLane = document.createElement("tr");
-    trLane.classList.add("lane-header");
-    trLane.innerHTML = `<td colspan="10">${laneNames[l]} (${list.length})</td>`;
-    body.appendChild(trLane);
+    const tr=document.createElement("tr");
+    tr.className="lane-header";
+    tr.innerHTML=`<td colspan="9">${laneNames[l]} (${list.length})</td>`;
+    body.appendChild(tr);
 
     list.sort((a,b)=>b.power-a.power);
 
     list.forEach(p=>{
-      const i = players.findIndex(x=>x===p);
+      const i=players.indexOf(p);
+      const row=document.createElement("tr");
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+      row.innerHTML=`
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
         <td>${p.range}/${p.style}</td>
+        <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
         <td>${p.runes.map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
         <td>${p.formation}</td>
@@ -265,15 +294,15 @@ function render(){
         <td><button onclick="editPlayer(${i})">編集</button></td>
         <td><button onclick="deletePlayer(${i})">削除</button></td>
       `;
-      body.appendChild(tr);
+      body.appendChild(row);
     });
   });
 }
 
 // ===== 初期ロード =====
 async function load(){
-  const snapshot = await getDocs(collection(db,"players"));
-  snapshot.forEach(d=>{
+  const snap=await getDocs(collection(db,"players"));
+  snap.forEach(d=>{
     players.push(d.data());
     playerDocs.push(d.id);
   });
