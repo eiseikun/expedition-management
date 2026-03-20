@@ -20,20 +20,20 @@ let editIndex = null;
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
+  document.body.dataset.prevOverflow = document.body.style.overflow;
   document.body.style.overflow = "hidden";
   document.body.classList.add("modal-open");
-
+  // 初期化
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
   document.getElementById("runeContainer").innerHTML = "";
-
   editIndex = null;
 };
-
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.body.classList.remove("modal-open");
-  document.body.style.overflow = "auto";
+  // ★ 元に戻す
+  document.body.style.overflow = document.body.dataset.prevOverflow || "auto";
 };
 
 // ===== ルーン =====
