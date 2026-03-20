@@ -60,11 +60,40 @@
   <h3>装備</h3>
   <div id="chaos" class="gear-grid"></div>
 
- 
-
   <h3>ルーン</h3>
-  <div id="runeContainer"></div>
-  <button onclick="addRune()">ルーン追加</button>
+  <!-- 固定ルーン -->
+  <div class="rune-row">
+  <span>鋭利</span>
+  <select id="sharpQuality">
+    <option value="none">なし</option>
+    <option value="legend">レジェンド</option>
+    <option value="mythic">ミシック</option>
+    <option value="epic">エピック</option>
+  </select>
+  <select id="sharpEnchant">
+    <option>跳ね返り</option>
+    <option>クリダメUP</option>
+  </select>
+  </div>
+  
+  <div class="rune-row">
+  <span>アロレ</span>
+  <select id="arrowQuality">
+    <option value="none">なし</option>
+    <option value="legend">レジェンド</option>
+    <option value="mythic">ミシック</option>
+    <option value="epic">エピック</option>
+  </select>
+  <select id="arrowEnchant">
+    <option>固有</option>
+    <option>主武器UP</option>
+  </select>
+</div>
+
+<!-- 追加ルーン -->
+<div id="runeContainer"></div>
+<button onclick="addRune()">ルーン追加</button>
+  
   
 
   <h3>その他</h3>
