@@ -334,7 +334,7 @@ function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
 function render(){
   const body=document.getElementById("playerBody");
   body.innerHTML="";
-  const total = players.length;
+  const total = 8;
   const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
 
   [1,2,3,0].forEach(l=>{
