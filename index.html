@@ -22,7 +22,7 @@
   <table id="playerTable">
     <thead>
       <tr>
-        <th>名前</th><th>戦力</th><th>戦術</th><th>装備</th><th>主キャラ</th>
+        <th>名前</th><th>戦力</th><th>戦術</th><th>主キャラ</th>
         <th>ルーン</th><th>編成</th><th>聖物%</th><th>編集</th><th>削除</th>
       </tr>
     </thead>
@@ -30,7 +30,7 @@
   </table>
 </div>
 
-<!-- モーダル（重複削除済み、初期非表示） -->
+<!-- モーダル -->
 <div id="editor" class="editor" style="display:none;">
   <h2>プレイヤー追加 / 編集</h2>
 
@@ -60,39 +60,43 @@
   <h3>装備</h3>
   <div id="chaos" class="gear-grid"></div>
 
+  <!-- ===== ルーン ===== -->
   <h3>ルーン</h3>
+
   <!-- 固定ルーン -->
   <div class="rune-row">
-  <span>鋭利</span>
-  <select id="sharpQuality">
-    <option value="none">なし</option>
-    <option value="legend">レジェンド</option>
-    <option value="mythic">ミシック</option>
-  </select>
-  <select id="sharpEnchant">
-    <option>跳ね返り</option>
-    <option>クリダメUP</option>
-  </select>
+    <span>鋭利</span>
+    <select id="sharpQuality">
+      <option value="none">なし</option>
+      <option value="legend">レジェンド</option>
+      <option value="mythic">ミシック</option>
+    </select>
+    <select id="sharpEnchant">
+      <option>跳ね返り</option>
+      <option>クリダメUP</option>
+    </select>
   </div>
-  
-  <div class="rune-row">
-  <span>アロレ</span>
-  <select id="arrowQuality">
-    <option value="none">なし</option>
-    <option value="legend">レジェンド</option>
-    <option value="mythic">ミシック</option>
-  </select>
-  <select id="arrowEnchant">
-    <option>固有</option>
-    <option>主武器UP</option>
-  </select>
-</div>
 
-<!-- 追加ルーン -->
-<div id="runeContainer"></div>
-<button onclick="addRune()">ルーン追加</button>
-  
-  
+  <div class="rune-row">
+    <span>アロレ</span>
+    <select id="arrowQuality">
+      <option value="none">なし</option>
+      <option value="legend">レジェンド</option>
+      <option value="mythic">ミシック</option>
+    </select>
+    <select id="arrowEnchant">
+      <option>固有</option>
+      <option>主武器UP</option>
+    </select>
+  </div>
+
+  <!-- 追加ルーン -->
+  <div id="runeContainer"></div>
+
+  <div style="margin-top:10px;">
+    <button onclick="addSelectRune()">選択ルーン追加</button>
+    <button onclick="addFreeRune()">自由ルーン追加</button>
+  </div>
 
   <h3>その他</h3>
   <input id="hero" placeholder="主キャラ">
