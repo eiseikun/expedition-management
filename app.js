@@ -407,6 +407,22 @@ window.addMatch = async function(matchNumber){
 
   loadExpeditions();
 };
+  // 2ページ目データ削除
+window.deleteMatch = async function(matchNumber){
+  const week = Number(document.getElementById("weekInput").value);
+  if(!week) return alert("週番号入力して");
+  const snap = await getDocs(collection(db,"expeditions"));
+  const docSnap = snap.docs.find(d=>d.data().week === week);
+  if(!docSnap){
+    alert("この週のデータがありません");
+    return;
+  }
+  const data = docSnap.data();
+  data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
+  await updateDoc(doc(db,"expeditions",docSnap.id), data);
+  loadExpeditions();
+};
+
 
 // ===== 2ページ目表示032121更新 =====
 
