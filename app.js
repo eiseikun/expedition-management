@@ -367,8 +367,8 @@ window.addMatch = async function(matchNumber){
   const week = Number(document.getElementById("weekInput").value);
   if(!week) return alert("週番号入力して");
   const matchPlayers = players
-    .filter(p=>p.lane > 0)
-    .map(p=>({
+  .filter(p => p.lane >= 1 && p.lane <= 3)
+  .map(p=>({
       name: p.name,
       lane: p.lane,
       style: p.range, // ←画像に合わせて戦術じゃなく距離に変更OK
