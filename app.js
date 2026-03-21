@@ -366,46 +366,44 @@ async function load(){
 load();
 
 // ===== 2ページ目用 =====
-window.addMatchRecord = async function(){
-
-  const week = Number(prompt("週番号を入力してください"));
-  if(isNaN(week)) return alert("週番号を入力してください");
-
-  const matchNumber = Number(prompt("回戦番号（1〜3）"));
-  if(![1,2,3].includes(matchNumber)) return alert("1〜3で入力");
-
-  // 現在のレーン情報コピー
+window.addMatch = async function(matchNumber){
+  const week = Number(document.getElementById("weekInput").value);
+  if(!week) return alert("週番号入力して");
   const matchPlayers = players
     .filter(p=>p.lane > 0)
     .map(p=>({
       name: p.name,
       lane: p.lane,
-      style: p.style,
+      style: p.range, // ←画像に合わせて戦術じゃなく距離に変更OK
       damageMarked: false
     }));
-
   const snap = await getDocs(collection(db,"expeditions"));
   const existing = snap.docs.find(d=>d.data().week === week);
 
   if(existing){
     const data = existing.data();
-    data.matches.push({
-      matchNumber,
-      players: matchPlayers
-    });
+
+    // 同じ回戦あれば上書き
+    const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
+    if(idx >= 0){
+      data.matches[idx] = { matchNumber, players: matchPlayers };
+    }else{
+      data.matches.push({ matchNumber, players: matchPlayers });
+    }
+
     await updateDoc(doc(db,"expeditions",existing.id), data);
+
   }else{
     await addDoc(collection(db,"expeditions"), {
       week,
-      matches: [{
-        matchNumber,
-        players: matchPlayers
-      }]
+      matches: [{ matchNumber, players: matchPlayers }]
     });
   }
+
+  loadExpeditions();
 };
 
-// ===== 2ページ目表示 =====
+// ===== 2ページ目表示032121更新 =====
 async function loadExpeditions(){
   const container = document.getElementById("expeditionContainer");
   container.innerHTML = "";
@@ -416,36 +414,65 @@ async function loadExpeditions(){
     const exp = d.data();
 
     const weekDiv = document.createElement("div");
-    weekDiv.innerHTML = `<h3>週${exp.week}</h3>`;
+    weekDiv.className = "week-block";
 
-    exp.matches.forEach(m=>{
-      const table = document.createElement("table");
-      table.className = "expedition-table";
+    // 折り畳み
+    const header = document.createElement("h3");
+    header.innerText = `週${exp.week}`;
+    header.style.cursor = "pointer";
 
-      table.innerHTML = `
-        <tr><th colspan="4">第${m.matchNumber}回戦</th></tr>
-        <tr>
-          <th>レーン</th><th>プレイヤー</th><th>戦術</th><th>ダメージ</th>
-        </tr>
+    const content = document.createElement("div");
+
+    header.onclick = () => {
+      content.style.display = (content.style.display === "none") ? "block" : "none";
+    };
+
+    // テーブル作成
+    const table = document.createElement("table");
+    table.className = "expedition-table";
+
+    table.innerHTML = `
+      <tr>
+        <th>レーン</th>
+        <th>プレイヤー</th>
+        <th>戦術</th>
+        <th>1回戦</th>
+        <th>2回戦</th>
+        <th>3回戦</th>
+      </tr>
+    `;
+
+    // プレイヤー一覧（1回戦ベース）
+    const baseMatch = exp.matches.find(m=>m.matchNumber === 1);
+    if(!baseMatch) return;
+
+    baseMatch.players.forEach((p,i)=>{
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${p.lane}</td>
+        <td>${p.name}</td>
+        <td>${p.style}</td>
+        ${[1,2,3].map(mn=>{
+          const match = exp.matches.find(m=>m.matchNumber === mn);
+          const checked = match?.players[i]?.damageMarked ? "checked" : "";
+
+          return `
+            <td>
+              <input type="checkbox"
+                ${checked}
+                onchange="toggleDamage('${d.id}',${mn},${i},this)">
+            </td>
+          `;
+        }).join("")}
       `;
 
-      m.players.forEach((p,i)=>{
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${p.lane}</td>
-          <td>${p.name}</td>
-          <td>${p.style}</td>
-          <td>
-            <input type="checkbox"
-              ${p.damageMarked ? "checked":""}
-              onchange="toggleDamage('${d.id}',${m.matchNumber},${i},this)">
-          </td>
-        `;
-        table.appendChild(row);
-      });
-
-      weekDiv.appendChild(table);
+      table.appendChild(row);
     });
+
+    content.appendChild(table);
+    weekDiv.appendChild(header);
+    weekDiv.appendChild(content);
 
     container.appendChild(weekDiv);
   });
