@@ -16,44 +16,35 @@ let playerDocs = [];
 let editIndex = null;
 
 // ===== ページ切替 =====
-const topButtons = document.querySelector(".top-buttons");
-
 window.showPage = function(n){
-  const pages = [document.getElementById("captureArea"), document.getElementById("page2")];
-  pages.forEach((p,i)=>{ p.style.display = (i===n-1) ? "block":"none"; });
+  const page1 = document.getElementById("captureArea");
+  const page2 = document.getElementById("page2");
 
-  // 1ページ目専用ボタン表示切替
-  const topButtons = document.querySelectorAll("#topButtons button");
-  topButtons.forEach(b=>{ b.style.display = (n===1)? "inline-block":"none"; });
+  page1.style.display = (n === 1) ? "block" : "none";
+  page2.style.display = (n === 2) ? "block" : "none";
 
-  if(n===2) loadExpeditions();
-};
-  // それ以外のアクションボタンは2ページ目で非表示
-  const actionButtons = Array.from(topButtons.querySelectorAll("button")).filter(btn=>{
-    return btn.innerText !== "ページ1" && btn.innerText !== "ページ2";
-  });
+  // 1ページ目ボタン表示制御
+  const topButtons = document.getElementById("topButtons");
+  topButtons.style.display = (n === 1) ? "flex" : "none";
 
-  actionButtons.forEach(btn=>{
-    btn.style.display = (n===2) ? "none" : "inline-block";
-  });
+  if(n === 2){
+    loadExpeditions();
+  }
 };
 
 // ===== モーダル =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
-  document.body.dataset.prevOverflow = document.body.style.overflow;
-  document.body.style.overflow = "hidden";
-  document.body.classList.add("modal-open");
+
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
-  document.getElementById("runeContainer").innerHTML = "";
+
   editIndex = null;
 };
+
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
-  document.body.classList.remove("modal-open");
-  document.body.style.overflow = document.body.dataset.prevOverflow || "auto";
   document.getElementById("modeIndicator").innerText = "通常モード";
 };
 
@@ -363,123 +354,114 @@ function render(){
     });
   });
 }
-
-// ===== 2ページ目用（遠征管理） =====
-let expeditions = []; // Firebaseからロード
-let selectedWeek = 1;
-
-// 週セレクト更新
-function updateWeekSelect() {
-  const sel = document.getElementById("weekSelect");
-  sel.innerHTML = expeditions.map(w => `<option value="${w.week}">Week ${w.week}</option>`).join("");
-  sel.value = selectedWeek;
+// ===== 初期ロード =====
+async function load(){
+  const snap = await getDocs(collection(db,"players"));
+  snap.forEach(d=>{
+    players.push(d.data());
+    playerDocs.push(d.id);
+  });
+  render();
 }
+load();
 
-// 新しい週を追加
-window.addWeek = function() {
-  const newWeek = expeditions.length ? expeditions[expeditions.length-1].week + 1 : 1;
-  const weekData = {
-    week: newWeek,
-    matches: [1,2,3].map(num => ({
-      matchNumber: num,
-      players: players.filter(p => p.lane !== 0).map(p => ({name:p.name,lane:p.lane,damageMarked:false}))
-    }))
-  };
-  expeditions.push(weekData);
-  selectedWeek = newWeek;
-  renderExpedition();
-  updateWeekSelect();
-};
-// 回戦追加
+// ===== 2ページ目用 =====
 window.addMatchRecord = async function(){
-  const week = Number(prompt("週番号を入力してください"));
-  const matchNumber = Number(prompt("回戦番号（1-3）を入力してください"));
 
-  const matchPlayers = players.filter(p=>p.lane>0).map(p=>({
-    name: p.name,
-    lane: p.lane,
-    style: p.style,
-    damageMarked:false
-  }));
+  const week = Number(prompt("週番号を入力してください"));
+  if(isNaN(week)) return alert("週番号を入力してください");
+
+  const matchNumber = Number(prompt("回戦番号（1〜3）"));
+  if(![1,2,3].includes(matchNumber)) return alert("1〜3で入力");
+
+  // 現在のレーン情報コピー
+  const matchPlayers = players
+    .filter(p=>p.lane > 0)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.style,
+      damageMarked: false
+    }));
 
   const snap = await getDocs(collection(db,"expeditions"));
-  const expDoc = snap.docs.find(d=>d.data().week===week);
+  const existing = snap.docs.find(d=>d.data().week === week);
 
-  if(expDoc){
-    const data=expDoc.data();
-    data.matches.push({matchNumber,players:matchPlayers});
-    await updateDoc(doc(db,"expeditions",expDoc.id), data);
+  if(existing){
+    const data = existing.data();
+    data.matches.push({
+      matchNumber,
+      players: matchPlayers
+    });
+    await updateDoc(doc(db,"expeditions",existing.id), data);
   }else{
-    await addDoc(collection(db,"expeditions"), {week, matches:[{matchNumber,players:matchPlayers}]});
+    await addDoc(collection(db,"expeditions"), {
+      week,
+      matches: [{
+        matchNumber,
+        players: matchPlayers
+      }]
+    });
   }
 
   loadExpeditions();
 };
 
-// 週選択変更
-document.getElementById("weekSelect")?.addEventListener("change", e=>{
-  selectedWeek = Number(e.target.value);
-  renderExpedition();
-});
-
-// 遠征表レンダリング
-function renderExpedition() {
-  const container = document.getElementById("expeditionTables");
+// ===== 2ページ目表示 =====
+async function loadExpeditions(){
+  const container = document.getElementById("expeditionContainer");
   container.innerHTML = "";
-  const weekData = expeditions.find(w=>w.week===selectedWeek);
-  if(!weekData) return;
 
-  weekData.matches.forEach(match=>{
-    const table = document.createElement("table");
-    table.innerHTML = `<thead><tr><th>試合${match.matchNumber}</th><th>レーン1</th><th>レーン2</th><th>レーン3</th></tr></thead>`;
-    const tbody = document.createElement("tbody");
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>出場</td>` + [1,2,3].map(lane=>{
-      const p = match.players.find(pl=>pl.lane===lane);
-      if(!p) return "<td></td>";
-      return `<td>
-        ${p.name}<br>
-        <label><input type="checkbox" class="damageChk" data-match="${match.matchNumber}" data-lane="${lane}" ${p.damageMarked ? "checked" : ""}> ダメージ</label>
-      </td>`;
-    }).join("");
-    tbody.appendChild(row);
-    table.appendChild(tbody);
-    container.appendChild(table);
-  });
-
-  // チェックボックスイベント
-  container.querySelectorAll(".damageChk").forEach(chk=>{
-    chk.onchange = function() {
-      const matchNum = Number(this.dataset.match);
-      const laneNum = Number(this.dataset.lane);
-      const m = weekData.matches.find(m=>m.matchNumber===matchNum);
-      const pl = m.players.find(p=>p.lane===laneNum);
-      if(pl) pl.damageMarked = this.checked;
-    };
-  });
-}
-
-// 週データ保存
-async function saveExpedition() {
-  for(const w of expeditions){
-    const docRef = doc(db,"expeditions","week"+w.week);
-    await updateDoc(docRef,w).catch(async()=>{
-      // 存在しなければ追加
-      await addDoc(collection(db,"expeditions"), w);
-    });
-  }
-  alert("保存完了");
-}
-
-// 初期ロード
-async function loadExpeditions() {
   const snap = await getDocs(collection(db,"expeditions"));
+
   snap.forEach(d=>{
-    expeditions.push(d.data());
+    const exp = d.data();
+
+    const weekDiv = document.createElement("div");
+    weekDiv.innerHTML = `<h3>週${exp.week}</h3>`;
+
+    exp.matches.forEach(m=>{
+      const table = document.createElement("table");
+      table.className = "expedition-table";
+
+      table.innerHTML = `
+        <tr><th colspan="4">第${m.matchNumber}回戦</th></tr>
+        <tr>
+          <th>レーン</th><th>プレイヤー</th><th>戦術</th><th>ダメージ</th>
+        </tr>
+      `;
+
+      m.players.forEach((p,i)=>{
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${p.lane}</td>
+          <td>${p.name}</td>
+          <td>${p.style}</td>
+          <td>
+            <input type="checkbox"
+              ${p.damageMarked ? "checked":""}
+              onchange="toggleDamage('${d.id}',${m.matchNumber},${i},this)">
+          </td>
+        `;
+        table.appendChild(row);
+      });
+
+      weekDiv.appendChild(table);
+    });
+
+    container.appendChild(weekDiv);
   });
-  if(expeditions.length===0) addWeek();
-  updateWeekSelect();
-  renderExpedition();
 }
 
-loadExpeditions();
+// ===== ダメージチェック更新 =====
+window.toggleDamage = async function(docId, matchNumber, playerIndex, checkbox){
+
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDocs(collection(db,"expeditions"));
+  const docData = snap.docs.find(d=>d.id === docId).data();
+
+  const match = docData.matches.find(m=>m.matchNumber === matchNumber);
+  match.players[playerIndex].damageMarked = checkbox.checked;
+
+  await updateDoc(ref, docData);
+};
