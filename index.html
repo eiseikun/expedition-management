@@ -10,15 +10,18 @@
 <body>
 
 <h1>ねこ海賊団 遠征管理</h1>
-
 <div class="mode-indicator" id="modeIndicator">通常モード</div>
 
-<div class="top-buttons">
+<div class="top-buttons" id="topButtons">
   <button onclick="openEditor()">プレイヤー追加</button>
   <button onclick="saveTableImage()">画像保存</button>
+</div>
+
+<div class="page-buttons">
   <button onclick="showPage(1)">ページ1</button>
   <button onclick="showPage(2)">ページ2</button>
 </div>
+
 <!-- ===== 1ページ目 ===== -->
 <div class="table-container" id="captureArea">
   <table id="playerTable">
@@ -34,47 +37,33 @@
 
 <!-- ===== 2ページ目 ===== -->
 <div class="table-container" id="page2" style="display:none;">
-  <h2>遠征記録</h2>
-  
-  <div>
-    <label>週選択:
-      <select id="weekSelect"></select>
-    </label>
-    <button onclick="addWeek()">週を追加</button>
-    <button onclick="saveExpedition()">週の保存</button>
+  <h2>遠征記録（週ごと）</h2>
+  <div class="expedition-controls">
+    <input type="number" id="weekInput" placeholder="週番号" min="1">
+    <button onclick="addWeek()">週作成</button>
   </div>
-
-  <div id="expeditionTables"></div>
+  <div id="expeditionContainer"></div>
 </div>
-  
 
-<!-- モーダル -->
+<!-- モーダル（1ページ目用） -->
 <div id="editor" class="editor" style="display:none;">
   <h2>プレイヤー追加 / 編集</h2>
-
   <input id="name" placeholder="名前">
   <input id="power" type="number" placeholder="戦力">
-
   <select id="range">
     <option>遠距離</option>
     <option>中距離</option>
     <option>近距離</option>
   </select>
-
   <select id="style">
     <option>バランス</option>
     <option>攻撃優先</option>
     <option>移動優先</option>
     <option>取得優先</option>
   </select>
-
   <h3>装備</h3>
   <div id="chaos" class="gear-grid"></div>
-
-  <!-- ===== ルーン ===== -->
   <h3>ルーン</h3>
-
-  <!-- 固定ルーン -->
   <div class="rune-row">
     <span>鋭利</span>
     <select id="sharpQuality">
@@ -87,10 +76,8 @@
       <option>主武器up</option>
       <option>メイン会心率up</option>
       <option>クリダメUP</option>
-      
     </select>
   </div>
-
   <div class="rune-row">
     <span>アロレ</span>
     <select id="arrowQuality">
@@ -105,28 +92,22 @@
       <option>クリダメ軽減</option>
     </select>
   </div>
-
-  <!-- 追加ルーン -->
   <div id="runeContainer"></div>
-
   <div style="margin-top:10px;">
     <button onclick="addSelectRune()">選択ルーン追加</button>
     <button onclick="addFreeRune()">自由ルーン追加</button>
   </div>
-
   <h3>その他</h3>
   <input id="hero" placeholder="主キャラ">
   <input id="formation" placeholder="編成">
   <input id="mythic" placeholder="ミシック数">
   <input id="legend" placeholder="レジェンド数">
-
   <select id="lane">
     <option value="0">控え</option>
     <option value="1">レーン1</option>
     <option value="2">レーン2</option>
     <option value="3">レーン3</option>
   </select>
-
   <div class="editor-footer">
     <button onclick="savePlayer()">保存</button>
     <button onclick="closeEditor()">閉じる</button>
