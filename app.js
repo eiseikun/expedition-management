@@ -385,104 +385,90 @@ async function load(){
 
 load();// ←ここまでが1ページ目のロード処理
 
-// ===== 2ページ目ロジック =====
+// ===== 2ページ目 ロジック =====
 const weekSelect = document.getElementById("weekSelect");
 const matchesContainer = document.getElementById("matchesContainer");
 const pastWeeksContainer = document.getElementById("pastWeeksContainer");
 
-// 週選択に1～52追加
-for(let w=1; w<=52; w++){
+let expeditions = []; // 遠征データ配列
+
+// 週選択肢を作る
+for(let i=1;i<=10;i++){ // 最大10週まで
   const opt = document.createElement("option");
-  opt.value = w;
-  opt.innerText = `Week ${w}`;
+  opt.value = i;
+  opt.textContent = `${i}週目`;
   weekSelect.appendChild(opt);
 }
 
-// 週切替
-weekSelect.onchange = loadWeek;
+// 選択週が変わったとき
+weekSelect.onchange = renderWeek;
 
-// 現在の週データを取得して描画
-async function loadWeek(){
+// 選択週の表示
+function renderWeek(){
   const week = Number(weekSelect.value);
-  matchesContainer.innerHTML="";
+  matchesContainer.innerHTML = "";
 
-  // Firebase から週データ取得
-  const snap = await getDocs(collection(db,"expeditions"));
-  const data = snap.docs.map(d=>d.data());
-  const weekData = data.find(d=>d.week===week);
+  for(let matchNumber=1; matchNumber<=3; matchNumber++){
+    const matchDiv = document.createElement("div");
+    matchDiv.className = "match";
 
-  // 3試合分作る
-  for(let m=1;m<=3;m++){
     const table = document.createElement("table");
-    table.innerHTML=`
+    table.innerHTML = `
       <thead>
         <tr>
-          <th>試合${m}</th>
-          <th>レーン1</th>
-          <th>レーン2</th>
-          <th>レーン3</th>
+          <th>レーン</th>
+          <th>名前</th>
+          <th>ダメージ</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          ${[1,2,3].map(lane=>{
-            // レーンのメンバーだけ
-            const lanePlayers = players.filter(p=>p.lane===lane);
-            return `<td>
-              ${lanePlayers.map(p=>{
-                // 過去データのdamageMarkedをチェック
-                let checked = false;
-                if(weekData){
-                  const match = weekData.matches.find(x=>x.matchNumber===m);
-                  if(match){
-                    const mp = match.players.find(x=>x.name===p.name);
-                    if(mp) checked = mp.damageMarked;
-                  }
-                }
-                return `<label>${p.name}<br><input type="checkbox" data-player="${p.name}" data-lane="${lane}" data-match="${m}" ${checked ? "checked":""}></label>`;
-              }).join("<br>")}
-            </td>`;
-          }).join("")}
-        </tr>
-      </tbody>
+      <tbody></tbody>
     `;
-    matchesContainer.appendChild(table);
+
+    const tbody = table.querySelector("tbody");
+
+    [1,2,3].forEach(lane=>{
+      const lanePlayers = players.filter(p=>p.lane===lane);
+      lanePlayers.forEach(p=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${lane}</td>
+          <td>${p.name}</td>
+          <td><input type="checkbox" class="damageCheckbox" data-week="${week}" data-match="${matchNumber}" data-player="${p.name}"></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+
+    matchDiv.innerHTML = `<h3>${matchNumber}試合目</h3>`;
+    matchDiv.appendChild(table);
+    matchesContainer.appendChild(matchDiv);
   }
 }
 
-// 保存
-window.saveWeek = async function(){
-  const week = Number(weekSelect.value);
-  const matchesArray = [];
-  for(let m=1;m<=3;m++){
-    const matchPlayers=[];
-    players.filter(p=>p.lane>=1 && p.lane<=3).forEach(p=>{
-      const cb = document.querySelector(`input[data-player="${p.name}"][data-lane="${p.lane}"][data-match="${m}"]`);
-      matchPlayers.push({
-        name:p.name,
-        lane:p.lane,
-        damageMarked:cb.checked
-      });
-    });
-    matchesArray.push({matchNumber:m, players:matchPlayers});
-  }
-
-  await setDoc(doc(db,"expeditions",String(week)), {week, matches:matchesArray});
-  alert(`Week ${week} 保存しました`);
-  renderPastWeeks();
-};
-
-// 過去週一覧
-async function renderPastWeeks(){
-  pastWeeksContainer.innerHTML="";
-  const snap = await getDocs(collection(db,"expeditions"));
-  snap.forEach(d=>{
+// 過去週の記録表示
+function renderPastWeeks(){
+  pastWeeksContainer.innerHTML = "";
+  expeditions.forEach(weekData=>{
     const div = document.createElement("div");
-    div.innerText = `Week ${d.data().week} 保存済み`;
+    div.innerHTML = `<h4>${weekData.week}週目</h4>`;
+    weekData.matches.forEach(match=>{
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead><tr><th>レーン</th><th>名前</th><th>ダメージ</th></tr></thead>
+        <tbody></tbody>
+      `;
+      const tbody = table.querySelector("tbody");
+      match.players.forEach(p=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${p.lane}</td><td>${p.name}</td><td>${p.damageMarked?"✔":""}</td>`;
+        tbody.appendChild(tr);
+      });
+      div.appendChild(table);
+    });
     pastWeeksContainer.appendChild(div);
   });
 }
 
-// 初期ロード
+// 初期表示
+renderWeek();
 renderPastWeeks();
-loadWeek();
