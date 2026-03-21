@@ -7,7 +7,6 @@ const firebaseConfig = {
   authDomain: "expedition-management-date.firebaseapp.com",
   projectId: "expedition-management-date",
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -17,12 +16,25 @@ let playerDocs = [];
 let editIndex = null;
 
 // ===== ページ切替 =====
+const topButtons = document.querySelector(".top-buttons");
+
 window.showPage = function(n){
   const pages = [document.getElementById("captureArea"), document.getElementById("page2")];
   pages.forEach((p,i)=>{
     p.style.display = (i === n-1) ? "block" : "none";
   });
+
+  // ページ切替ボタンは常に表示
+  // それ以外のアクションボタンは2ページ目で非表示
+  const actionButtons = Array.from(topButtons.querySelectorAll("button")).filter(btn=>{
+    return btn.innerText !== "ページ1" && btn.innerText !== "ページ2";
+  });
+
+  actionButtons.forEach(btn=>{
+    btn.style.display = (n===2) ? "none" : "inline-block";
+  });
 };
+
 // ===== モーダル =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
@@ -30,7 +42,6 @@ window.openEditor = function(){
   document.body.dataset.prevOverflow = document.body.style.overflow;
   document.body.style.overflow = "hidden";
   document.body.classList.add("modal-open");
-  // 初期化
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
   document.getElementById("runeContainer").innerHTML = "";
@@ -39,7 +50,6 @@ window.openEditor = function(){
 window.closeEditor = function(){
   document.getElementById("editor").style.display = "none";
   document.body.classList.remove("modal-open");
-  // ★ 元に戻す
   document.body.style.overflow = document.body.dataset.prevOverflow || "auto";
   document.getElementById("modeIndicator").innerText = "通常モード";
 };
@@ -53,7 +63,6 @@ const runeOptions = {
   炎毒の触: ["エレダメup","エレ会心ダメup","固有","クリダメ軽減"],
   氷雷の触: ["エレダメup","エレ会心ダメup","固有","クリダメ軽減"],
   ストポショ: ["無敵効果"]
-  
 };
 
 function updateEnchant(nameSelect, enchantSelect){
@@ -106,7 +115,6 @@ window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
 
 // ===== 装備 =====
 const parts = ["武器","兜","お守り","鎧","指輪","靴"];
-
 document.getElementById("chaos").innerHTML = parts.map(p=>`
 <div>
   <label>${p}</label>
@@ -125,17 +133,13 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
 </div>
 `).join("");
 
-// ===== 表示 =====
+// ===== 表示用関数 =====
 function gearText(gearDetail){
   const mark = {神託:"神",ドラグーン:"ド",グリフォン:"グ"};
-
-  return `
-  <div class="gear-box">
-    ${parts.map(p=>{
-      const g = gearDetail?.find(x=>x.part===p);
-      return `<div class="cell ${g?.type||"empty"}">${g?mark[g.set]:""}</div>`;
-    }).join("")}
-  </div>`;
+  return `<div class="gear-box">${parts.map(p=>{
+    const g = gearDetail?.find(x=>x.part===p);
+    return `<div class="cell ${g?.type||"empty"}">${g?mark[g.set]:""}</div>`;
+  }).join("")}</div>`;
 }
 
 function runeHTML(name,q,e){
@@ -148,9 +152,7 @@ function runeHTML(name,q,e){
 
 // ===== 保存 =====
 window.savePlayer = async function(){
-
   const runes = [];
-
   if(document.getElementById("sharpQuality").value!=="none"){
     runes.push({
       name:"鋭利",
@@ -158,7 +160,6 @@ window.savePlayer = async function(){
       e:document.getElementById("sharpEnchant").value
     });
   }
-
   if(document.getElementById("arrowQuality").value!=="none"){
     runes.push({
       name:"アロレ",
@@ -166,7 +167,6 @@ window.savePlayer = async function(){
       e:document.getElementById("arrowEnchant").value
     });
   }
-
   document.querySelectorAll("#runeContainer .rune-row").forEach(row=>{
     const name = row.querySelector(".rune-name").value;
     const q = row.querySelector(".rune-q").value;
@@ -218,7 +218,6 @@ window.savePlayer = async function(){
 // ===== 編集 =====
 window.editPlayer = function(i){
   const p = players[i];
-
   openEditor();
   editIndex = i;
 
@@ -232,16 +231,13 @@ window.editPlayer = function(i){
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
 
-  // 装備復元
   document.querySelectorAll("#chaos div").forEach(div=>{
     const part = div.querySelector("[data-type='set']").dataset.part;
     const g = p.gearDetail?.find(x=>x.part===part);
-
     div.querySelector("[data-type='set']").value = g?.set || "";
     div.querySelector("[data-type='quality']").value = g?.type || "";
   });
 
-  // ルーン復元
   document.getElementById("runeContainer").innerHTML = "";
   document.getElementById("sharpQuality").value = "none";
   document.getElementById("arrowQuality").value = "none";
@@ -283,9 +279,7 @@ window.saveTableImage = async function(){
         hide = true;
         row.remove();
         return;
-      }else{
-        hide = false;
-      }
+      }else hide=false;
     }
     if(hide) row.remove();
   });
@@ -306,16 +300,11 @@ window.saveTableImage = async function(){
 
   document.body.appendChild(clone);
 
-  const canvas = await html2canvas(clone,{
-    scale:3,
-    backgroundColor:"#111",
-    width:clone.scrollWidth
-  });
-
+  const canvas = await html2canvas(clone,{scale:3, backgroundColor:"#111", width:clone.scrollWidth});
   document.body.removeChild(clone);
+
   canvas.toBlob(async blob=>{
     const file=new File([blob],"expedition.png",{type:"image/png"});
-
     if(navigator.share && navigator.canShare({files:[file]})){
       await navigator.share({files:[file]});
     }else{
@@ -354,7 +343,6 @@ function render(){
 
     list.forEach(p=>{
       const i=players.indexOf(p);
-
       const row=document.createElement("tr");
       row.innerHTML=`
         <td>${p.name}</td>
@@ -373,6 +361,23 @@ function render(){
   });
 }
 
+// ===== 2ページ目用（遠征管理） =====
+window.renderExpeditions = function(){
+  const tbody = document.getElementById("page2Body");
+  tbody.innerHTML = "";
+
+  const laneNames = {1:"レーン1",2:"レーン2",3:"レーン3"};
+  const weeks = 5; // 仮で5週分
+
+  for(let w=1; w<=weeks; w++){
+    for(let m=1; m<=3; m++){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>Week ${w}</td><td>Match ${m}</td><td>${laneNames[1]}: - | ${laneNames[2]}: - | ${laneNames[3]}: -</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+};
+
 // ===== 初期ロード =====
 async function load(){
   const snap=await getDocs(collection(db,"players"));
@@ -381,106 +386,7 @@ async function load(){
     playerDocs.push(d.id);
   });
   render();
+  renderExpeditions();
 }
 
-load();// ←ここまでが1ページ目のロード処理
-
-// ===== 2ページ目: 遠征管理 =====
-let expeditions = []; // Firebaseから取得
-let currentWeek = 1;
-
-// 2ページ目表示・非表示に合わせてボタンも制御
-const topButtons = document.querySelector(".top-buttons");
-
-// Firebaseから遠征データ読み込み
-async function loadExpeditions() {
-  expeditions = [];
-  const snap = await getDocs(collection(db, "expeditions"));
-  snap.forEach(d => expeditions.push({ id: d.id, ...d.data() }));
-  renderExpedition();
-}
-
-function getPlayersByLane(lane) {
-  return players.filter(p => p.lane === lane);
-}
-
-// 遠征テーブル描画
-function renderExpedition() {
-  const tbody = document.getElementById("page2Body");
-  tbody.innerHTML = "";
-
-  // 週データ取得 or 新規作成
-  let weekData = expeditions.find(w => w.week === currentWeek);
-  if (!weekData) {
-    weekData = { week: currentWeek, matches: [] };
-    for (let i = 1; i <= 3; i++) {
-      const matchPlayers = [];
-      [1,2,3].forEach(lane => {
-        getPlayersByLane(lane).forEach(p => matchPlayers.push({ name: p.name, lane: lane, damageMarked: false }));
-      });
-      weekData.matches.push({ matchNumber: i, players: matchPlayers });
-    }
-    expeditions.push(weekData);
-  }
-
-  // 週ラベル更新
-  document.getElementById("weekLabel").innerText = `第${currentWeek}週`;
-
-  weekData.matches.forEach(match => {
-    const header = document.createElement("tr");
-    header.innerHTML = `<th colspan="3">第${match.matchNumber}試合</th>`;
-    tbody.appendChild(header);
-
-    match.players.forEach(p => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${p.name}</td>
-        <td>${["控え","レーン1","レーン2","レーン3"][p.lane]}</td>
-        <td><input type="checkbox" ${p.damageMarked ? "checked" : ""} onchange="toggleDamage(${currentWeek}, ${match.matchNumber}, '${p.name}', this.checked)"></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  });
-}
-
-// チェックボックス変更時
-async function toggleDamage(week, matchNumber, playerName, checked) {
-  const weekData = expeditions.find(w => w.week === week);
-  if (!weekData) return;
-  const match = weekData.matches.find(m => m.matchNumber === matchNumber);
-  if (!match) return;
-  const player = match.players.find(p => p.name === playerName);
-  if (!player) return;
-
-  player.damageMarked = checked;
-
-  // Firebase更新
-  if (weekData.id) {
-    const docRef = doc(db, "expeditions", weekData.id);
-    await updateDoc(docRef, { matches: weekData.matches });
-  } else {
-    const docRef = await addDoc(collection(db, "expeditions"), weekData);
-    weekData.id = docRef.id;
-  }
-}
-
-// 週切替
-window.nextWeek = () => { currentWeek++; renderExpedition(); }
-window.prevWeek = () => { if(currentWeek>1){ currentWeek--; renderExpedition(); } }
-
-// ページ切替修正版（2ページ目でボタン非表示）
-window.showPage = function(n){
-  const pages = [document.getElementById("captureArea"), document.getElementById("page2")];
-  pages.forEach((p,i)=>{
-    p.style.display = (i === n-1) ? "block" : "none";
-  });
-
-  // 2ページ目ならボタン非表示
-  if(n===2){
-    topButtons.style.display = "none";
-  } else {
-    topButtons.style.display = "flex";
-  }
-};
-
-loadExpeditions();
+load();
