@@ -163,5 +163,5 @@ td:nth-child(6){
   padding:10px;
 }
 .expedition-controls {
-  border: none;
+  border: none !important;
 }
