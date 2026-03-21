@@ -158,5 +158,9 @@ td:nth-child(6){
   padding:0;
 }
 .expedition-controls {
+  margin: 5px 10px;
   border: none !important;
+}
+.expedition-controls button:nth-child(2n){
+  margin-left: 20px;
 }
