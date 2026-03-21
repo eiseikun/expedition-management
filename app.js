@@ -20,11 +20,14 @@ const topButtons = document.querySelector(".top-buttons");
 
 window.showPage = function(n){
   const pages = [document.getElementById("captureArea"), document.getElementById("page2")];
-  pages.forEach((p,i)=>{
-    p.style.display = (i === n-1) ? "block" : "none";
-  });
+  pages.forEach((p,i)=>{ p.style.display = (i===n-1) ? "block":"none"; });
 
-  // ページ切替ボタンは常に表示
+  // 1ページ目専用ボタン表示切替
+  const topButtons = document.querySelectorAll("#topButtons button");
+  topButtons.forEach(b=>{ b.style.display = (n===1)? "inline-block":"none"; });
+
+  if(n===2) loadExpeditions();
+};
   // それ以外のアクションボタンは2ページ目で非表示
   const actionButtons = Array.from(topButtons.querySelectorAll("button")).filter(btn=>{
     return btn.innerText !== "ページ1" && btn.innerText !== "ページ2";
@@ -386,6 +389,31 @@ window.addWeek = function() {
   selectedWeek = newWeek;
   renderExpedition();
   updateWeekSelect();
+};
+// 回戦追加
+window.addMatchRecord = async function(){
+  const week = Number(prompt("週番号を入力してください"));
+  const matchNumber = Number(prompt("回戦番号（1-3）を入力してください"));
+
+  const matchPlayers = players.filter(p=>p.lane>0).map(p=>({
+    name: p.name,
+    lane: p.lane,
+    style: p.style,
+    damageMarked:false
+  }));
+
+  const snap = await getDocs(collection(db,"expeditions"));
+  const expDoc = snap.docs.find(d=>d.data().week===week);
+
+  if(expDoc){
+    const data=expDoc.data();
+    data.matches.push({matchNumber,players:matchPlayers});
+    await updateDoc(doc(db,"expeditions",expDoc.id), data);
+  }else{
+    await addDoc(collection(db,"expeditions"), {week, matches:[{matchNumber,players:matchPlayers}]});
+  }
+
+  loadExpeditions();
 };
 
 // 週選択変更
