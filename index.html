@@ -34,16 +34,22 @@
 
 <!-- ===== 2ページ目 ===== -->
 <div class="table-container" id="page2" style="display:none;">
-  <h2>遠征記録</h2>
-
-  <label>週選択：
-    <select id="weekSelect"></select>
-  </label>
-
-  <div id="matchesContainer"></div>
-
-  <h3>過去の週の記録</h3>
-  <div id="pastWeeksContainer"></div>
+  <h2>遠征管理（2ページ目）</h2>
+  <div class="week-buttons" style="margin-bottom:10px;">
+    <button onclick="prevWeek()">前の週</button>
+    <span id="weekLabel">第1週</span>
+    <button onclick="nextWeek()">次の週</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>キャラ</th><th>レーン</th><th>ダメージ</th>
+      </tr>
+    </thead>
+    <tbody id="page2Body">
+      <!-- JSで表示 -->
+    </tbody>
+  </table>
 </div>
   
 
