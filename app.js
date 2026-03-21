@@ -16,7 +16,7 @@ let playerDocs = [];
 let editIndex = null;
 
 // ===== ページ切替 =====
-window.showPage = function(n){
+window.showPage = async function(n){
   const page1 = document.getElementById("captureArea");
   const page2 = document.getElementById("page2");
   const topButtons = document.getElementById("topButtons");
@@ -24,6 +24,10 @@ window.showPage = function(n){
   page1.style.display = (n === 1) ? "block" : "none";
   page2.style.display = (n === 2) ? "block" : "none";
   topButtons.style.display = (n === 1) ? "flex" : "none";
+
+  if(players.length === 0){
+    await load();
+  }
 
   if(n === 2) loadExpeditions();
 };
@@ -364,6 +368,10 @@ load();
 // ============================
 
 window.addMatch = async function(matchNumber){
+  if(players.length === 0){
+  alert("プレイヤーが読み込まれていません。ページ1を開いてください");
+  return;
+}
   const week = Number(document.getElementById("weekInput").value);
   if(!week) return alert("週番号入力して");
   const matchPlayers = players
