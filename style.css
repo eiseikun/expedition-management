@@ -157,7 +157,10 @@ td:nth-child(6){
   border:none;
   padding:0;
 }
-.expedition-controls {
-  margin: 5px 10px;
-  border: none !important;
+.expedition-controls{
+  margin: 10px 0px;
+  border: none;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
 }
