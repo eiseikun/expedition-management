@@ -403,8 +403,6 @@ window.addMatchRecord = async function(){
       }]
     });
   }
-
-  loadExpeditions();
 };
 
 // ===== 2ページ目表示 =====
