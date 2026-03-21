@@ -439,9 +439,15 @@ async function loadExpeditions(){
 
     const weekDiv = document.createElement("div");
     weekDiv.className = "week-block";
+    const header = document.createElement("div");
 
-    const header = document.createElement("h3");
-    header.innerText = `週${exp.week}`;
+header.innerHTML = `
+  <h3 style="display:inline;">週${exp.week}</h3>
+  <button onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
+  <button onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
+  <button onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
+  <button onclick="deleteWeek('${d.id}')">週ごと削除</button>
+`;
     header.style.cursor = "pointer";
 
     const content = document.createElement("div");
@@ -538,4 +544,27 @@ window.toggleDamage = async function(docId, matchNumber, playerName, checkbox){
   player.damageMarked = checkbox.checked;
 
   await updateDoc(ref, docData);
+};
+// 回戦削除（週指定）
+window.deleteMatchByWeek = async function(docId, matchNumber){
+
+  if(!confirm("この回戦を削除しますか？")) return;
+
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDocs(collection(db,"expeditions"));
+  const data = snap.docs.find(d=>d.id === docId).data();
+
+  data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
+
+  await updateDoc(ref, data);
+  loadExpeditions();
+};
+
+// 週ごと削除
+window.deleteWeek = async function(docId){
+
+  if(!confirm("この週を全部削除しますか？")) return;
+
+  await deleteDoc(doc(db,"expeditions",docId));
+  loadExpeditions();
 };
