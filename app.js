@@ -508,7 +508,6 @@ async function loadExpeditions(){
     container.appendChild(weekDiv);
   });
 }
-}
 
 // チェック更新（名前ベース）
 window.toggleDamage = async function(docId, matchNumber, playerName, checkbox){
