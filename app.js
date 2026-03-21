@@ -401,45 +401,6 @@ window.addMatch = async function(matchNumber){
 };
 
 // ===== 2ページ目表示032121更新 =====
-// 回戦追加（ボタン用）
-window.addMatch = async function(matchNumber){
-
-  const week = Number(document.getElementById("weekInput").value);
-  if(!week) return alert("週番号入力して");
-
-  const matchPlayers = players
-    .filter(p=>p.lane > 0)
-    .map(p=>({
-      name: p.name,
-      lane: p.lane,
-      style: p.range,
-      damageMarked: false
-    }));
-
-  const snap = await getDocs(collection(db,"expeditions"));
-  const existing = snap.docs.find(d=>d.data().week === week);
-
-  if(existing){
-    const data = existing.data();
-
-    const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
-    if(idx >= 0){
-      data.matches[idx] = { matchNumber, players: matchPlayers };
-    }else{
-      data.matches.push({ matchNumber, players: matchPlayers });
-    }
-
-    await updateDoc(doc(db,"expeditions",existing.id), data);
-
-  }else{
-    await addDoc(collection(db,"expeditions"), {
-      week,
-      matches: [{ matchNumber, players: matchPlayers }]
-    });
-  }
-
-  loadExpeditions();
-};
 
 // 表示（横テーブル＋レーン区切り）
 async function loadExpeditions(){
@@ -478,7 +439,7 @@ async function loadExpeditions(){
       </tr>
     `;
 
-    const baseMatch = exp.matches.find(m=>m.matchNumber === 1);
+    const baseMatch = exp.matches[0];
     if(!baseMatch) return;
 
     // ★レーン順に並び替え
