@@ -38,9 +38,13 @@
 <!-- ===== 2ページ目 ===== -->
 <div class="table-container" id="page2" style="display:none;">
   <h2>遠征記録（週ごと）</h2>
-  <div class="expedition-controls">
-    <button onclick="addMatchRecord()">回戦追加</button>
-  </div>
+<div class="expedition-controls">
+  週：
+  <input type="number" id="weekInput" style="width:60px;">
+  <button onclick="addMatch(1)">1回戦</button>
+  <button onclick="addMatch(2)">2回戦</button>
+  <button onclick="addMatch(3)">3回戦</button>
+</div>
   <div id="expeditionContainer"></div>
 </div>
 
