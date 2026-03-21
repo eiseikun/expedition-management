@@ -41,6 +41,7 @@ window.closeEditor = function(){
   document.body.classList.remove("modal-open");
   // ★ 元に戻す
   document.body.style.overflow = document.body.dataset.prevOverflow || "auto";
+  document.getElementById("modeIndicator").innerText = "通常モード";
 };
 
 // ===== ルーン =====
