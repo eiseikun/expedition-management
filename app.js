@@ -385,90 +385,102 @@ async function load(){
 
 load();// ←ここまでが1ページ目のロード処理
 
-// ===== 2ページ目 ロジック =====
-const weekSelect = document.getElementById("weekSelect");
-const matchesContainer = document.getElementById("matchesContainer");
-const pastWeeksContainer = document.getElementById("pastWeeksContainer");
+// ===== 2ページ目: 遠征管理 =====
+let expeditions = []; // Firebaseから取得
+let currentWeek = 1;
 
-let expeditions = []; // 遠征データ配列
+// 2ページ目表示・非表示に合わせてボタンも制御
+const topButtons = document.querySelector(".top-buttons");
 
-// 週選択肢を作る
-for(let i=1;i<=10;i++){ // 最大10週まで
-  const opt = document.createElement("option");
-  opt.value = i;
-  opt.textContent = `${i}週目`;
-  weekSelect.appendChild(opt);
+// Firebaseから遠征データ読み込み
+async function loadExpeditions() {
+  expeditions = [];
+  const snap = await getDocs(collection(db, "expeditions"));
+  snap.forEach(d => expeditions.push({ id: d.id, ...d.data() }));
+  renderExpedition();
 }
 
-// 選択週が変わったとき
-weekSelect.onchange = renderWeek;
+function getPlayersByLane(lane) {
+  return players.filter(p => p.lane === lane);
+}
 
-// 選択週の表示
-function renderWeek(){
-  const week = Number(weekSelect.value);
-  matchesContainer.innerHTML = "";
+// 遠征テーブル描画
+function renderExpedition() {
+  const tbody = document.getElementById("page2Body");
+  tbody.innerHTML = "";
 
-  for(let matchNumber=1; matchNumber<=3; matchNumber++){
-    const matchDiv = document.createElement("div");
-    matchDiv.className = "match";
-
-    const table = document.createElement("table");
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>レーン</th>
-          <th>名前</th>
-          <th>ダメージ</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-
-    const tbody = table.querySelector("tbody");
-
-    [1,2,3].forEach(lane=>{
-      const lanePlayers = players.filter(p=>p.lane===lane);
-      lanePlayers.forEach(p=>{
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${lane}</td>
-          <td>${p.name}</td>
-          <td><input type="checkbox" class="damageCheckbox" data-week="${week}" data-match="${matchNumber}" data-player="${p.name}"></td>
-        `;
-        tbody.appendChild(tr);
+  // 週データ取得 or 新規作成
+  let weekData = expeditions.find(w => w.week === currentWeek);
+  if (!weekData) {
+    weekData = { week: currentWeek, matches: [] };
+    for (let i = 1; i <= 3; i++) {
+      const matchPlayers = [];
+      [1,2,3].forEach(lane => {
+        getPlayersByLane(lane).forEach(p => matchPlayers.push({ name: p.name, lane: lane, damageMarked: false }));
       });
-    });
-
-    matchDiv.innerHTML = `<h3>${matchNumber}試合目</h3>`;
-    matchDiv.appendChild(table);
-    matchesContainer.appendChild(matchDiv);
+      weekData.matches.push({ matchNumber: i, players: matchPlayers });
+    }
+    expeditions.push(weekData);
   }
-}
 
-// 過去週の記録表示
-function renderPastWeeks(){
-  pastWeeksContainer.innerHTML = "";
-  expeditions.forEach(weekData=>{
-    const div = document.createElement("div");
-    div.innerHTML = `<h4>${weekData.week}週目</h4>`;
-    weekData.matches.forEach(match=>{
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <thead><tr><th>レーン</th><th>名前</th><th>ダメージ</th></tr></thead>
-        <tbody></tbody>
+  // 週ラベル更新
+  document.getElementById("weekLabel").innerText = `第${currentWeek}週`;
+
+  weekData.matches.forEach(match => {
+    const header = document.createElement("tr");
+    header.innerHTML = `<th colspan="3">第${match.matchNumber}試合</th>`;
+    tbody.appendChild(header);
+
+    match.players.forEach(p => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${p.name}</td>
+        <td>${["控え","レーン1","レーン2","レーン3"][p.lane]}</td>
+        <td><input type="checkbox" ${p.damageMarked ? "checked" : ""} onchange="toggleDamage(${currentWeek}, ${match.matchNumber}, '${p.name}', this.checked)"></td>
       `;
-      const tbody = table.querySelector("tbody");
-      match.players.forEach(p=>{
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${p.lane}</td><td>${p.name}</td><td>${p.damageMarked?"✔":""}</td>`;
-        tbody.appendChild(tr);
-      });
-      div.appendChild(table);
+      tbody.appendChild(tr);
     });
-    pastWeeksContainer.appendChild(div);
   });
 }
 
-// 初期表示
-renderWeek();
-renderPastWeeks();
+// チェックボックス変更時
+async function toggleDamage(week, matchNumber, playerName, checked) {
+  const weekData = expeditions.find(w => w.week === week);
+  if (!weekData) return;
+  const match = weekData.matches.find(m => m.matchNumber === matchNumber);
+  if (!match) return;
+  const player = match.players.find(p => p.name === playerName);
+  if (!player) return;
+
+  player.damageMarked = checked;
+
+  // Firebase更新
+  if (weekData.id) {
+    const docRef = doc(db, "expeditions", weekData.id);
+    await updateDoc(docRef, { matches: weekData.matches });
+  } else {
+    const docRef = await addDoc(collection(db, "expeditions"), weekData);
+    weekData.id = docRef.id;
+  }
+}
+
+// 週切替
+window.nextWeek = () => { currentWeek++; renderExpedition(); }
+window.prevWeek = () => { if(currentWeek>1){ currentWeek--; renderExpedition(); } }
+
+// ページ切替修正版（2ページ目でボタン非表示）
+window.showPage = function(n){
+  const pages = [document.getElementById("captureArea"), document.getElementById("page2")];
+  pages.forEach((p,i)=>{
+    p.style.display = (i === n-1) ? "block" : "none";
+  });
+
+  // 2ページ目ならボタン非表示
+  if(n===2){
+    topButtons.style.display = "none";
+  } else {
+    topButtons.style.display = "flex";
+  }
+};
+
+loadExpeditions();
