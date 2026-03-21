@@ -16,6 +16,13 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
+// ===== ページ切替 =====
+window.showPage = function(n){
+  const pages = [document.getElementById("captureArea"), document.getElementById("page2")];
+  pages.forEach((p,i)=>{
+    p.style.display = (i === n-1) ? "block" : "none";
+  });
+};
 // ===== モーダル =====
 window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
@@ -56,7 +63,6 @@ function updateEnchant(nameSelect, enchantSelect){
 window.addSelectRune = function(rune = {name:"炎毒の印", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
-
   div.innerHTML = `
     <select class="rune-name">
       ${Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("")}
@@ -69,26 +75,20 @@ window.addSelectRune = function(rune = {name:"炎毒の印", q:"none", e:""}){
     <select class="rune-e"></select>
     <button onclick="this.parentNode.remove()">削除</button>
   `;
-
   const nameSel = div.querySelector(".rune-name");
   const qSel = div.querySelector(".rune-q");
   const eSel = div.querySelector(".rune-e");
-
   nameSel.value = rune.name;
   qSel.value = rune.q;
-
   updateEnchant(nameSel, eSel);
   eSel.value = rune.e;
-
   nameSel.onchange = () => updateEnchant(nameSel, eSel);
-
   document.getElementById("runeContainer").appendChild(div);
 };
 
 window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
-
   div.innerHTML = `
     <input class="rune-name" placeholder="ルーン名" value="${rune.name}">
     <select class="rune-q">
@@ -99,7 +99,6 @@ window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
     <input class="rune-e" placeholder="効果" value="${rune.e}">
     <button onclick="this.parentNode.remove()">削除</button>
   `;
-
   div.querySelector(".rune-q").value = rune.q;
   document.getElementById("runeContainer").appendChild(div);
 };
