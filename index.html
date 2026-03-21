@@ -16,8 +16,10 @@
 <div class="top-buttons">
   <button onclick="openEditor()">プレイヤー追加</button>
   <button onclick="saveTableImage()">画像保存</button>
+  <button onclick="showPage(1)">ページ1</button>
+  <button onclick="showPage(2)">ページ2</button>
 </div>
-
+<!-- ===== 1ページ目 ===== -->
 <div class="table-container" id="captureArea">
   <table id="playerTable">
     <thead>
@@ -27,6 +29,22 @@
       </tr>
     </thead>
     <tbody id="playerBody"></tbody>
+  </table>
+</div>
+
+<!-- ===== 2ページ目 ===== -->
+<div class="table-container" id="page2" style="display:none;">
+  <h2>2ページ目のフォーマット</h2>
+  <p>ここに統計や別のデータを表示できます。</p>
+  <table>
+    <thead>
+      <tr>
+        <th>項目1</th><th>項目2</th><th>項目3</th>
+      </tr>
+    </thead>
+    <tbody id="page2Body">
+      <!-- JSで表示可能 -->
+    </tbody>
   </table>
 </div>
 
