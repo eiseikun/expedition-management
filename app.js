@@ -19,17 +19,13 @@ let editIndex = null;
 window.showPage = function(n){
   const page1 = document.getElementById("captureArea");
   const page2 = document.getElementById("page2");
+  const topButtons = document.getElementById("topButtons");
 
   page1.style.display = (n === 1) ? "block" : "none";
   page2.style.display = (n === 2) ? "block" : "none";
-
-  // 1ページ目ボタン表示制御
-  const topButtons = document.getElementById("topButtons");
   topButtons.style.display = (n === 1) ? "flex" : "none";
 
-  if(n === 2){
-    loadExpeditions();
-  }
+  if(n === 2) loadExpeditions();
 };
 
 // ===== モーダル =====
@@ -39,7 +35,6 @@ window.openEditor = function(){
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
-
   editIndex = null;
 };
 
@@ -364,8 +359,10 @@ async function load(){
   render();
 }
 load();
+// ============================
+// ===== ここから2ページ目 =====
+// ============================
 
-// ===== 2ページ目用 =====
 window.addMatch = async function(matchNumber){
   const week = Number(document.getElementById("weekInput").value);
   if(!week) return alert("週番号入力して");
@@ -404,6 +401,47 @@ window.addMatch = async function(matchNumber){
 };
 
 // ===== 2ページ目表示032121更新 =====
+// 回戦追加（ボタン用）
+window.addMatch = async function(matchNumber){
+
+  const week = Number(document.getElementById("weekInput").value);
+  if(!week) return alert("週番号入力して");
+
+  const matchPlayers = players
+    .filter(p=>p.lane > 0)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range,
+      damageMarked: false
+    }));
+
+  const snap = await getDocs(collection(db,"expeditions"));
+  const existing = snap.docs.find(d=>d.data().week === week);
+
+  if(existing){
+    const data = existing.data();
+
+    const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
+    if(idx >= 0){
+      data.matches[idx] = { matchNumber, players: matchPlayers };
+    }else{
+      data.matches.push({ matchNumber, players: matchPlayers });
+    }
+
+    await updateDoc(doc(db,"expeditions",existing.id), data);
+
+  }else{
+    await addDoc(collection(db,"expeditions"), {
+      week,
+      matches: [{ matchNumber, players: matchPlayers }]
+    });
+  }
+
+  loadExpeditions();
+};
+
+// 表示（横テーブル＋レーン区切り）
 async function loadExpeditions(){
   const container = document.getElementById("expeditionContainer");
   container.innerHTML = "";
@@ -416,7 +454,6 @@ async function loadExpeditions(){
     const weekDiv = document.createElement("div");
     weekDiv.className = "week-block";
 
-    // 折り畳み
     const header = document.createElement("h3");
     header.innerText = `週${exp.week}`;
     header.style.cursor = "pointer";
@@ -424,12 +461,11 @@ async function loadExpeditions(){
     const content = document.createElement("div");
 
     header.onclick = () => {
-      content.style.display = (content.style.display === "none") ? "block" : "none";
+      content.style.display =
+        (content.style.display === "none") ? "block" : "none";
     };
 
-    // テーブル作成
     const table = document.createElement("table");
-    table.className = "expedition-table";
 
     table.innerHTML = `
       <tr>
@@ -442,12 +478,25 @@ async function loadExpeditions(){
       </tr>
     `;
 
-    // プレイヤー一覧（1回戦ベース）
     const baseMatch = exp.matches.find(m=>m.matchNumber === 1);
     if(!baseMatch) return;
 
-    baseMatch.players.forEach((p,i)=>{
+    // ★レーン順に並び替え
+    const sortedPlayers = [...baseMatch.players].sort((a,b)=>{
+      if(a.lane !== b.lane) return a.lane - b.lane;
+      return 0;
+    });
+
+    let prevLane = null;
+
+    sortedPlayers.forEach(p=>{
       const row = document.createElement("tr");
+
+      // ★レーン区切り
+      if(prevLane !== null && prevLane !== p.lane){
+        row.classList.add("lane-separator");
+      }
+      prevLane = p.lane;
 
       row.innerHTML = `
         <td>${p.lane}</td>
@@ -455,13 +504,14 @@ async function loadExpeditions(){
         <td>${p.style}</td>
         ${[1,2,3].map(mn=>{
           const match = exp.matches.find(m=>m.matchNumber === mn);
-          const checked = match?.players[i]?.damageMarked ? "checked" : "";
+          const playerData = match?.players.find(mp=>mp.name === p.name);
+          const checked = playerData?.damageMarked ? "checked" : "";
 
           return `
             <td>
               <input type="checkbox"
                 ${checked}
-                onchange="toggleDamage('${d.id}',${mn},${i},this)">
+                onchange="toggleDamage('${d.id}',${mn},'${p.name}',this)">
             </td>
           `;
         }).join("")}
@@ -478,15 +528,17 @@ async function loadExpeditions(){
   });
 }
 
-// ===== ダメージチェック更新 =====
-window.toggleDamage = async function(docId, matchNumber, playerIndex, checkbox){
+// チェック更新（名前ベース）
+window.toggleDamage = async function(docId, matchNumber, playerName, checkbox){
 
   const ref = doc(db,"expeditions",docId);
   const snap = await getDocs(collection(db,"expeditions"));
   const docData = snap.docs.find(d=>d.id === docId).data();
 
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
-  match.players[playerIndex].damageMarked = checkbox.checked;
+  const player = match.players.find(p=>p.name === playerName);
+
+  player.damageMarked = checkbox.checked;
 
   await updateDoc(ref, docData);
 };
