@@ -412,6 +412,7 @@ window.addMatch = async function(matchNumber){
 
 // 表示（横テーブル＋レーン区切り）
 async function loadExpeditions(){
+
   const container = document.getElementById("expeditionContainer");
   container.innerHTML = "";
 
@@ -436,57 +437,68 @@ async function loadExpeditions(){
 
     const table = document.createElement("table");
 
+    // ===== ヘッダー =====
     table.innerHTML = `
       <tr>
         <th>レーン</th>
-        <th>プレイヤー</th>
-        <th>戦術</th>
-        <th>1回戦</th>
-        <th>2回戦</th>
-        <th>3回戦</th>
+        <th colspan="3">1回戦</th>
+        <th colspan="3">2回戦</th>
+        <th colspan="3">3回戦</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th>名前</th><th>戦術</th><th>高火力</th>
+        <th>名前</th><th>戦術</th><th>高火力</th>
+        <th>名前</th><th>戦術</th><th>高火力</th>
       </tr>
     `;
 
-    const baseMatch = exp.matches[0];
-    if(!baseMatch) return;
+    const lanes = [1,2,3];
 
-    // ★レーン順に並び替え
-    const sortedPlayers = [...baseMatch.players].sort((a,b)=>{
-      if(a.lane !== b.lane) return a.lane - b.lane;
-      return 0;
-    });
+    lanes.forEach(lane=>{
 
-    let prevLane = null;
+      // ★そのレーンの最大人数を取得
+      let max = 0;
+      [1,2,3].forEach(mn=>{
+        const match = exp.matches.find(m=>m.matchNumber === mn);
+        const count = match ? match.players.filter(p=>p.lane === lane).length : 0;
+        if(count > max) max = count;
+      });
 
-    sortedPlayers.forEach(p=>{
-      const row = document.createElement("tr");
+      // ★人数分ループ（縦に増やす）
+      for(let i=0;i<max;i++){
 
-      // ★レーン区切り
-      if(prevLane !== null && prevLane !== p.lane){
-        row.classList.add("lane-separator");
-      }
-      prevLane = p.lane;
+        const row = document.createElement("tr");
 
-      row.innerHTML = `
-        <td>${p.lane}</td>
-        <td>${p.name}</td>
-        <td>${p.style}</td>
-        ${[1,2,3].map(mn=>{
+        // レーン表示（最初の行だけ）
+        if(i === 0){
+          row.innerHTML += `<td rowspan="${max}">${lane}</td>`;
+        }
+
+        [1,2,3].forEach(mn=>{
           const match = exp.matches.find(m=>m.matchNumber === mn);
-          const playerData = match?.players.find(mp=>mp.name === p.name);
-          const checked = playerData?.damageMarked ? "checked" : "";
+          const lanePlayers = match
+            ? match.players.filter(p=>p.lane === lane)
+            : [];
 
-          return `
+          const p = lanePlayers[i];
+
+          row.innerHTML += `
+            <td>${p?.name || ""}</td>
+            <td>${p?.style || ""}</td>
             <td>
+              ${p ? `
               <input type="checkbox"
-                ${checked}
+                ${p.damageMarked ? "checked":""}
                 onchange="toggleDamage('${d.id}',${mn},'${p.name}',this)">
+              ` : ""}
             </td>
           `;
-        }).join("")}
-      `;
+        });
 
-      table.appendChild(row);
+        table.appendChild(row);
+      }
+
     });
 
     content.appendChild(table);
@@ -495,6 +507,7 @@ async function loadExpeditions(){
 
     container.appendChild(weekDiv);
   });
+}
 }
 
 // チェック更新（名前ベース）
