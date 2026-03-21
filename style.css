@@ -143,3 +143,14 @@ td:nth-child(6){
   justify-content: center;
   gap: 10px;
 }
+.week-block{
+  margin-bottom:20px;
+  border:1px solid #444;
+  padding:10px;
+}
+
+.week-block h3{
+  margin:0;
+  background:#222;
+  padding:8px;
+}
