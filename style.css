@@ -169,12 +169,7 @@ td:nth-child(6){
 body{
   background:linear-gradient(180deg,#0f0f0f,#1a1a1a);
 }
-/* タイトルを強化 */
-h1{
-  font-size:28px;
-  letter-spacing:2px;
-  text-shadow:0 0 10px rgba(255,255,255,0.1);
-}
+
 /* テーブルカード化 */
 .table-container{
   background:linear-gradient(180deg,#1b1b1b,#161616);
