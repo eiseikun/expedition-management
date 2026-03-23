@@ -165,10 +165,7 @@ td:nth-child(6){
   gap:10px;
   justify-content:center;
 }
-/* 背景にグラデーション */
-body{
-  background:linear-gradient(180deg,#0f0f0f,#1a1a1a);
-}
+
 
 /* テーブルカード化 */
 .table-container{
