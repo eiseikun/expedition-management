@@ -347,15 +347,12 @@ function render(){
       row.innerHTML=`
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
-        <td>
-        　<span class="${
-           p.range === "近距離" ? "strategy-close" :
-           p.range === "中距離" ? "strategy-mid" :
-           "strategy-long"
-         }">
-         ${p.range}
-         </span>
-         / ${p.style}
+        <td class="${
+          p.range === "近距離" ? "strategy-close" :
+          p.range === "中距離" ? "strategy-mid" :
+          "strategy-long"
+        }">
+        ${p.range} / ${p.style}
         </td>
         <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
@@ -528,16 +525,14 @@ header.innerHTML = `
 
           row.innerHTML += `
             <td>${p?.name || ""}</td>
-            <td>
-            ${p ? `
-            <span class="${
-              p.style === "近距離" ? "strategy-close" :
-              p.style === "中距離" ? "strategy-mid" :
-              "strategy-long"
+            <td class="${
+              p
+              ? (p.style === "近距離" ? "strategy-close" :
+                 p.style === "中距離" ? "strategy-mid" :
+                 "strategy-long")
+              : ""
             }">
-            ${p.style}
-            </span>
-            ` : ""}
+            ${p ? p.style : ""}
             </td>
             <td>
               ${p ? `
