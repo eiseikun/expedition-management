@@ -475,20 +475,20 @@ header.innerHTML = `
     const table = document.createElement("table");
 
     // ===== ヘッダー =====
-    table.innerHTML = `
-      <tr>
-        <th>レーン</th>
-        <th colspan="3">1回戦</th>
-        <th colspan="3">2回戦</th>
-        <th colspan="3">3回戦</th>
-      </tr>
-      <tr>
-        <th></th>
-        <th>名前</th><th>戦術</th><th>高火力</th>
-        <th>名前</th><th>戦術</th><th>高火力</th>
-        <th>名前</th><th>戦術</th><th>高火力</th>
-      </tr>
-    `;
+    // ★追加：存在する回戦を取得
+    const matchNumbers = exp.matches.map(m => m.matchNumber);
+    matchNumbers.sort((a,b)=>a-b);
+    // ★ヘッダー生成
+    let header1 = `<tr><th>レーン</th>`;
+    let header2 = `<tr><th></th>`;
+
+    matchNumbers.forEach(mn=>{
+      header1 += `<th colspan="3">${mn}回戦</th>`;
+      header2 += `<th>名前</th><th>戦術</th><th>高火力</th>`;
+    });
+    header1 += `</tr>`;
+    header2 += `</tr>`;
+    table.innerHTML = header1 + header2;
 
     const lanes = [1,2,3];
 
@@ -496,7 +496,7 @@ header.innerHTML = `
 
       // ★そのレーンの最大人数を取得
       let max = 0;
-      [1,2,3].forEach(mn=>{
+      matchNumbers.forEach(mn=>{
         const match = exp.matches.find(m=>m.matchNumber === mn);
         const count = match ? match.players.filter(p=>p.lane === lane).length : 0;
         if(count > max) max = count;
@@ -516,8 +516,8 @@ header.innerHTML = `
         if(i === 0){
           row.innerHTML += `<td rowspan="${max}">${lane}</td>`;
         }
-
-        [1,2,3].forEach(mn=>{
+        
+        matchNumbers.forEach(mn=>{
           const match = exp.matches.find(m=>m.matchNumber === mn);
           const lanePlayers = match
             ? match.players.filter(p=>p.lane === lane)
