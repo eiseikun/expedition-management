@@ -330,3 +330,25 @@ button:hover{
 .lane-1 td{ background:rgba(180,210,255,0.5); }/* レーン1（青） */
 .lane-2 td{ background:rgba(170,230,180,0.5); }/* レーン2（緑） */
 .lane-3 td{ background:rgba(240,180,150,0.5); }/* レーン3（赤） */
+.strategy-label{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px; /* ←これで丸くなる */
+  font-size:12px;
+  font-weight:bold;
+}
+/* 近距離（赤系） */
+.strategy-close{
+  background:rgba(251,226,213,0.9);
+  color:#5a2a1f;
+}
+/* 中距離（青系） */
+.strategy-mid{
+  background:rgba(202,237,251,0.9);
+  color:#1f3f5a;
+}
+/* 遠距離（緑系） */
+.strategy-long{
+  background:rgba(218,242,208,0.9);
+  color:#2d5a1f;
+}
