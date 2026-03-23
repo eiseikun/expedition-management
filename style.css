@@ -330,18 +330,19 @@ button:hover{
 .lane-1 td{ background:rgba(180,210,255,0.5); }/* レーン1（青） */
 .lane-2 td{ background:rgba(170,230,180,0.5); }/* レーン2（緑） */
 .lane-3 td{ background:rgba(240,180,150,0.5); }/* レーン3（赤） */
-td.strategy-close{ background:#fbe2d5; color:#000; }
-td.strategy-mid{ background:#caedfb; color:#000; }
 td.strategy-long{ background:#daf2d0; color:#000; }
 td.strategy-close{
-  background:rgba(255,120,120,0.15);
-  border-left:4px solid #ff6b6b;
+  background:rgba(251,226,213,0.15);
+   color:#000;
+  border-left:4px solid #fbe2d5;
 }
 td.strategy-mid{
-  background:rgba(120,180,255,0.15);
-  border-left:4px solid #4dabf7;
+  background:rgba(202,237,251,0.15);
+   color:#000;
+  border-left:4px solid #caedfb;
 }
 td.strategy-long{
-  background:rgba(120,255,180,0.15);
-  border-left:4px solid #51cf66;
+  background:rgba(218,242,208,0.15);
+   color:#000;
+  border-left:4px solid #daf2d0;
 }
