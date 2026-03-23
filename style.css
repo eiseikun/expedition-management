@@ -167,13 +167,7 @@ td:nth-child(6){
 }
 
 
-/* テーブルカード化 */
-.table-container{
-  background:linear-gradient(180deg,#1b1b1b,#161616);
-  border:1px solid #333;
-  border-radius:12px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.6);
-}
+
 
 /* ヘッダー強化 */
 th{
