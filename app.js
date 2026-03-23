@@ -337,10 +337,26 @@ function render(){
     list.forEach(p=>{
       const i=players.indexOf(p);
       const row=document.createElement("tr");
+      if(p.lane === 1){
+        row.classList.add("lane-1");
+      }else if(p.lane === 2){
+        row.classList.add("lane-2");
+      }else if(p.lane === 3){
+        row.classList.add("lane-3");
+      }
       row.innerHTML=`
         <td>${p.name}</td>
         <td>${formatPower(p.power)}</td>
-        <td>${p.range}/${p.style}</td>
+        <td>
+        　<span class="${
+           p.range === "近距離" ? "strategy-close" :
+           p.range === "中距離" ? "strategy-mid" :
+           "strategy-long"
+         }">
+         ${p.range}
+         </span>
+         / ${p.style}
+        </td>
         <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
         <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
@@ -489,9 +505,14 @@ header.innerHTML = `
 
       // ★人数分ループ（縦に増やす）
       for(let i=0;i<max;i++){
-
         const row = document.createElement("tr");
-
+        if(lane === 1){
+          row.classList.add("lane-1");
+        }else if(lane === 2){
+          row.classList.add("lane-2");
+        }else if(lane === 3){
+          row.classList.add("lane-3");
+        }
         // レーン表示（最初の行だけ）
         if(i === 0){
           row.innerHTML += `<td rowspan="${max}">${lane}</td>`;
@@ -507,7 +528,17 @@ header.innerHTML = `
 
           row.innerHTML += `
             <td>${p?.name || ""}</td>
-            <td>${p?.style || ""}</td>
+            <td>
+            ${p ? `
+            <span class="${
+              p.style === "近距離" ? "strategy-close" :
+              p.style === "中距離" ? "strategy-mid" :
+              "strategy-long"
+            }">
+            ${p.style}
+            </span>
+            ` : ""}
+            </td>
             <td>
               ${p ? `
               <input type="checkbox"
