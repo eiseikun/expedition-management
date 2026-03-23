@@ -1,76 +1,123 @@
+/* ==============================
+   全体設定（ページ全体）
+============================== */
 body{
-  font-family:sans-serif;
-  background:#111;
-  color:white;
-  text-align:center;
-  margin:0;
-  overflow-x:hidden;
+  font-family:sans-serif;     /* フォント */
+  background:#111;            /* 背景色（黒） */
+  color:white;                /* 文字色 */
+  text-align:center;          /* 中央寄せ */
+  margin:0;                   /* 余白なし */
+  overflow-x:hidden;          /* 横スクロール防止 */
 }
 
-/* テーブル */
+
+/* ==============================
+   テーブル全体
+============================== */
+
+/* テーブル本体 */
 table{
-  min-width:900px;
-  border-collapse:collapse;
+  min-width:900px;            /* 横スクロール前提の幅 */
+  border-collapse:collapse;   /* 枠線をまとめる */
 }
 
+/* セル共通 */
 th,td{
-  padding:8px;
-  border:1px solid #333;
-  white-space:nowrap;
+  padding:8px;                /* 内側余白 */
+  border:1px solid #333;      /* 枠線 */
+  white-space:nowrap;         /* 改行させない */
 }
 
-th{ background:#222; }
-tr:nth-child(even){ background:#1a1a1a; }
+/* ヘッダー（タイトル行） */
+th{
+  background:#222;            /* 少し明るい黒 */
+}
+
+/* 偶数行の背景 */
+tr:nth-child(even){
+  background:#1a1a1a;
+}
+
+/* レーン見出し（レーン1とか） */
 .lane-header{
   background:#333;
   font-weight:bold;
   text-align:left;
 }
 
-/* テーブル横スクロール */
+/* 行にマウス乗せたとき */
+tr:hover{
+  background:#2c2c2c;
+  transition:0.15s;
+}
+
+/* 横スクロール用の外枠 */
 .table-container{
   overflow-x:auto;
 }
 
-/* 装備グリッド */
+
+/* ==============================
+    装備表示
+============================== */
+
+/* 装備入力（編集画面のグリッド） */
 .gear-grid{
   display:grid;
-  grid-template-columns:repeat(2,1fr); /* 2列固定 */
+  grid-template-columns:repeat(2,1fr); /* 2列 */
   gap:8px;
   width:100%;
   box-sizing:border-box;
 }
 
+/* セレクトの幅調整 */
 .gear-grid select{
   width:100%;
   box-sizing:border-box;
 }
 
+/* 表示用の小さい装備マス */
 .gear-box{
   display:grid;
   grid-template-columns:repeat(2,12px);
   gap:3px;
-  pointer-events:none; 
+  pointer-events:none; /* クリック無効（ボタン邪魔しない） */
 }
-/* 0320追加 */
-.cell{ width:12px;height:12px; }
-.cell.empty{ background:#444; }
-.cell.chaos{ background:#75004f; }
-.cell.mythic{ background:#c11333; }
-.cell.legend{ background:#db9000; }
 
+/* 各マスの基本 */
 .cell{
+  width:12px;
+  height:12px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:8px;
   font-weight:bold;
 }
-/* ルーンだけ改行OK */
+
+/* 装備なし */
+.cell.empty{ background:#444; }
+
+/* カオス */
+.cell.chaos{ background:#75004f; }
+
+/* ミシック */
+.cell.mythic{ background:#c11333; }
+
+/* レジェンド */
+.cell.legend{ background:#db9000; }
+
+
+/* ==============================
+   ルーン表示
+============================== */
+
+/* ルーン列だけ改行OK */
 td:nth-child(6){
   white-space:normal;
 }
-/* ルーンの色変更 */
+
+/* ルーン共通 */
 .rune{
   display:inline-block;
   padding:4px 6px;
@@ -79,99 +126,93 @@ td:nth-child(6){
   font-size:12px;
   font-weight:bold;
 }
+
 /* レジェンド（黄色） */
 .rune-legend{
   background:#db9000;
   color:#000;
 }
+
 /* ミシック（赤） */
 .rune-mythic{
   background:#c11333;
   color:#fff;
 }
-/* ルーンを区切る */
+
+/* ルーン追加欄の区切り線 */
 #runeContainer{
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #555;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid #555;
 }
-/* モーダル */
+
+
+/* ==============================
+   モーダル（編集画面）
+============================== */
+
 .editor {
   position: fixed;
-  /* 画面中央ではなく上下左右を調整可能に */
+
+  /* 画面全体に配置 */
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
 
-  margin: 10px auto; /* 上下左右に余白を作る */
-  max-width: 400px;
+  margin: 10px auto;      /* 中央寄せ＋余白 */
+  max-width: 400px;       /* 横幅制限 */
 
-  background: #222;
+  background: #222;       /* 背景 */
   padding: 20px;
   border-radius: 10px;
 
-  overflow-y: auto; /* 縦スクロール可能 */
+  overflow-y: auto;       /* 縦スクロール */
   overflow-x: hidden;
 
-  z-index: 9999;
+  z-index: 9999;          /* 最前面表示 */
   box-sizing: border-box;
 }
 
-
-/* モーダル自体は操作可能 */
+/* モーダル操作有効 */
 .editor{
   pointer-events:auto;
 }
 
+/* モーダル内の入力欄 */
 #editor input,
 #editor select{
   width:100%;
   box-sizing:border-box;
 }
 
+/* モーダル下のボタンエリア */
 .editor-footer{
   margin-top:10px;
   display:flex;
   justify-content:space-between;
   gap:8px;
 }
-/* ボタンと表に隙間 */
+
+
+/* ==============================
+   ボタン関連
+============================== */
+
+/* 上のボタン群 */
 .top-buttons{
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.week-block h3{
-  margin:0;
-  background:#222;
-  padding:8px;
-}
-.lane-separator td{
-  border-top: 4px double white;
-}
-.week-block{
-  margin-bottom:20px;
-  border:none;
-  padding:0;
-}
-.expedition-controls{
-  margin: 10px 0px;
-  border: none;
+  margin-bottom:15px;
   display:flex;
-  flex-wrap:wrap;
-  gap:10px;
   justify-content:center;
+  gap:10px;
 }
 
-/* 行ホバー強化 */
-tr:hover{
-  background:#2c2c2c;
-  transition:0.15s;
+/* 下ページボタン余白 */
+.page-buttons{
+  margin-bottom:15px;
 }
 
+/* ボタン見た目 */
 button{
   background:linear-gradient(180deg,#2a2a2a,#1a1a1a);
   border:1px solid #444;
@@ -181,11 +222,42 @@ button{
   font-weight:bold;
 }
 
+/* ホバー時 */
 button:hover{
   background:linear-gradient(180deg,#3a3a3a,#222);
   box-shadow:0 0 10px rgba(255,255,255,0.1);
 }
-.top-buttons,
-.page-buttons{
-  margin-bottom:15px;
+
+
+/* ==============================
+   2ページ目（遠征管理）
+============================== */
+
+/* 週ブロック */
+.week-block{
+  margin-bottom:20px;
+  border:none;
+  padding:0;
+}
+
+/* 週タイトル */
+.week-block h3{
+  margin:0;
+  background:#222;
+  padding:8px;
+}
+
+/* レーン区切り線 */
+.lane-separator td{
+  border-top:4px double white;
+}
+
+/* 上部操作ボタン */
+.expedition-controls{
+  margin:10px 0px;
+  border:none;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
 }
