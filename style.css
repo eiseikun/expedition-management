@@ -165,4 +165,56 @@ td:nth-child(6){
   gap:10px;
   justify-content:center;
 }
+/* 背景にグラデーション */
+body{
+  background:linear-gradient(180deg,#0f0f0f,#1a1a1a);
+}
+/* タイトルを強化 */
+h1{
+  font-size:28px;
+  letter-spacing:2px;
+  text-shadow:0 0 10px rgba(255,255,255,0.1);
+}
+/* テーブルカード化 */
+.table-container{
+  background:linear-gradient(180deg,#1b1b1b,#161616);
+  border:1px solid #333;
+  border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);
+}
 
+/* ヘッダー強化 */
+th{
+  background:linear-gradient(180deg,#2a2a2a,#1f1f1f);
+  font-weight:bold;
+  font-size:13px;
+}
+
+/* 行ホバー強化 */
+tr:hover{
+  background:#2c2c2c;
+  transition:0.15s;
+}
+.lane-header{
+  background:linear-gradient(90deg,#555,#222);
+  font-size:14px;
+  letter-spacing:1px;
+  border-left:4px solid #ffcc00;
+}
+button{
+  background:linear-gradient(180deg,#2a2a2a,#1a1a1a);
+  border:1px solid #444;
+  color:white;
+  border-radius:8px;
+  padding:8px 14px;
+  font-weight:bold;
+}
+
+button:hover{
+  background:linear-gradient(180deg,#3a3a3a,#222);
+  box-shadow:0 0 10px rgba(255,255,255,0.1);
+}
+.top-buttons,
+.page-buttons{
+  margin-bottom:15px;
+}
