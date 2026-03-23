@@ -33,10 +33,7 @@ th{
   background:#222;            /* 少し明るい黒 */
 }
 
-/* 偶数行の背景 */
-tr:nth-child(even){
-  background:#1a1a1a;
-}
+
 
 /* レーン見出し（レーン1とか） */
 .lane-header{
