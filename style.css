@@ -336,6 +336,7 @@ button:hover{
   border-radius:999px; /* ←これで丸くなる */
   font-size:12px;
   font-weight:bold;
+   background:rgba(255,255,255,0.1);
 }
 /* 近距離（赤系） */
 .strategy-close{
