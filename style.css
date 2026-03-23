@@ -327,7 +327,7 @@ button:hover{
 /* ==============================
    🎯 レーン戦術別カラー
 ============================== */
-.lane-1 td{ background:rgba(200,220,245,0.5); }/* レーン1（青） */
+.lane-1 td{ background:rgba(180,210,255,0.5); }/* レーン1（青） */
 .lane-2 td{ background:rgba(170,230,180,0.5); }/* レーン2（緑） */
 .lane-3 td{ background:rgba(240,180,150,0.5); }/* レーン3（赤） */
 .strategy-close{ background:#fbe2d5; color:#000; }
