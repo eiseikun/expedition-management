@@ -166,27 +166,12 @@ td:nth-child(6){
   justify-content:center;
 }
 
-
-
-
-/* ヘッダー強化 */
-th{
-  background:linear-gradient(180deg,#2a2a2a,#1f1f1f);
-  font-weight:bold;
-  font-size:13px;
-}
-
 /* 行ホバー強化 */
 tr:hover{
   background:#2c2c2c;
   transition:0.15s;
 }
-.lane-header{
-  background:linear-gradient(90deg,#555,#222);
-  font-size:14px;
-  letter-spacing:1px;
-  border-left:4px solid #ffcc00;
-}
+
 button{
   background:linear-gradient(180deg,#2a2a2a,#1a1a1a);
   border:1px solid #444;
