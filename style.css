@@ -165,3 +165,29 @@ td:nth-child(6){
   gap:10px;
   justify-content:center;
 }
+/* ▼ アプリ感アップ（安全） */
+.table-container{
+  background:#1b1b1b;
+  padding:15px;
+  border-radius:12px;
+  margin:10px 0;
+}
+
+/* ボタン改善 */
+button{
+  background:#2a2a2a;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#444;
+}
+
+/* 行ホバー */
+tr:hover{
+  background:#2a2a2a;
+}
