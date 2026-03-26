@@ -648,29 +648,40 @@ window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, che
   await updateDoc(ref, docData);
 };
 
-// OKボタンで編集閉じ＋タグ表示更新
-window.closeTagEdit = function(button){
-  const editDiv = button.parentNode;                // .tag-edit
-  const viewDiv = editDiv.previousElementSibling;   // .tag-view
+window.closeTagEdit = async function(button){
+  const editDiv = button.parentNode;
+  const viewDiv = editDiv.previousElementSibling;
 
-  // チェックボックスの状態からタグ配列作成
+  const container = viewDiv.closest("td");
+  const docId = container.dataset.docId;
+  const matchNumber = parseInt(container.dataset.matchNumber);
+  const playerName = container.dataset.playerName;
+
   const tags = editDiv.querySelectorAll("input[type=checkbox]");
   const active = [];
   tags.forEach(cb => {
     if(cb.checked){
-      // 同じ行のサイズセレクトを取得
       const sizeSel = cb.closest("label").querySelector("select.size-select");
       const size = sizeSel ? sizeSel.value : "medium";
       active.push({ type: cb.value, size });
     }
   });
 
-  // 表示更新（サイズに応じてclass付与）
+  // 表示更新
   viewDiv.innerHTML = active.length > 0
     ? active.map(t => `<span class="tag active tag-${t.size}" style="background:${damageColors[t.type] || 'gray'};">${t.type}</span>`).join("")
     : '<span class="no-tag">未設定</span>';
 
-  // 編集モードを閉じる
+  // Firestore 更新
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDocs(collection(db,"expeditions"));
+  const docData = snap.docs.find(d=>d.id === docId).data();
+  const match = docData.matches.find(m=>m.matchNumber === matchNumber);
+  const player = match.players.find(p=>p.name === playerName);
+
+  player.damageTypes = active; // ここでサイズ反映
+  await updateDoc(ref, docData);
+
   editDiv.style.display = "none";
   viewDiv.style.display = "block";
 };
