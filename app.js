@@ -556,18 +556,7 @@ header.innerHTML = `
            </span>
            ` : ""}
            </td>
-           <td>
-           ${p ? `
-           <!-- 表示モード -->
-           <div class="tag-view" onclick="enableEdit(this)">
-           ${
-             p.damageTypes && p.damageTypes.length > 0
-             ? p.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
-             : '<span class="no-tag">未設定</span>'
-           }
-           </div>
-           <!-- 編集モード（最初は非表示） -->
-           const damageList = ["物理","魔法","範囲","単体","継続","バースト"];
+const damageList = ["物理","魔法","範囲","単体","継続","バースト"];
 
 row.innerHTML += `
 <td>${p?.name || ""}</td>
@@ -627,7 +616,29 @@ window.enableEdit = function(el){
   parent.querySelector(".tag-view").style.display = "none";
   parent.querySelector(".tag-edit").style.display = "block";
 };
+window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, checkbox){
 
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDocs(collection(db,"expeditions"));
+  const docData = snap.docs.find(d=>d.id === docId).data();
+
+  const match = docData.matches.find(m=>m.matchNumber === matchNumber);
+  const player = match.players.find(p=>p.name === playerName);
+
+  if(!player.damageTypes) player.damageTypes = [];
+
+  if(checkbox.checked){
+    if(!player.damageTypes.includes(checkbox.value)){
+      player.damageTypes.push(checkbox.value);
+    }
+  }else{
+    player.damageTypes = player.damageTypes.filter(v=>v !== checkbox.value);
+  }
+
+  await updateDoc(ref, docData);
+
+  loadExpeditions();
+};
 
 
                 
