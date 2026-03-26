@@ -624,8 +624,9 @@ window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, che
   }
 
   await updateDoc(ref, docData);
-
-  loadExpeditions();
+  view.innerHTML = player.damageTypes.length > 0
+    ? player.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
+    : '<span class="no-tag">未設定</span>';
 };
 
 document.addEventListener("click", function(e){
