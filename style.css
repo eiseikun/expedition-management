@@ -398,8 +398,11 @@ button:hover{
 td {
   position: relative;
 }
+
 .dropdown-box {
   position: absolute;
+  top: 100%;
+  left: 0;
   background: #222;
   border: 1px solid #555;
   padding: 8px;
@@ -410,8 +413,12 @@ td {
   gap: 4px;
   max-height: 200px;
   overflow-y: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
-
 .dropdown-item {
   font-size: 12px;
+  cursor: pointer;
+}
+.dropdown-item:hover {
+  background: #333;
 }
