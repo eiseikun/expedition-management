@@ -411,7 +411,7 @@ window.addMatch = async function(matchNumber){
       name: p.name,
       lane: p.lane,
       style: p.range, // ←画像に合わせて戦術じゃなく距離に変更OK
-      damageMarked: false
+      damageTypes: []
     }));
   const snap = await getDocs(collection(db,"expeditions"));
   const existing = snap.docs.find(d=>d.data().date === date);
@@ -502,7 +502,7 @@ header.innerHTML = `
 
     matchNumbers.forEach(mn=>{
       header1 += `<th colspan="3">${mn}回戦</th>`;
-      header2 += `<th>名前</th><th>戦術</th><th>高火力</th>`;
+      header2 += `<th>名前</th><th>戦術</th><th>火力内訳</th>`;
     });
     header1 += `</tr>`;
     header2 += `</tr>`;
@@ -558,10 +558,14 @@ header.innerHTML = `
            </td>
             <td>
               ${p ? `
-              <input type="checkbox"
-                ${p.damageMarked ? "checked":""}
-                onchange="toggleDamage('${d.id}',${mn},'${p.name}',this)">
-              ` : ""}
+             ${p ? `
+             <label><input type="checkbox" value="物理" ${p.damageTypes?.includes("物理")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">物理</label>
+             <label><input type="checkbox" value="魔法" ${p.damageTypes?.includes("魔法")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">魔法</label>
+             <label><input type="checkbox" value="範囲" ${p.damageTypes?.includes("範囲")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">範囲</label>
+             <label><input type="checkbox" value="単体" ${p.damageTypes?.includes("単体")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">単体</label>
+             <label><input type="checkbox" value="継続" ${p.damageTypes?.includes("継続")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">継続</label>
+             <label><input type="checkbox" value="バースト" ${p.damageTypes?.includes("バースト")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">バースト</label>
+             ` : ""}
             </td>
           `;
         });
@@ -579,20 +583,24 @@ header.innerHTML = `
   });
 }
 
-// チェック更新（名前ベース）
-window.toggleDamage = async function(docId, matchNumber, playerName, checkbox){
-
+// 火力内訳欄
+window.toggleDamageType = async function(docId, matchNumber, playerName, checkbox){
   const ref = doc(db,"expeditions",docId);
   const snap = await getDocs(collection(db,"expeditions"));
   const docData = snap.docs.find(d=>d.id === docId).data();
-
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
   const player = match.players.find(p=>p.name === playerName);
-
-  player.damageMarked = checkbox.checked;
-
+  if(!player.damageTypes) player.damageTypes = [];
+  if(checkbox.checked){
+    if(!player.damageTypes.includes(checkbox.value)){
+      player.damageTypes.push(checkbox.value);
+    }
+  }else{
+    player.damageTypes = player.damageTypes.filter(v=>v !== checkbox.value);
+  }
   await updateDoc(ref, docData);
 };
+                
 // 回戦削除（週指定）
 window.deleteMatchByWeek = async function(docId, matchNumber){
 
