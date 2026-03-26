@@ -402,8 +402,8 @@ window.addMatch = async function(matchNumber){
   alert("プレイヤーが読み込まれていません。ページ1を開いてください");
   return;
 }
-  const week = Number(document.getElementById("weekInput").value);
-  if(!week) return alert("週番号入力して");
+  const date = document.getElementById("weekDate").value;
+  if(!date) return alert("日付を選択して");
   const matchPlayers = players
   .filter(p => p.lane >= 1 && p.lane <= 3)
   .sort((a,b)=>a.order - b.order)
@@ -414,7 +414,7 @@ window.addMatch = async function(matchNumber){
       damageMarked: false
     }));
   const snap = await getDocs(collection(db,"expeditions"));
-  const existing = snap.docs.find(d=>d.data().week === week);
+  const existing = snap.docs.find(d=>d.data().date === date);
 
   if(existing){
     const data = existing.data();
@@ -431,7 +431,7 @@ window.addMatch = async function(matchNumber){
 
   }else{
     await addDoc(collection(db,"expeditions"), {
-      week,
+      date,
       matches: [{ matchNumber, players: matchPlayers }]
     });
   }
@@ -440,10 +440,10 @@ window.addMatch = async function(matchNumber){
 };
   // 2ページ目データ削除
 window.deleteMatch = async function(matchNumber){
-  const week = Number(document.getElementById("weekInput").value);
-  if(!week) return alert("週番号入力して");
+  const date = document.getElementById("weekDate").value;
+if(!date) return alert("日付を選択して");
   const snap = await getDocs(collection(db,"expeditions"));
-  const docSnap = snap.docs.find(d=>d.data().week === week);
+  const docSnap = snap.docs.find(d=>d.data().date === date);
   if(!docSnap){
     alert("この週のデータがありません");
     return;
@@ -473,7 +473,7 @@ async function loadExpeditions(){
     const header = document.createElement("div");
 
 header.innerHTML = `
-  <h3 style="display:inline;">週${exp.week}</h3>
+  <h3 style="display:inline;">${formatRange(exp.date)}</h3>
   <button onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
   <button onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
   <button onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
@@ -614,7 +614,25 @@ window.deleteWeek = async function(docId){
   await deleteDoc(doc(db,"expeditions",docId));
   loadExpeditions();
 };
+// 日付
+function formatRange(dateStr){
+  const start = new Date(dateStr);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 2);
 
+  const y = start.getFullYear();
+  const m1 = start.getMonth() + 1;
+  const d1 = start.getDate();
+
+  const m2 = end.getMonth() + 1;
+  const d2 = end.getDate();
+
+  if(m1 === m2){
+    return `${y}/${m1}/${d1}〜${d2}`;
+  }else{
+    return `${y}/${m1}/${d1}〜${m2}/${d2}`;
+  }
+}
 // 1ページ目並べ替えの中身
 window.moveUp = async function(i){
   const p = players[i];
