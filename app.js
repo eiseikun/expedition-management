@@ -185,6 +185,9 @@ window.savePlayer = async function(){
     mythic: Number(document.getElementById("mythic").value),
     legend: Number(document.getElementById("legend").value),
     lane: Number(document.getElementById("lane").value),
+    
+    order: editIndex === null ? Date.now() : players[editIndex].order,
+    
     gearDetail,
     runes
   };
@@ -332,7 +335,7 @@ function render(){
     }
     body.appendChild(tr);
 
-    list.sort((a,b)=>b.power-a.power);
+    list.sort((a,b)=>a.order - b.order);
 
     list.forEach(p=>{
       const i=players.indexOf(p);
@@ -361,6 +364,10 @@ function render(){
         <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
+        <td>
+        <button onclick="moveUp(${i})">↑</button>
+        <button onclick="moveDown(${i})">↓</button>
+        </td>
         <td><button onclick="editPlayer(${i})">編集</button></td>
         <td><button onclick="deletePlayer(${i})">削除</button></td>
       `;
@@ -375,8 +382,15 @@ async function load(){
     players.push(d.data());
     playerDocs.push(d.id);
   });
+  
+ players.forEach((p,i)=>{
+    if(p.order === undefined){
+      p.order = i;
+    }
+  });
   render();
 }
+
 load();
 // ============================
 // ===== ここから2ページ目 =====
@@ -597,4 +611,55 @@ window.deleteWeek = async function(docId){
 
   await deleteDoc(doc(db,"expeditions",docId));
   loadExpeditions();
+};
+
+// 1ページ目並べ替えの中身
+window.moveUp = async function(i){
+  const p = players[i];
+
+  const sameLane = players
+    .map((p,idx)=>({p,idx}))
+    .filter(x=>x.p.lane === p.lane)
+    .sort((a,b)=>a.p.order - b.p.order);
+
+  const index = sameLane.findIndex(x=>x.idx === i);
+  if(index === 0) return;
+
+  const a = sameLane[index];
+  const b = sameLane[index-1];
+
+  // 順番入れ替え
+  const temp = players[a.idx].order;
+  players[a.idx].order = players[b.idx].order;
+  players[b.idx].order = temp;
+
+  // Firestore保存
+  await updateDoc(doc(db,"players",playerDocs[a.idx]), players[a.idx]);
+  await updateDoc(doc(db,"players",playerDocs[b.idx]), players[b.idx]);
+
+  render();
+};
+
+window.moveDown = async function(i){
+  const p = players[i];
+
+  const sameLane = players
+    .map((p,idx)=>({p,idx}))
+    .filter(x=>x.p.lane === p.lane)
+    .sort((a,b)=>a.p.order - b.p.order);
+
+  const index = sameLane.findIndex(x=>x.idx === i);
+  if(index === sameLane.length-1) return;
+
+  const a = sameLane[index];
+  const b = sameLane[index+1];
+
+  const temp = players[a.idx].order;
+  players[a.idx].order = players[b.idx].order;
+  players[b.idx].order = temp;
+
+  await updateDoc(doc(db,"players",playerDocs[a.idx]), players[a.idx]);
+  await updateDoc(doc(db,"players",playerDocs[b.idx]), players[b.idx]);
+
+  render();
 };
