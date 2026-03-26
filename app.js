@@ -567,14 +567,48 @@ header.innerHTML = `
            }
            </div>
            <!-- 編集モード（最初は非表示） -->
-           <div class="tag-edit" style="display:none;">
-           ${["物理","魔法","範囲","単体","継続","バースト"].map(type => `
-           <span 
-           class="tag ${p.damageTypes?.includes(type) ? "active" : ""}"
-           onclick="toggleDamageTag('${d.id}',${mn},'${p.name}','${type}', this)"
-           >${type}</span>
-           `).join("")}
-           </div>
+           const damageList = ["物理","魔法","範囲","単体","継続","バースト"];
+
+row.innerHTML += `
+<td>${p?.name || ""}</td>
+
+<td>
+${p ? `
+<span class="strategy-label ${
+  p.style === "近距離" ? "strategy-close" :
+  p.style === "中距離" ? "strategy-mid" :
+  "strategy-long"
+}">
+${p.style}
+</span>
+` : ""}
+</td>
+
+<td>
+${p ? `
+<div class="tag-view" onclick="enableEdit(this)">
+${
+  p.damageTypes && p.damageTypes.length > 0
+  ? p.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
+  : '<span class="no-tag">未設定</span>'
+}
+</div>
+
+<div class="tag-edit" style="display:none;">
+${damageList.map(type => `
+<label style="margin-right:6px;">
+<input type="checkbox"
+  value="${type}"
+  ${p.damageTypes?.includes(type) ? "checked" : ""}
+  onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
+>
+${type}
+</label>
+`).join("")}
+</div>
+` : ""}
+</td>
+`;
            ` : ""}
            </td>
           `;
@@ -593,26 +627,7 @@ window.enableEdit = function(el){
   parent.querySelector(".tag-view").style.display = "none";
   parent.querySelector(".tag-edit").style.display = "block";
 };
-window.toggleDamageTag = async function(docId, matchNumber, playerName, type, el){
-  const ref = doc(db,"expeditions",docId);
-  const snap = await getDocs(collection(db,"expeditions"));
-  const docData = snap.docs.find(d=>d.id === docId).data();
-  const match = docData.matches.find(m=>m.matchNumber === matchNumber);
-  const player = match.players.find(p=>p.name === playerName);
-  if(!player.damageTypes) player.damageTypes = [];
-  if(player.damageTypes.includes(type)){
-    player.damageTypes = player.damageTypes.filter(t=>t !== type);
-    el.classList.remove("active");
-  }else{
-    player.damageTypes.push(type);
-    el.classList.add("active");
-  }
-  await updateDoc(ref, docData);
-  const parent = el.closest("td");
-  parent.querySelector(".tag-edit").style.display = "none";
-  parent.querySelector(".tag-view").style.display = "block";
-  loadExpeditions(); // 
-};
+
 
 
                 
