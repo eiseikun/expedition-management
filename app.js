@@ -629,22 +629,20 @@ window.enableEdit = function(el){
   parent.querySelector(".tag-edit").style.display = "block";
 };
 window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, checkbox){
-  // Firestore 更新
   const ref = doc(db,"expeditions",docId);
   const snap = await getDocs(collection(db,"expeditions"));
   const docData = snap.docs.find(d=>d.id === docId).data();
-
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
   const player = match.players.find(p=>p.name === playerName);
 
   if(!player.damageTypes) player.damageTypes = [];
 
   if(checkbox.checked){
-    if(!player.damageTypes.includes(checkbox.value)){
-      player.damageTypes.push(checkbox.value);
+    if(!player.damageTypes.some(t=>t.type===checkbox.value)){
+      player.damageTypes.push({ type: checkbox.value, size: "medium" });
     }
   }else{
-    player.damageTypes = player.damageTypes.filter(v=>v !== checkbox.value);
+    player.damageTypes = player.damageTypes.filter(v=>v.type !== checkbox.value);
   }
 
   await updateDoc(ref, docData);
