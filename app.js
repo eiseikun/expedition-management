@@ -557,7 +557,6 @@ header.innerHTML = `
            ` : ""}
            </td>
             <td>
-              ${p ? `
              ${p ? `
              <label><input type="checkbox" value="物理" ${p.damageTypes?.includes("物理")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">物理</label>
              <label><input type="checkbox" value="魔法" ${p.damageTypes?.includes("魔法")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">魔法</label>
