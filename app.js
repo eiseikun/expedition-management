@@ -593,6 +593,10 @@ ${type}
 }
 window.enableEdit = function(el){
   const parent = el.parentNode;
+  document.querySelectorAll(".tag-edit").forEach(edit => {
+    edit.style.display = "none";
+    edit.previousElementSibling.style.display = "block";
+  });
   parent.querySelector(".tag-view").style.display = "none";
   parent.querySelector(".tag-edit").style.display = "block";
 };
@@ -620,6 +624,14 @@ window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, che
   loadExpeditions();
 };
 
+document.addEventListener("click", function(e){
+  document.querySelectorAll(".tag-edit").forEach(edit => {
+    if(!edit.contains(e.target) && !edit.previousElementSibling.contains(e.target)){
+      edit.style.display = "none";
+      edit.previousElementSibling.style.display = "block";
+    }
+  });
+});
 
                 
 // 回戦削除（週指定）
