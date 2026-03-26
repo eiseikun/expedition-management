@@ -395,7 +395,9 @@ button:hover{
   color: #aaa;
   font-size: 12px;
 }
-
+td {
+  position: relative;
+}
 .dropdown-box {
   position: absolute;
   background: #222;
