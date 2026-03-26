@@ -605,7 +605,7 @@ window.enableEdit = function(el){
   parent.querySelector(".tag-edit").style.display = "block";
 };
 window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, checkbox){
-
+  // Firestore 更新
   const ref = doc(db,"expeditions",docId);
   const snap = await getDocs(collection(db,"expeditions"));
   const docData = snap.docs.find(d=>d.id === docId).data();
@@ -624,15 +624,33 @@ window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, che
   }
 
   await updateDoc(ref, docData);
-  view.innerHTML = player.damageTypes.length > 0
-    ? player.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
-    : '<span class="no-tag">未設定</span>';
 };
 
+// OKボタンで編集閉じ＋タグ表示更新
+window.closeTagEdit = function(button){
+  const editDiv = button.parentNode;                // .tag-edit
+  const viewDiv = editDiv.previousElementSibling;   // .tag-view
+
+  // チェックボックスの状態からタグ配列作成
+  const tags = editDiv.querySelectorAll("input[type=checkbox]");
+  const active = [];
+  tags.forEach(cb => {
+    if(cb.checked) active.push(cb.value);
+  });
+
+  // 表示更新
+  viewDiv.innerHTML = active.length > 0
+    ? active.map(t => `<span class="tag active">${t}</span>`).join("")
+    : '<span class="no-tag">未設定</span>';
+
+  // 編集モードを閉じる
+  editDiv.style.display = "none";
+  viewDiv.style.display = "block";
+};
+
+// クリックで外側を閉じる処理はそのまま
 document.addEventListener("click", function(e){
-  // ドロップダウン or 表示部分の中なら何もしない
   if(e.target.closest(".tag-edit") || e.target.closest(".tag-view")) return;
-  // それ以外は全部閉じる
   document.querySelectorAll(".tag-edit").forEach(edit => {
     edit.style.display = "none";
     const view = edit.previousElementSibling;
