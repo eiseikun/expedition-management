@@ -411,7 +411,7 @@ window.addMatch = async function(matchNumber){
       name: p.name,
       lane: p.lane,
       style: p.range, // ←画像に合わせて戦術じゃなく距離に変更OK
-      damageTypes: []
+      damageMarked: false
     }));
   const snap = await getDocs(collection(db,"expeditions"));
   const existing = snap.docs.find(d=>d.data().date === date);
@@ -502,7 +502,7 @@ header.innerHTML = `
 
     matchNumbers.forEach(mn=>{
       header1 += `<th colspan="3">${mn}回戦</th>`;
-      header2 += `<th>名前</th><th>戦術</th><th>火力内訳</th>`;
+      header2 += `<th>名前</th><th>戦術</th><th>高火力</th>`;
     });
     header1 += `</tr>`;
     header2 += `</tr>`;
@@ -542,69 +542,45 @@ header.innerHTML = `
             : [];
 
           const p = lanePlayers[i];
-          
-          const damageList = ["物理","魔法","範囲","単体","継続","バースト"];
+
           row.innerHTML += `
-<td>${p?.name || ""}</td>
-<td>
-${p ? `
-<span class="strategy-label ${
-  p.style === "近距離" ? "strategy-close" :
-  p.style === "中距離" ? "strategy-mid" :
-  "strategy-long"
-}">
-${p.style}
-</span>
-` : ""}
-</td>
-<td>
-${p ? `
-<div class="tag-view" onclick="enableEdit(this)">
-${
-  p.damageTypes && p.damageTypes.length > 0
-  ? p.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
-  : '<span class="no-tag">未設定</span>'
-}
-</div>
-<div class="tag-edit" style="display:none;">
-<div class="dropdown-box">
-${damageList.map(type => `
-<label class="dropdown-item" onclick="event.stopPropagation()">
-<input type="checkbox"
-value="${type}"
-${p.damageTypes?.includes(type) ? "checked" : ""}
-onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
-onclick="event.stopPropagation()"
->
-${type}
-</label>
-`).join("")}
-</div>
-<button onclick="event.stopPropagation(); closeTagEdit(this)">OK</button>
-</div>
-` : ""}
-</td>
-`;
+            <td>${p?.name || ""}</td>
+           <td>
+           ${p ? `
+           <span class="strategy-label ${
+             p.style === "近距離" ? "strategy-close" :
+             p.style === "中距離" ? "strategy-mid" :
+             "strategy-long"
+           }">
+           ${p.style}
+           </span>
+           ` : ""}
+           </td>
+            <td>
+              ${p ? `
+              <input type="checkbox"
+                ${p.damageMarked ? "checked":""}
+                onchange="toggleDamage('${d.id}',${mn},'${p.name}',this)">
+              ` : ""}
+            </td>
+          `;
         });
+
         table.appendChild(row);
       }
+
     });
+
     content.appendChild(table);
     weekDiv.appendChild(header);
     weekDiv.appendChild(content);
+
     container.appendChild(weekDiv);
   });
 }
-window.enableEdit = function(el){
-  const parent = el.parentNode;
-  document.querySelectorAll(".tag-edit").forEach(edit => {
-    edit.style.display = "none";
-    edit.previousElementSibling.style.display = "block";
-  });
-  parent.querySelector(".tag-view").style.display = "none";
-  parent.querySelector(".tag-edit").style.display = "block";
-};
-window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, checkbox){
+
+// チェック更新（名前ベース）
+window.toggleDamage = async function(docId, matchNumber, playerName, checkbox){
 
   const ref = doc(db,"expeditions",docId);
   const snap = await getDocs(collection(db,"expeditions"));
@@ -613,33 +589,10 @@ window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, che
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
   const player = match.players.find(p=>p.name === playerName);
 
-  if(!player.damageTypes) player.damageTypes = [];
-
-  if(checkbox.checked){
-    if(!player.damageTypes.includes(checkbox.value)){
-      player.damageTypes.push(checkbox.value);
-    }
-  }else{
-    player.damageTypes = player.damageTypes.filter(v=>v !== checkbox.value);
-  }
+  player.damageMarked = checkbox.checked;
 
   await updateDoc(ref, docData);
-  view.innerHTML = player.damageTypes.length > 0
-    ? player.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
-    : '<span class="no-tag">未設定</span>';
 };
-
-document.addEventListener("click", function(e){
-  // ドロップダウン or 表示部分の中なら何もしない
-  if(e.target.closest(".tag-edit") || e.target.closest(".tag-view")) return;
-  // それ以外は全部閉じる
-  document.querySelectorAll(".tag-edit").forEach(edit => {
-    edit.style.display = "none";
-    const view = edit.previousElementSibling;
-    if(view) view.style.display = "block";
-  });
-});
-                
 // 回戦削除（週指定）
 window.deleteMatchByWeek = async function(docId, matchNumber){
 
