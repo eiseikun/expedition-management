@@ -556,16 +556,27 @@ header.innerHTML = `
            </span>
            ` : ""}
            </td>
-            <td>
-             ${p ? `
-             <label><input type="checkbox" value="物理" ${p.damageTypes?.includes("物理")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">物理</label>
-             <label><input type="checkbox" value="魔法" ${p.damageTypes?.includes("魔法")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">魔法</label>
-             <label><input type="checkbox" value="範囲" ${p.damageTypes?.includes("範囲")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">範囲</label>
-             <label><input type="checkbox" value="単体" ${p.damageTypes?.includes("単体")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">単体</label>
-             <label><input type="checkbox" value="継続" ${p.damageTypes?.includes("継続")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">継続</label>
-             <label><input type="checkbox" value="バースト" ${p.damageTypes?.includes("バースト")?"checked":""} onchange="toggleDamageType('${d.id}',${mn},'${p.name}',this)">バースト</label>
-             ` : ""}
-            </td>
+           <td>
+           ${p ? `
+           <!-- 表示モード -->
+           <div class="tag-view" onclick="enableEdit(this)">
+           ${
+             p.damageTypes && p.damageTypes.length > 0
+             ? p.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
+             : '<span class="no-tag">未設定</span>'
+           }
+           </div>
+           <!-- 編集モード（最初は非表示） -->
+           <div class="tag-edit" style="display:none;">
+           ${["物理","魔法","範囲","単体","継続","バースト"].map(type => `
+           <span 
+           class="tag ${p.damageTypes?.includes(type) ? "active" : ""}"
+           onclick="toggleDamageTag('${d.id}',${mn},'${p.name}','${type}', this)"
+           >${type}</span>
+           `).join("")}
+           </div>
+           ` : ""}
+           </td>
           `;
         });
 
