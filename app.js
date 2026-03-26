@@ -15,6 +15,7 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
+
 // ===== ページ切替 =====
 window.showPage = async function(n){
   const page1 = document.getElementById("captureArea");
@@ -396,6 +397,15 @@ load();
 // ============================
 // ===== ここから2ページ目 =====
 // ============================
+// タグ・火力色設定（ページ2用）
+const damageColors = {
+  "物理": "red",
+  "魔法": "blue",
+  "範囲": "orange",
+  "単体": "green",
+  "継続": "purple",
+  "バースト": "gold"
+};
 
 window.addMatch = async function(matchNumber){
   if(players.length === 0){
@@ -559,15 +569,7 @@ ${p.style}
 </td>
 <td>
 ${p ? `
-// タグ色設定 
-const damageColors = {
-  "物理": "red",
-  "魔法": "blue",
-  "範囲": "orange",
-  "単体": "green",
-  "継続": "purple",
-  "バースト": "gold"
-};
+
 
 // タグ表示部分 
 <div class="tag-view" onclick="enableEdit(this)">
@@ -589,11 +591,16 @@ ${damageList.map(type => `
 <label class="dropdown-item" onclick="event.stopPropagation()">
 <input type="checkbox"
 value="${type}"
-${p.damageTypes?.includes(type) ? "checked" : ""}
+${p.damageTypes?.some(t=>t.type===type) ? "checked" : ""}
 onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
 onclick="event.stopPropagation()"
->
+/>
 ${type}
+<select class="size-select">
+  <option value="small" ${p.damageTypes?.find(t=>t.type===type)?.size==='small'?'selected':''}>小</option>
+  <option value="medium" ${p.damageTypes?.find(t=>t.type===type)?.size==='medium'?'selected':''}>中</option>
+  <option value="large" ${p.damageTypes?.find(t=>t.type===type)?.size==='large'?'selected':''}>大</option>
+</select>
 </label>
 `).join("")}
 </div>
@@ -652,12 +659,17 @@ window.closeTagEdit = function(button){
   const tags = editDiv.querySelectorAll("input[type=checkbox]");
   const active = [];
   tags.forEach(cb => {
-    if(cb.checked) active.push(cb.value);
+    if(cb.checked){
+      // 同じ行のサイズセレクトを取得
+      const sizeSel = cb.closest("label").querySelector("select.size-select");
+      const size = sizeSel ? sizeSel.value : "medium";
+      active.push({ type: cb.value, size });
+    }
   });
 
-  // 表示更新
+  // 表示更新（サイズに応じてclass付与）
   viewDiv.innerHTML = active.length > 0
-    ? active.map(t => `<span class="tag active">${t}</span>`).join("")
+    ? active.map(t => `<span class="tag active tag-${t.size}" style="background:${damageColors[t.type] || 'gray'};">${t.type}</span>`).join("")
     : '<span class="no-tag">未設定</span>';
 
   // 編集モードを閉じる
