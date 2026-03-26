@@ -559,13 +559,30 @@ ${p.style}
 </td>
 <td>
 ${p ? `
+// タグ色設定 
+const damageColors = {
+  "物理": "red",
+  "魔法": "blue",
+  "範囲": "orange",
+  "単体": "green",
+  "継続": "purple",
+  "バースト": "gold"
+};
+
+// タグ表示部分 
 <div class="tag-view" onclick="enableEdit(this)">
 ${
   p.damageTypes && p.damageTypes.length > 0
-  ? p.damageTypes.map(t => `<span class="tag active">${t}</span>`).join("")
+  ? p.damageTypes.map(t => `
+      <span class="tag active" 
+            style="background:${damageColors[t] || 'gray'}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
+        ${t}
+      </span>
+    `).join("")
   : '<span class="no-tag">未設定</span>'
 }
 </div>
+
 <div class="tag-edit" style="display:none;">
 <div class="dropdown-box">
 ${damageList.map(type => `
