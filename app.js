@@ -640,8 +640,8 @@ window.closeTagEdit = function(button){
 
   // 表示更新
   viewDiv.innerHTML = active.length > 0
-    ? active.map(t => `<span class="tag active">${t}</span>`).join("")
-    : '<span class="no-tag">未設定</span>';
+  ? active.map(t => `<span class="tag ${t.size}">${t.name}</span>`).join("")
+  : '<span class="no-tag">未設定</span>';
 
   // 編集モードを閉じる
   editDiv.style.display = "none";
