@@ -282,7 +282,8 @@ window.saveTableImage = async function(){
 
   clone.querySelectorAll("tr").forEach(row=>{
     const cells = row.querySelectorAll("th, td");
-    if(cells.length >= 10){
+    if(cells.length >= 11){
+      cells[10]?.remove();
       cells[9]?.remove();
       cells[8]?.remove();
     }
@@ -329,9 +330,9 @@ function render(){
     const tr=document.createElement("tr");
     tr.className="lane-header";
     if(l === 0){
-      tr.innerHTML = `<td colspan="10">${laneNames[l]} (${list.length})</td>`;
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
     }else{
-      tr.innerHTML = `<td colspan="10">${laneNames[l]} (${list.length} / ${total})</td>`;
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
     }
     body.appendChild(tr);
 
