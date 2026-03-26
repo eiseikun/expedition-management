@@ -464,8 +464,10 @@ async function loadExpeditions(){
   container.innerHTML = "";
 
   const snap = await getDocs(collection(db,"expeditions"));
-
-  snap.forEach(d=>{
+  const docs = snap.docs.sort(
+    (a,b)=> new Date(b.data().date) - new Date(a.data().date)
+  );
+  docs.forEach(d=>{
     const exp = d.data();
 
     const weekDiv = document.createElement("div");
