@@ -635,6 +635,23 @@ function formatRange(dateStr){
     return `${y}/${m1}/${d1}〜${m2}/${d2}`;
   }
 }
+// ===== 金曜だけ選択可能 =====
+document.getElementById("weekDate").addEventListener("input", function(){
+
+  if(!this.value) return;
+
+  const date = new Date(this.value);
+  const day = date.getDay(); // 0=日〜6=土
+
+  if(day !== 5){
+    alert("金曜日を選択してください");
+
+    // 🔽 前の値に戻す（これ重要）
+    this.value = "";
+  }
+
+});
+
 // 1ページ目並べ替えの中身
 window.moveUp = async function(i){
   const p = players[i];
