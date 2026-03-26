@@ -646,6 +646,7 @@ document.getElementById("weekDate").addEventListener("input", function(){
   }
 });
 flatpickr("#weekDate", {
+  locale: "ja",
   dateFormat: "Y-m-d",
   enable: [
     function(date){
