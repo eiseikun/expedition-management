@@ -579,37 +579,42 @@ header.innerHTML = `
            </td>
           `;
         });
-
         table.appendChild(row);
       }
-
     });
-
     content.appendChild(table);
     weekDiv.appendChild(header);
     weekDiv.appendChild(content);
-
     container.appendChild(weekDiv);
   });
 }
-
-// 火力内訳欄
-window.toggleDamageType = async function(docId, matchNumber, playerName, checkbox){
+window.enableEdit = function(el){
+  const parent = el.parentNode;
+  parent.querySelector(".tag-view").style.display = "none";
+  parent.querySelector(".tag-edit").style.display = "block";
+};
+window.toggleDamageTag = async function(docId, matchNumber, playerName, type, el){
   const ref = doc(db,"expeditions",docId);
   const snap = await getDocs(collection(db,"expeditions"));
   const docData = snap.docs.find(d=>d.id === docId).data();
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
   const player = match.players.find(p=>p.name === playerName);
   if(!player.damageTypes) player.damageTypes = [];
-  if(checkbox.checked){
-    if(!player.damageTypes.includes(checkbox.value)){
-      player.damageTypes.push(checkbox.value);
-    }
+  if(player.damageTypes.includes(type)){
+    player.damageTypes = player.damageTypes.filter(t=>t !== type);
+    el.classList.remove("active");
   }else{
-    player.damageTypes = player.damageTypes.filter(v=>v !== checkbox.value);
+    player.damageTypes.push(type);
+    el.classList.add("active");
   }
   await updateDoc(ref, docData);
+  const parent = el.closest("td");
+  parent.querySelector(".tag-edit").style.display = "none";
+  parent.querySelector(".tag-view").style.display = "block";
+  loadExpeditions(); // 
 };
+
+
                 
 // 回戦削除（週指定）
 window.deleteMatchByWeek = async function(docId, matchNumber){
