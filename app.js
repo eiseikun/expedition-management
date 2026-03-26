@@ -542,25 +542,10 @@ header.innerHTML = `
             : [];
 
           const p = lanePlayers[i];
-
+          
+          const damageList = ["物理","魔法","範囲","単体","継続","バースト"];
           row.innerHTML += `
-            <td>${p?.name || ""}</td>
-           <td>
-           ${p ? `
-           <span class="strategy-label ${
-             p.style === "近距離" ? "strategy-close" :
-             p.style === "中距離" ? "strategy-mid" :
-             "strategy-long"
-           }">
-           ${p.style}
-           </span>
-           ` : ""}
-           </td>
-const damageList = ["物理","魔法","範囲","単体","継続","バースト"];
-
-row.innerHTML += `
 <td>${p?.name || ""}</td>
-
 <td>
 ${p ? `
 <span class="strategy-label ${
@@ -572,7 +557,6 @@ ${p.style}
 </span>
 ` : ""}
 </td>
-
 <td>
 ${p ? `
 <div class="tag-view" onclick="enableEdit(this)">
@@ -582,14 +566,13 @@ ${
   : '<span class="no-tag">未設定</span>'
 }
 </div>
-
 <div class="tag-edit" style="display:none;">
 ${damageList.map(type => `
 <label style="margin-right:6px;">
 <input type="checkbox"
-  value="${type}"
-  ${p.damageTypes?.includes(type) ? "checked" : ""}
-  onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
+value="${type}"
+${p.damageTypes?.includes(type) ? "checked" : ""}
+onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
 >
 ${type}
 </label>
@@ -598,9 +581,6 @@ ${type}
 ` : ""}
 </td>
 `;
-           ` : ""}
-           </td>
-          `;
         });
         table.appendChild(row);
       }
