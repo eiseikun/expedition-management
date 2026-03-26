@@ -569,17 +569,18 @@ ${
 <div class="tag-edit" style="display:none;">
 <div class="dropdown-box">
 ${damageList.map(type => `
-<label class="dropdown-item">
+<label class="dropdown-item" onclick="event.stopPropagation()">
 <input type="checkbox"
 value="${type}"
 ${p.damageTypes?.includes(type) ? "checked" : ""}
 onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
+onclick="event.stopPropagation()"
 >
 ${type}
 </label>
 `).join("")}
 </div>
-<button onclick="closeTagEdit(this)">OK</button>
+<button onclick="event.stopPropagation(); closeTagEdit(this)">OK</button>
 </div>
 ` : ""}
 </td>
@@ -628,27 +629,15 @@ window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, che
 };
 
 document.addEventListener("click", function(e){
+  // ドロップダウン or 表示部分の中なら何もしない
+  if(e.target.closest(".tag-edit") || e.target.closest(".tag-view")) return;
+  // それ以外は全部閉じる
   document.querySelectorAll(".tag-edit").forEach(edit => {
-
-    const parent = edit.parentNode;
-    const view = parent.querySelector(".tag-view");
-
-    // 編集エリア内クリック → 何もしない
-    if(edit.contains(e.target)) return;
-
-    // 表示部分クリック → 何もしない（開く用）
-    if(view.contains(e.target)) return;
-
-    // それ以外だけ閉じる
     edit.style.display = "none";
-    view.style.display = "block";
+    const view = edit.previousElementSibling;
+    if(view) view.style.display = "block";
   });
 });
-window.closeTagEdit = function(btn){
-  const parent = btn.closest("td");
-  parent.querySelector(".tag-edit").style.display = "none";
-  parent.querySelector(".tag-view").style.display = "block";
-};
                 
 // 回戦削除（週指定）
 window.deleteMatchByWeek = async function(docId, matchNumber){
