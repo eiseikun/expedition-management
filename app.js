@@ -629,10 +629,19 @@ window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, che
 
 document.addEventListener("click", function(e){
   document.querySelectorAll(".tag-edit").forEach(edit => {
-    if(!edit.contains(e.target) && !edit.previousElementSibling.contains(e.target)){
-      edit.style.display = "none";
-      edit.previousElementSibling.style.display = "block";
-    }
+
+    const parent = edit.parentNode;
+    const view = parent.querySelector(".tag-view");
+
+    // 編集エリア内クリック → 何もしない
+    if(edit.contains(e.target)) return;
+
+    // 表示部分クリック → 何もしない（開く用）
+    if(view.contains(e.target)) return;
+
+    // それ以外だけ閉じる
+    edit.style.display = "none";
+    view.style.display = "block";
   });
 });
 window.closeTagEdit = function(btn){
