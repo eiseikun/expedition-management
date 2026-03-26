@@ -543,7 +543,7 @@ header.innerHTML = `
 
           const p = lanePlayers[i];
           
-          const damageList = ["物理","魔法","範囲","単体","継続","バースト"];
+          const damageList = ["メイン武器","精霊","ストライク","メテオ","サークル","エレメント","爆発","植物の守り手","その他"];
           row.innerHTML += `
 <td>${p?.name || ""}</td>
 <td>
