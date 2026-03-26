@@ -352,3 +352,22 @@ button:hover{
   background:rgba(218,242,208,0.9);
   color:#2d5a1f;
 }
+/* ==============================
+   カレンダー見た目
+============================== */
+/* カレンダー全体 */
+.flatpickr-calendar {
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  font-family: sans-serif;
+}
+/* 日付セル */
+.flatpickr-day {
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+/* ホバー時 */
+.flatpickr-day:hover {
+  background: #e3f2fd;
+  transform: scale(1.1);
+}
