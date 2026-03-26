@@ -383,18 +383,33 @@ button:hover{
   cursor: pointer;
   font-size: 12px;
 }
-
 .tag.active {
   background: #4CAF50;
   color: white;
   font-weight: bold;
 }
-
 .tag-view {
   cursor: pointer;
 }
-
 .no-tag {
   color: #aaa;
+  font-size: 12px;
+}
+
+.dropdown-box {
+  position: absolute;
+  background: #222;
+  border: 1px solid #555;
+  padding: 8px;
+  border-radius: 6px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
   font-size: 12px;
 }
