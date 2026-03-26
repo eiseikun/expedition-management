@@ -406,6 +406,7 @@ window.addMatch = async function(matchNumber){
   if(!week) return alert("週番号入力して");
   const matchPlayers = players
   .filter(p => p.lane >= 1 && p.lane <= 3)
+  .sort((a,b)=>a.order - b.order)
   .map(p=>({
       name: p.name,
       lane: p.lane,
