@@ -383,6 +383,9 @@ button:hover{
   cursor: pointer;
   font-size: 12px;
 }
+.tag-small { font-size: 10px; padding: 2px 4px; }
+.tag-medium { font-size: 12px; padding: 4px 6px; }
+.tag-large { font-size: 16px; padding: 6px 10px; }
 .tag.active {
   background: #4CAF50;
   color: white;
