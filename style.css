@@ -383,32 +383,6 @@ button:hover{
   cursor: pointer;
   font-size: 12px;
 }
-/* ======================
-   手動火力タグサイズ
-====================== */
-.tag-small {
-  width: 20px;
-  height: 10px;
-  background: #f88;  /* 小＝赤系 */
-  display: inline-block;
-  border-radius: 4px;
-}
-
-.tag-medium {
-  width: 30px;
-  height: 14px;
-  background: #fa0;  /* 中＝オレンジ系 */
-  display: inline-block;
-  border-radius: 4px;
-}
-
-.tag-large {
-  width: 40px;
-  height: 18px;
-  background: #4f4;  /* 大＝緑系 */
-  display: inline-block;
-  border-radius: 4px;
-}
 .tag.active {
   background: #4CAF50;
   color: white;
