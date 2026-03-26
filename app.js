@@ -635,7 +635,11 @@ document.addEventListener("click", function(e){
     }
   });
 });
-
+window.closeTagEdit = function(btn){
+  const parent = btn.closest("td");
+  parent.querySelector(".tag-edit").style.display = "none";
+  parent.querySelector(".tag-view").style.display = "block";
+};
                 
 // 回戦削除（週指定）
 window.deleteMatchByWeek = async function(docId, matchNumber){
