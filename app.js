@@ -567,8 +567,9 @@ ${
 }
 </div>
 <div class="tag-edit" style="display:none;">
+<div class="dropdown-box">
 ${damageList.map(type => `
-<label style="margin-right:6px;">
+<label class="dropdown-item">
 <input type="checkbox"
 value="${type}"
 ${p.damageTypes?.includes(type) ? "checked" : ""}
@@ -577,6 +578,8 @@ onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
 ${type}
 </label>
 `).join("")}
+</div>
+<button onclick="closeTagEdit(this)">OK</button>
 </div>
 ` : ""}
 </td>
