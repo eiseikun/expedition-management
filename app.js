@@ -975,4 +975,50 @@ window.saveWeekImage = async function(btn){
     }
   });
 };
+// ===== 回戦ごと画像保存 =====
+window.saveMatchImage = async function(btn, matchNumber){
+  const original = btn.closest(".week-block");
+  const clone = original.cloneNode(true);
+  clone.querySelectorAll("button").forEach(b => b.remove());
+  const rows = clone.querySelectorAll("tr");
+  let keep = false;
+  rows.forEach(row=>{
+    const match = row.getAttribute("data-match-number");
+    if(match === String(matchNumber)){
+      keep = true;
+    }else if(match !== null){
+      keep = false;
+    }
+    if(!keep && !row.querySelector("th")){
+      row.remove();
+    }
+  });
 
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111"
+  });
+
+  document.body.removeChild(clone);
+
+  canvas.toBlob(async blob=>{
+    const file = new File([blob], `match-${matchNumber}.png`, {type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `match-${matchNumber}.png`;
+      link.click();
+    }
+  });
+};
