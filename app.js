@@ -607,9 +607,10 @@ buttonArea.innerHTML = `
 
     const content = document.createElement("div");
 
-    header.onclick = () => {
+    header.onclick = (e) => {
+      if(e.target.tagName === "BUTTON") return;
       content.style.display =
-        content.style.display === "none" ? "block" : "none";
+        (content.style.display === "none") ? "block" : "none";
     };
     const table = document.createElement("table");
 
