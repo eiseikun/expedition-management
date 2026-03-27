@@ -655,6 +655,7 @@ header.innerHTML = `
             : [];
 
           const p = lanePlayers[i];
+          row.setAttribute("data-match-number", mn);
           
           const damageList = ["メイン武器","エレメント","爆発","ストライク","メテオ","サークル","精霊","植物の守り手","その他"];
           row.innerHTML += `
