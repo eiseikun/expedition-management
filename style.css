@@ -426,7 +426,7 @@ td {
 }
 /* 2ページ目のボタン */
 .buttons{
-  margin:8px 0;
+  margin:12px 0;
 }
 
 .buttons button{
@@ -439,7 +439,7 @@ td {
   font-weight:bold;
 }
 
-.btn-save{ background:#4caf50; color:white; }
-.btn-add{ background:#2196f3; color:white; }
-.btn-delete{ background:#f44336; color:white; }
+.btn-save{ background:#4caf5080; color:white; }  /* 薄めの緑 */
+.btn-add{ background:#2196f380; color:white; }   /* 薄めの青 */
+.btn-delete{ background:#f4433680; color:white; }/* 薄めの赤 */
 .btn-all{ background:#9c27b0; color:white; }
