@@ -574,39 +574,48 @@ ${p.style}
 >
 ${p ? `
 <div class="tag-view" onclick="enableEdit(this)">
-${
-  p.damageTypes && p.damageTypes.length > 0
-  ? p.damageTypes.map(t => `
-      <span class="tag active" 
-            style="background:${damageColors[t] || 'gray'}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
-        ${t}
-      </span>
-    `).join("")
-  : '<span class="no-tag">未設定</span>'
-}
+  ${
+    p.damageTypes && p.damageTypes.length > 0
+    ? p.damageTypes.map(t => {
+        const type = typeof t === "string" ? t : t.type;
+        const size = typeof t === "string" ? "medium" : t.size;
+
+        return `
+          <span class="tag active tag-${size}" 
+            style="background:${damageColors[type] || 'gray'}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
+            ${type}
+          </span>
+        `;
+      }).join("")
+    : '<span class="no-tag">未設定</span>'
+  }
 </div>
 
 <div class="tag-edit" style="display:none;">
-<div class="dropdown-box">
-${damageList.map(type => `
-<label class="dropdown-item" onclick="event.stopPropagation()">
-<input type="checkbox"
-value="${type}"
-${p.damageTypes?.some(t=>t.type===type) ? "checked" : ""}
-onchange="toggleDamageCheckbox('${d.id}',${mn},'${p.name}', this)"
-onclick="event.stopPropagation()"
-/>
-${type}
-<select class="size-select">
-  <option value="small" ${p.damageTypes?.find(t=>t.type===type)?.size==='small'?'selected':''}>小</option>
-  <option value="medium" ${p.damageTypes?.find(t=>t.type===type)?.size==='medium'?'selected':''}>中</option>
-  <option value="large" ${p.damageTypes?.find(t=>t.type===type)?.size==='large'?'selected':''}>大</option>
-</select>
-</label>
-`).join("")}
+  <div class="dropdown-box">
+    ${damageList.map(type => `
+      <label class="dropdown-item" onclick="event.stopPropagation()">
+        <input type="checkbox"
+          value="${type}"
+          ${
+            p.damageTypes?.some(t => 
+              (typeof t === "string" ? t : t.type) === type
+            ) ? "checked" : ""
+          }
+          onclick="event.stopPropagation()"
+        />
+        ${type}
+        <select class="size-select">
+          <option value="small">小</option>
+          <option value="medium">中</option>
+          <option value="large">大</option>
+        </select>
+      </label>
+    `).join("")}
+  </div>
+  <button onclick="event.stopPropagation(); closeTagEdit(this)">OK</button>
 </div>
-<button onclick="event.stopPropagation(); closeTagEdit(this)">OK</button>
-</div>
+
 ` : ""}
 </td>
 `;
