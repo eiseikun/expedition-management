@@ -567,11 +567,12 @@ ${p.style}
 </span>
 ` : ""}
 </td>
-<td>
+<td 
+  data-doc-id="${d.id}" 
+  data-match-number="${mn}" 
+  data-player-name="${p?.name || ""}"
+>
 ${p ? `
-
-
-// タグ表示部分 
 <div class="tag-view" onclick="enableEdit(this)">
 ${
   p.damageTypes && p.damageTypes.length > 0
