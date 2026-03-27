@@ -350,57 +350,33 @@ function render(){
         row.classList.add("lane-3");
       }
       row.innerHTML=`
-  <td>
-    ${p.name}
-    ${p.updatedAt ? `<span style="margin-left:6px; font-size:0.8em; color:#888;">(${p.updatedAt})</span>` : ""}
-  </td>
-  <td>${formatPower(p.power)}</td>
-  <td>
-    <span class="strategy-label ${
-      p.range === "近距離" ? "strategy-close" :
-      p.range === "中距離" ? "strategy-mid" :
-      "strategy-long"
-    }">
-    ${p.range} / ${p.style}
-    </span>
-  </td>
-  <td>${gearText(p.gearDetail)}</td>
-  <td>${p.hero}</td>
-  <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
-  <td>${p.formation}</td>
-  <td>${relicBuff(p.mythic,p.legend)}</td>
-  <td>
-    <button onclick="moveUp(${i})">↑</button>
-    <button onclick="moveDown(${i})">↓</button>
-  </td>
-  <td>
-    <button onclick="editPlayer(${i})">編集</button>
-    <button onclick="deletePlayer(${i})">削除</button>
-    <button onclick="updatePlayerDate(${i})">更新</button> <!-- ここ追加 -->
-  </td>
-`;
+        <td>${p.name}</td>
+        <td>${formatPower(p.power)}</td>
+        <td>
+        <span class="strategy-label ${
+          p.range === "近距離" ? "strategy-close" :
+          p.range === "中距離" ? "strategy-mid" :
+          "strategy-long"
+        }">
+        ${p.range} / ${p.style}
+        </span>
+        </td>
+        <td>${gearText(p.gearDetail)}</td>
+        <td>${p.hero}</td>
+        <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
+        <td>${p.formation}</td>
+        <td>${relicBuff(p.mythic,p.legend)}</td>
+        <td>
+        <button onclick="moveUp(${i})">↑</button>
+        <button onclick="moveDown(${i})">↓</button>
+        </td>
+        <td><button onclick="editPlayer(${i})">編集</button></td>
+        <td><button onclick="deletePlayer(${i})">削除</button></td>
+      `;
       body.appendChild(row);
     });
   });
 }
-// ===== メンバー更新（更新ボタン用） =====
-window.updatePlayerDate = async function(i){
-  const playerId = playerDocs[i];
-  if(!playerId) return;
-
-  const now = new Date();
-  const updatedAt = now.toISOString().slice(0,10); // YYYY-MM-DD形式
-
-  await updateDoc(doc(db, "players", playerId), {
-    updatedAt
-  });
-
-  // ローカルデータにも反映
-  players[i].updatedAt = updatedAt;
-
-  render();
-};
-
 // ===== 初期ロード =====
 async function load(){
   const snap = await getDocs(collection(db,"players"));
