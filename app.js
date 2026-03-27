@@ -457,7 +457,10 @@ window.addMatchToWeek = async function(docId, matchNumber){
 
   if(!target) return;
 
-  const data = target.data();
+  const data = {
+  ...target.data(),
+  matches: [...target.data().matches]
+};
 
   // 既存チェック
   const existsIndex = data.matches.findIndex(m => m.matchNumber === matchNumber);
@@ -470,19 +473,25 @@ window.addMatchToWeek = async function(docId, matchNumber){
       style: p.range,
       damageTypes: []
     }));
-  if(existsIndex >= 0){
-    // 既にある → 上書き（復活・再生成）
-    data.matches[existsIndex] = {
-      matchNumber,
-      players: matchPlayers
+ if(existsIndex >= 0){
+  const oldMatch = data.matches[existsIndex];
+  const newPlayers = matchPlayers.map(p=>{
+    const old = oldMatch.players.find(op => op.name === p.name);
+    return {
+      ...p,
+      damageTypes: old?.damageTypes || []
     };
-  }else{
-    // ない → 新規追加
-    data.matches.push({
-      matchNumber,
-      players: matchPlayers
-    });
-  }
+  });
+  data.matches[existsIndex] = {
+    matchNumber,
+    players: newPlayers
+  };
+}else{
+  data.matches.push({
+    matchNumber,
+    players: matchPlayers
+  });
+}
   await updateDoc(ref, data);
   loadExpeditions();
 };
