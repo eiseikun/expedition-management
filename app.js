@@ -575,37 +575,42 @@ async function loadExpeditions(){
     const weekDiv = document.createElement("div");
     weekDiv.className = "week-block";
     const header = document.createElement("div");
+header.className = "week-header";
+header.innerHTML = `<h3>${formatRange(exp.date)}</h3>`;
 
-header.innerHTML = `
+const content = document.createElement("div");
+content.className = "week-content";
+
+const buttonArea = document.createElement("div");
+buttonArea.className = "buttons";
+
+buttonArea.innerHTML = `
   <div class="week-header-row date-row">
-    <h3>${formatRange(exp.date)}</h3>
-    <button onclick="saveWeekImage(this)">全体</button>
-    <button onclick="saveMatchImage(this,1)">1回戦保存</button>
-    <button onclick="saveMatchImage(this,2)">2回戦保存</button>
-    <button onclick="saveMatchImage(this,3)">3回戦保存</button>
+    <button class="btn-all" onclick="saveWeekImage(this)">全体</button>
+    <button class="btn-save" onclick="saveMatchImage(this,1)">1回戦</button>
+    <button class="btn-save" onclick="saveMatchImage(this,2)">2回戦</button>
+    <button class="btn-save" onclick="saveMatchImage(this,3)">3回戦</button>
   </div>
   <div class="week-header-row add-row">
-    <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
-    <button onclick="addMatchToWeek('${d.id}',2)">2回戦追加</button>
-    <button onclick="addMatchToWeek('${d.id}',3)">3回戦追加</button>
+    <button class="btn-add" onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
+    <button class="btn-add" onclick="addMatchToWeek('${d.id}',2)">2回戦追加</button>
+    <button class="btn-add" onclick="addMatchToWeek('${d.id}',3)">3回戦追加</button>
   </div>
   <div class="week-header-row delete-row">
-    <button onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
-    <button onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
-    <button onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
-    <button onclick="deleteWeek('${d.id}')">週ごと削除</button>
+    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
+    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
+    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
+    <button class="btn-delete" onclick="deleteWeek('${d.id}')">週削除</button>
   </div>
 `;
     header.style.cursor = "pointer";
 
     const content = document.createElement("div");
 
-    header.onclick = (e) => {
-      if(e.target.tagName === "BUTTON") return;
+    header.onclick = () => {
       content.style.display =
-        (content.style.display === "none") ? "block" : "none";
+        content.style.display === "none" ? "block" : "none";
     };
-
     const table = document.createElement("table");
 
     // ===== ヘッダー =====
@@ -741,6 +746,7 @@ ${p ? `
         table.appendChild(row);
       }
     });
+    content.appendChild(buttonArea);    
     content.appendChild(table);
     weekDiv.appendChild(header);
     weekDiv.appendChild(content);
