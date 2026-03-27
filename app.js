@@ -599,13 +599,13 @@ header.innerHTML = `
     header.style.cursor = "pointer";
 
     const content = document.createElement("div");
-
     header.onclick = (e) => {
-      if(e.target.tagName === "BUTTON") return;
-      content.style.display =
-        (content.style.display === "none") ? "block" : "none";
+      const isHidden = content.style.display === "none";
+      content.style.display = isHidden ? "block" : "none";
+      header.querySelectorAll("button").forEach(btn => {
+        btn.style.display = isHidden ? "inline-block" : "none";
+      });
     };
-
     const table = document.createElement("table");
 
     // ===== ヘッダー =====
