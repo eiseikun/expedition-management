@@ -695,25 +695,29 @@ ${p ? `
 
 <div class="tag-edit" style="display:none;">
   <div class="dropdown-box">
-    ${damageList.map(type => `
-      <label class="dropdown-item" onclick="event.stopPropagation()">
-        <input type="checkbox"
-          value="${type}"
-          ${
-            p.damageTypes?.some(t => 
-              (typeof t === "string" ? t : t.type) === type
-            ) ? "checked" : ""
-          }
-          onclick="event.stopPropagation()"
-        />
-        ${type}
-        <select class="size-select">
-          <option value="small">小</option>
-          <option value="medium">中</option>
-          <option value="large">大</option>
-        </select>
-      </label>
-    `).join("")}
+   ${damageList.map(type => {
+  const found = p.damageTypes?.find(t => 
+    (typeof t === "string" ? t : t.type) === type
+  );
+  const size = found
+    ? (typeof found === "string" ? "medium" : found.size)
+    : "medium";
+  return `
+    <label class="dropdown-item" onclick="event.stopPropagation()">
+      <input type="checkbox"
+        value="${type}"
+        ${found ? "checked" : ""}
+        onclick="event.stopPropagation()"
+      />
+      ${type}
+      <select class="size-select">
+        <option value="small" ${size==="small"?"selected":""}>小</option>
+        <option value="medium" ${size==="medium"?"selected":""}>中</option>
+        <option value="large" ${size==="large"?"selected":""}>大</option>
+      </select>
+    </label>
+  `;
+}).join("")}
   </div>
   <button onclick="event.stopPropagation(); closeTagEdit(this)">OK</button>
 </div>
