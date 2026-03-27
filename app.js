@@ -578,9 +578,12 @@ async function loadExpeditions(){
 
 header.innerHTML = `
   <div class="week-header-row date-row">
-    <h3>${formatRange(exp.date)}</h3>
-    <button onclick="saveWeekImage(this)">画像保存</button>
-  </div>
+  <h3>${formatRange(exp.date)}</h3>
+  <button onclick="saveWeekImage(this)">全体保存</button>
+  <button onclick="saveLaneImage(this,1)">レーン1</button>
+  <button onclick="saveLaneImage(this,2)">レーン2</button>
+  <button onclick="saveLaneImage(this,3)">レーン3</button>
+</div>
   <div class="week-header-row add-row">
     <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
     <button onclick="addMatchToWeek('${d.id}',2)">2回戦追加</button>
