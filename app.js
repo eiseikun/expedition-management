@@ -579,6 +579,7 @@ async function loadExpeditions(){
 header.innerHTML = `
   <div class="week-header-row date-row">
     <h3>${formatRange(exp.date)}</h3>
+    <button onclick="saveWeekImage(this)">全体</button>
   </div>
   <div class="week-header-row add-row">
     <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
@@ -932,3 +933,45 @@ window.moveDown = async function(i){
 
   render();
 };
+// ===== 週ごと画像保存 =====
+window.saveWeekImage = async function(btn){
+  // 対象の週ブロック取得
+  const original = btn.closest(".week-block");
+  // クローン
+  const clone = original.cloneNode(true);
+  // 不要なボタン削除
+  clone.querySelectorAll("button").forEach(b => b.remove());
+  
+  // スタイル
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
+  document.body.appendChild(clone);
+
+  // 画像化
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111",
+    width:clone.scrollWidth
+  });
+
+  document.body.removeChild(clone);
+
+  // 保存 or 共有）
+  canvas.toBlob(async blob=>{
+    const file = new File([blob], "expedition-week.png", {type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "expedition-week.png";
+      link.click();
+    }
+  });
+};
+
