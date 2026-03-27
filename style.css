@@ -1,361 +1,250 @@
 /* ==============================
-   全体設定（ページ全体）
+   ページ全体設定
 ============================== */
-body{
-  font-family:sans-serif;     /* フォント */
-  background:#111;            /* 背景色（黒） */
-  color:white;                /* 文字色 */
-  text-align:center;          /* 中央寄せ */
-  margin:0;                   /* 余白なし */
-  overflow-x:hidden;          /* 横スクロール防止 */
+body {
+  font-family: sans-serif;     /* フォント */
+  background: #111;            /* 背景色 */
+  color: white;                /* 文字色 */
+  text-align: center;          /* 中央寄せ */
+  margin: 0;                   /* 余白なし */
+  overflow-x: hidden;          /* 横スクロール防止 */
 }
-
-
 /* ==============================
    テーブル全体
 ============================== */
-
 /* テーブル本体 */
 table{
   min-width:900px;            /* 横スクロール前提の幅 */
   border-collapse:collapse;   /* 枠線をまとめる */
 }
-
 /* セル共通 */
 th,td{
   padding:8px;                /* 内側余白 */
   border:1px solid #333;      /* 枠線 */
   white-space:nowrap;         /* 改行させない */
 }
-
 /* ヘッダー（タイトル行） */
 th{
   background:#222;            /* 少し明るい黒 */
 }
-
-
-
 /* レーン見出し（レーン1とか） */
 .lane-header{
   background:#333;
   font-weight:bold;
   text-align:left;
 }
-
 /* 行にマウス乗せたとき */
 tr:hover{
   background:#2c2c2c;
   transition:0.15s;
 }
-
 /* 横スクロール用の外枠 */
 .table-container{
   overflow-x:auto;
 }
 
-
 /* ==============================
-    装備表示
+   装備表示
 ============================== */
-
-/* 装備入力（編集画面のグリッド） */
-.gear-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr); /* 2列 */
-  gap:8px;
-  width:100%;
-  box-sizing:border-box;
+.gear-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2列 */
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
-
-/* セレクトの幅調整 */
-.gear-grid select{
-  width:100%;
-  box-sizing:border-box;
+.gear-grid select {
+  width: 100%;
+  box-sizing: border-box;
 }
-
-/* 表示用の小さい装備マス */
-.gear-box{
-  display:grid;
-  grid-template-columns:repeat(2,12px);
-  gap:3px;
-  pointer-events:none; /* クリック無効（ボタン邪魔しない） */
+/* 表示用装備マス */
+.gear-box {
+  display: grid;
+  grid-template-columns: repeat(2, 12px);
+  gap: 3px;
+  pointer-events: none;       /* クリック無効（ボタン邪魔しない） */
 }
-
 /* 各マスの基本 */
-.cell{
-  width:12px;
-  height:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:8px;
-  font-weight:bold;
+.cell {
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
 }
 
-/* 装備なし */
-.cell.empty{ background:#444; }
-
-/* カオス */
-.cell.chaos{ background:#75004f; }
-
-/* ミシック */
-.cell.mythic{ background:#c11333; }
-
-/* レジェンド */
-.cell.legend{ background:#db9000; }
-
+/* 装備タイプ色 */
+.cell.empty  { background: #444; }
+.cell.chaos  { background: #75004f; }
+.cell.mythic { background: #c11333; }
+.cell.legend { background: #db9000; }
 
 /* ==============================
    ルーン表示
 ============================== */
-
-/* ルーン列だけ改行OK */
-td:nth-child(6){
-  white-space:normal;
-}
-
+td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 /* ルーン共通 */
-.rune{
-  display:inline-block;
-  padding:4px 6px;
-  margin:2px;
-  border-radius:4px;
-  font-size:12px;
-  font-weight:bold;
+.rune {
+  display: inline-block;
+  padding: 4px 6px;
+  margin: 2px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
-/* レジェンド（黄色） */
-.rune-legend{
-  background:#db9000;
-  color:#000;
-}
-
-/* ミシック（赤） */
-.rune-mythic{
-  background:#c11333;
-  color:#fff;
-}
-
+.rune-legend { background: #db9000; color: #000; }
+.rune-mythic { background: #c11333; color: #fff; }
 /* ルーン追加欄の区切り線 */
-#runeContainer{
-  margin-top:10px;
-  padding-top:10px;
-  border-top:1px solid #555;
+#runeContainer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #555;
 }
-
-
 /* ==============================
    モーダル（編集画面）
 ============================== */
-
 .editor {
   position: fixed;
-
-  /* 画面全体に配置 */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  margin: 10px auto;      /* 中央寄せ＋余白 */
+  top: 0; left: 0; right: 0; bottom: 0;
+  margin: 10px auto;       /* 中央寄せ＋余白 */
   max-width: 400px;       /* 横幅制限 */
-
-  background: #222;       /* 背景 */
+  background: #222;
   padding: 20px;
   border-radius: 10px;
-
   overflow-y: auto;       /* 縦スクロール */
   overflow-x: hidden;
-
   z-index: 9999;          /* 最前面表示 */
   box-sizing: border-box;
+  pointer-events: auto;
 }
-
-/* モーダル操作有効 */
-.editor{
-  pointer-events:auto;
-}
-
 /* モーダル内の入力欄 */
 #editor input,
-#editor select{
-  width:100%;
-  box-sizing:border-box;
+#editor select {
+  width: 100%;
+  box-sizing: border-box;
 }
-
 /* モーダル下のボタンエリア */
-.editor-footer{
-  margin-top:10px;
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
+.editor-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
 }
-
-
 /* ==============================
    ボタン関連
 ============================== */
-
-/* 上のボタン群 */
-.top-buttons{
-  margin-bottom:15px;
-  display:flex;
-  justify-content:center;
-  gap:10px;
+button {
+  background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+  border: 1px solid #444;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-/* 下ページボタン余白 */
-.page-buttons{
-  margin-bottom:15px;
+button:hover {
+  background: linear-gradient(180deg, #3a3a3a, #222);
+  box-shadow: 0 0 10px rgba(255,255,255,0.1);
 }
-
-/* ボタン見た目 */
-button{
-  background:linear-gradient(180deg,#2a2a2a,#1a1a1a);
-  border:1px solid #444;
-  color:white;
-  border-radius:8px;
-  padding:8px 14px;
-  font-weight:bold;
+.top-buttons {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
-
-/* ホバー時 */
-button:hover{
-  background:linear-gradient(180deg,#3a3a3a,#222);
-  box-shadow:0 0 10px rgba(255,255,255,0.1);
+.page-buttons {
+  margin-bottom: 15px;
 }
-
+/* 2ページ目ボタン */
+.buttons {
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.buttons button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: bold;
+  margin: 2px;
+}
+/* ボタン色 */
+.btn-save   { background: #4caf5080; color:white; }
+.btn-add    { background: #2196f380; color:white; }
+.btn-delete { background: #f4433680; color:white; }
+.btn-all    { background: #9c27b0; color:white; }
 
 /* ==============================
    2ページ目（遠征管理）
 ============================== */
-
 /* 週ブロック */
-.week-block{
-  margin-bottom:20px;
-  border:none;
-  padding:0;
+.week-block {
+  margin-bottom: 20px;
+  border: none;
+  padding: 0;
 }
-
 /* 週タイトル */
-.week-block h3{
-  margin:0;
-  background:#222;
-  padding:8px;
+.week-block h3 {
+  margin: 0;
+  background: #222;
+  padding: 8px;
 }
-
 /* レーン区切り線 */
-.lane-separator td{
-  border-top:4px double white;
+.lane-separator td {
+  border-top: 4px double white;
 }
-
 /* 上部操作ボタン */
-.expedition-controls{
-  margin:10px 0px;
-  border:none;
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  justify-content:center;
+.expedition-controls {
+  margin: 10px 0;
+  border: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
 }
 /* ==============================
-   📱 スマホ用レイアウト（600px以下）
+   スマホ用レイアウト（600px以下）
 ============================== */
-@media (max-width: 600px){
-
-  /* 🔤 全体ちょいコンパクト */
-  body{
-    font-size:14px;
-  }
-
-  /* 📊 テーブル調整 */
-  th,td{
-    font-size:11px;
-    padding:6px;
-  }
-
-  /* 横スクロールを少し快適に */
-  .table-container{
-    overflow-x:auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* 🔘 ボタン小さく */
-  button{
-    padding:6px 10px;
-    font-size:12px;
-    border-radius:6px;
-  }
-
-  /* 上のボタン折り返し */
-  .top-buttons{
-    flex-wrap:wrap;
-    gap:6px;
-  }
-
-  /* 遠征ボタンも折り返し */
-  .expedition-controls{
-    flex-wrap:wrap;
-    gap:6px;
-  }
-
-  /* 🛡 装備表示少し縮小 */
-  .gear-box{
-    transform:scale(0.9);
-  }
-
-  /* 🔮 ルーン少し小さく */
-  .rune{
-    font-size:10px;
-    padding:3px 5px;
-  }
-
-  /* 🪟 モーダル（超重要） */
-  .editor{
-    margin:5px;
-    max-width:none;
-    height:90vh;          /* 画面内に収める */
-    border-radius:12px;
-  }
-
-  /* モーダル内余白調整 */
-  .editor-footer{
-    flex-direction:column;
-  }
-
+@media (max-width: 600px) {
+  body { font-size: 14px; }
+  th, td { font-size: 11px; padding: 6px; }  /* 📊 テーブル調整 */
+  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }  /* 横スクロールを少し快適に */
+  button { padding: 6px 10px; font-size: 12px; border-radius: 6px; }  /* ボタン小さく */
+  .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
+  .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
+  .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
+  .editor { margin: 5px; max-width: none; height: 90vh; border-radius: 12px; }
+  .editor-footer { flex-direction: column; }
 }
 /* ==============================
-   🎯 レーン戦術別カラー
+   レーン戦術別カラー
 ============================== */
-.lane-1 td{ background:rgba(180,210,255,0.5); }/* レーン1（青） */
-.lane-2 td{ background:rgba(170,230,180,0.5); }/* レーン2（緑） */
-.lane-3 td{ background:rgba(240,180,150,0.5); }/* レーン3（赤） */
-.strategy-label{
-  display:inline-block;
-  padding:4px 10px;
-  border-radius:999px; /* ←これで丸くなる */
-  font-size:12px;
-  font-weight:bold;
+.lane-1 td { background: rgba(180,210,255,0.5); }/* レーン1（青） */
+.lane-2 td { background: rgba(170,230,180,0.5); }/* レーン2（緑） */
+.lane-3 td { background: rgba(240,180,150,0.5); }/* レーン3（赤） */
+
+.strategy-label {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px; /* ←これで丸くなる */
+  font-size: 12px;
+  font-weight: bold;
 }
-/* 近距離（赤系） */
-.strategy-close{
-  background:rgba(251,226,213,0.9);
-  color:#5a2a1f;
-}
-/* 中距離（青系） */
-.strategy-mid{
-  background:rgba(202,237,251,0.9);
-  color:#1f3f5a;
-}
-/* 遠距離（緑系） */
-.strategy-long{
-  background:rgba(218,242,208,0.9);
-  color:#2d5a1f;
-}
+
+.strategy-close { background: rgba(251,226,213,0.9); color:#5a2a1f; }
+.strategy-mid   { background: rgba(202,237,251,0.9); color:#1f3f5a; }
+.strategy-long  { background: rgba(218,242,208,0.9); color:#2d5a1f; }
+
 /* ==============================
    カレンダー見た目
 ============================== */
-/* カレンダー全体 */
 .flatpickr-calendar {
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.15);
@@ -383,24 +272,20 @@ button:hover{
   cursor: pointer;
   font-size: 12px;
 }
-.tag-small { font-size: 10px; padding: 1px 4px; }
-.tag-medium { font-size: 14px; padding: 2px 6px; }
-.tag-large { font-size: 18px; padding: 4px 8px; }
-.tag.active {
-  color: white;
-  font-weight: bold;
-}
-.tag-view {
-  cursor: pointer;
-}
-.no-tag {
-  color: #aaa;
-  font-size: 12px;
-}
-td {
-  position: relative;
-}
 
+.tag-small  { font-size: 10px; padding: 1px 4px; }
+.tag-medium { font-size: 14px; padding: 2px 6px; }
+.tag-large  { font-size: 18px; padding: 4px 8px; }
+.tag.active { color:white; font-weight:bold; }
+.tag-view { cursor:pointer; }
+.no-tag { color:#aaa; font-size:12px; }
+
+td { position: relative; }
+
+
+/* ==============================
+   ドロップダウン
+============================== */
 .dropdown-box {
   position: absolute;
   top: 100%;
@@ -417,29 +302,18 @@ td {
   overflow-y: auto;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
+
 .dropdown-item {
   font-size: 12px;
   cursor: pointer;
 }
+
 .dropdown-item:hover {
   background: #333;
 }
-/* 2ページ目のボタン */
-.buttons{
-  margin:12px 0;
-}
 
-.buttons button{
-  padding:6px 10px;
-  border:none;
-  border-radius:6px;
-  margin:2px;
-  cursor:pointer;
-  font-size:12px;
-  font-weight:bold;
-}
 
-.btn-save{ background:#4caf5080; color:white; }  /* 薄めの緑 */
-.btn-add{ background:#2196f380; color:white; }   /* 薄めの青 */
-.btn-delete{ background:#f4433680; color:white; }/* 薄めの赤 */
-.btn-all{ background:#9c27b0; color:white; }
+
+
+
+
