@@ -580,6 +580,9 @@ header.innerHTML = `
   <div class="week-header-row date-row">
     <h3>${formatRange(exp.date)}</h3>
     <button onclick="saveWeekImage(this)">全体</button>
+    <button onclick="saveMatchImage(this,1)">1回戦保存</button>
+    <button onclick="saveMatchImage(this,2)">2回戦保存</button>
+    <button onclick="saveMatchImage(this,3)">3回戦保存</button>
   </div>
   <div class="week-header-row add-row">
     <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
