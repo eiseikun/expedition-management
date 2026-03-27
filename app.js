@@ -577,13 +577,9 @@ async function loadExpeditions(){
     const header = document.createElement("div");
 
 header.innerHTML = `
- <div class="week-header-row date-row">
-  <h3>${formatRange(exp.date)}</h3>
-  <button onclick="saveWeekImage(this)">全体</button>
-  <button onclick="saveMatchImage(this,1)">1回戦</button>
-  <button onclick="saveMatchImage(this,2)">2回戦</button>
-  <button onclick="saveMatchImage(this,3)">3回戦</button>
-</div>
+  <div class="week-header-row date-row">
+    <h3>${formatRange(exp.date)}</h3>
+  </div>
   <div class="week-header-row add-row">
     <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
     <button onclick="addMatchToWeek('${d.id}',2)">2回戦追加</button>
@@ -935,92 +931,4 @@ window.moveDown = async function(i){
   await updateDoc(doc(db,"players",playerDocs[b.idx]), players[b.idx]);
 
   render();
-};
-// ===== 週ごと画像保存 =====
-window.saveWeekImage = async function(btn){
-  // 対象の週ブロック取得
-  const original = btn.closest(".week-block");
-  // クローン
-  const clone = original.cloneNode(true);
-  // 不要なボタン削除
-  clone.querySelectorAll("button").forEach(b => b.remove());
-  
-
-  // スタイル
-  clone.style.width = original.scrollWidth + "px";
-  clone.style.background = "#111";
-  clone.style.color = "white";
-  clone.style.position = "absolute";
-  clone.style.top = "-9999px";
-
-  document.body.appendChild(clone);
-
-  // 画像化
-  const canvas = await html2canvas(clone,{
-    scale:3,
-    backgroundColor:"#111",
-    width:clone.scrollWidth
-  });
-
-  document.body.removeChild(clone);
-
-  // 保存 or 共有）
-  canvas.toBlob(async blob=>{
-    const file = new File([blob], "expedition-week.png", {type:"image/png"});
-
-    if(navigator.share && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file]});
-    }else{
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "expedition-week.png";
-      link.click();
-    }
-  });
-};
-// ===== 回戦ごと画像保存 =====
-window.saveMatchImage = async function(btn, matchNumber){
-  const original = btn.closest(".week-block");
-  const clone = original.cloneNode(true);
-  clone.querySelectorAll("button").forEach(b => b.remove());
-  const rows = clone.querySelectorAll("tr");
-  let keep = false;
-  rows.forEach(row=>{
-    const match = row.getAttribute("data-match-number");
-    if(match === String(matchNumber)){
-      keep = true;
-    }else if(match !== null){
-      keep = false;
-    }
-    if(!keep && !row.querySelector("th")){
-      row.remove();
-    }
-  });
-
-  clone.style.width = original.scrollWidth + "px";
-  clone.style.background = "#111";
-  clone.style.color = "white";
-  clone.style.position = "absolute";
-  clone.style.top = "-9999px";
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone,{
-    scale:3,
-    backgroundColor:"#111"
-  });
-
-  document.body.removeChild(clone);
-
-  canvas.toBlob(async blob=>{
-    const file = new File([blob], `lane-${lane}.png`, {type:"image/png"});
-
-    if(navigator.share && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file]});
-    }else{
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `lane-${lane}.png`;
-      link.click();
-    }
-  });
 };
