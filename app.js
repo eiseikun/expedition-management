@@ -935,15 +935,15 @@ window.moveDown = async function(i){
 };
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
-  // ① 対象の週ブロック取得
+  // 対象の週ブロック取得
   const original = btn.closest(".week-block");
-  // ② クローン
+  // クローン
   const clone = original.cloneNode(true);
-  // ③ 不要なボタン削除
+  // 不要なボタン削除
   clone.querySelectorAll("button").forEach(b => b.remove());
   
 
-  // ⑥ スタイル
+  // スタイル
   clone.style.width = original.scrollWidth + "px";
   clone.style.background = "#111";
   clone.style.color = "white";
@@ -952,7 +952,7 @@ window.saveWeekImage = async function(btn){
 
   document.body.appendChild(clone);
 
-  // ⑦ 画像化
+  // 画像化
   const canvas = await html2canvas(clone,{
     scale:3,
     backgroundColor:"#111",
@@ -961,7 +961,7 @@ window.saveWeekImage = async function(btn){
 
   document.body.removeChild(clone);
 
-  // ⑧ 保存 or 共有（←ここ完全流用）
+  // 保存 or 共有）
   canvas.toBlob(async blob=>{
     const file = new File([blob], "expedition-week.png", {type:"image/png"});
 
@@ -971,6 +971,56 @@ window.saveWeekImage = async function(btn){
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = "expedition-week.png";
+      link.click();
+    }
+  });
+};
+// ===== レーンごと画像保存 =====
+window.saveLaneImage = async function(btn, lane){
+  const original = btn.closest(".week-block");
+  const clone = original.cloneNode(true);
+  clone.querySelectorAll("button").forEach(b => b.remove());
+  const rows = clone.querySelectorAll("tr");
+  let keep = false;
+  rows.forEach(row=>{
+    if(row.cells.length === 0) return;
+    const firstCell = row.cells[0]?.innerText;
+    // 「1」「2」「3」でレーン判定
+    if(firstCell === String(lane)){
+      keep = true;
+    }else if(["1","2","3"].includes(firstCell)){
+      keep = false;
+    }
+
+    // keepじゃなければ削除
+    if(!keep && !row.innerHTML.includes("レーン")){
+      row.remove();
+    }
+  });
+
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111"
+  });
+
+  document.body.removeChild(clone);
+
+  canvas.toBlob(async blob=>{
+    const file = new File([blob], `lane-${lane}.png`, {type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `lane-${lane}.png`;
       link.click();
     }
   });
