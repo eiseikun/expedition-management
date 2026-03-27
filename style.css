@@ -443,7 +443,3 @@ td {
 .btn-add{ background:#2196f3; color:white; }
 .btn-delete{ background:#f44336; color:white; }
 .btn-all{ background:#9c27b0; color:white; }
-.buttons button{
-  background:none;
-  border:none;
-}
