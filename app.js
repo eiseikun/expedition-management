@@ -579,6 +579,7 @@ async function loadExpeditions(){
 header.innerHTML = `
   <div class="week-header-row date-row">
     <h3>${formatRange(exp.date)}</h3>
+    <button onclick="saveWeekImage(this)">画像保存</button>
   </div>
   <div class="week-header-row add-row">
     <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
@@ -931,4 +932,69 @@ window.moveDown = async function(i){
   await updateDoc(doc(db,"players",playerDocs[b.idx]), players[b.idx]);
 
   render();
+};
+// ===== 週ごと画像保存 =====
+window.saveWeekImage = async function(btn){
+  // ① 対象の週ブロック取得
+  const original = btn.closest(".week-block");
+  // ② クローン
+  const clone = original.cloneNode(true);
+  // ③ 不要なボタン削除
+  clone.querySelectorAll("button").forEach(b => b.remove());
+  // ④ 控え行の削除（←ここそのまま流用OK）
+  const rows = clone.querySelectorAll("tr");
+  let hide = false;
+  rows.forEach(row=>{
+    if(row.classList.contains("lane-header")){
+      if(row.innerText.includes("控え")){
+        hide = true;
+        row.remove();
+        return;
+      }else{
+        hide = false;
+      }
+    }
+    if(hide) row.remove();
+  });
+  // ⑤ 右側列削除（これも流用）
+  clone.querySelectorAll("tr").forEach(row=>{
+    const cells = row.querySelectorAll("th, td");
+    if(cells.length >= 11){
+      cells[10]?.remove();
+      cells[9]?.remove();
+      cells[8]?.remove();
+    }
+  });
+
+  // ⑥ スタイル
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
+  document.body.appendChild(clone);
+
+  // ⑦ 画像化
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111",
+    width:clone.scrollWidth
+  });
+
+  document.body.removeChild(clone);
+
+  // ⑧ 保存 or 共有（←ここ完全流用）
+  canvas.toBlob(async blob=>{
+    const file = new File([blob], "expedition-week.png", {type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "expedition-week.png";
+      link.click();
+    }
+  });
 };
