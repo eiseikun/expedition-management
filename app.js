@@ -941,30 +941,7 @@ window.saveWeekImage = async function(btn){
   const clone = original.cloneNode(true);
   // ③ 不要なボタン削除
   clone.querySelectorAll("button").forEach(b => b.remove());
-  // ④ 控え行の削除（←ここそのまま流用OK）
-  const rows = clone.querySelectorAll("tr");
-  let hide = false;
-  rows.forEach(row=>{
-    if(row.classList.contains("lane-header")){
-      if(row.innerText.includes("控え")){
-        hide = true;
-        row.remove();
-        return;
-      }else{
-        hide = false;
-      }
-    }
-    if(hide) row.remove();
-  });
-  // ⑤ 右側列削除（これも流用）
-  clone.querySelectorAll("tr").forEach(row=>{
-    const cells = row.querySelectorAll("th, td");
-    if(cells.length >= 11){
-      cells[10]?.remove();
-      cells[9]?.remove();
-      cells[8]?.remove();
-    }
-  });
+  
 
   // ⑥ スタイル
   clone.style.width = original.scrollWidth + "px";
