@@ -978,25 +978,21 @@ window.saveWeekImage = async function(btn){
     }
   });
 };
-// ===== レーンごと画像保存 =====
-window.saveLaneImage = async function(btn, lane){
+// ===== 回戦ごと画像保存 =====
+window.saveMatchImage = async function(btn, matchNumber){
   const original = btn.closest(".week-block");
   const clone = original.cloneNode(true);
   clone.querySelectorAll("button").forEach(b => b.remove());
   const rows = clone.querySelectorAll("tr");
   let keep = false;
   rows.forEach(row=>{
-    if(row.cells.length === 0) return;
-    const firstCell = row.cells[0]?.innerText;
-    // 「1」「2」「3」でレーン判定
-    if(firstCell === String(lane)){
+    const match = row.getAttribute("data-match-number");
+    if(match === String(matchNumber)){
       keep = true;
-    }else if(["1","2","3"].includes(firstCell)){
+    }else if(match !== null){
       keep = false;
     }
-
-    // keepじゃなければ削除
-    if(!keep && !row.innerHTML.includes("レーン")){
+    if(!keep && !row.querySelector("th")){
       row.remove();
     }
   });
