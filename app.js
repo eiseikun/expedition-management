@@ -666,8 +666,9 @@ header.innerHTML = `
           
           const damageList = ["メイン武器","エレメント","爆発","ストライク","メテオ","サークル","精霊","植物の守り手","その他"];
           row.innerHTML += `
-<td>${p?.name || ""}</td>
-<td>
+<td data-match-number="${mn}">${p?.name || ""}</td>
+
+<td data-match-number="${mn}">
 ${p ? `
 <span class="strategy-label ${
   p.style === "近距離" ? "strategy-close" :
@@ -678,11 +679,13 @@ ${p.style}
 </span>
 ` : ""}
 </td>
+
 <td 
   data-doc-id="${d.id}" 
   data-match-number="${mn}" 
   data-player-name="${p?.name || ""}"
 >
+          
 ${p ? `
 <div class="tag-view" onclick="enableEdit(this)">
   ${
