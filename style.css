@@ -424,3 +424,26 @@ td {
 .dropdown-item:hover {
   background: #333;
 }
+/* 2ページ目のボタン */
+.buttons{
+  margin:8px 0;
+}
+
+.buttons button{
+  padding:6px 10px;
+  border:none;
+  border-radius:6px;
+  margin:2px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.btn-save{ background:#4caf50; color:white; }
+.btn-add{ background:#2196f3; color:white; }
+.btn-delete{ background:#f44336; color:white; }
+.btn-all{ background:#9c27b0; color:white; }
+.buttons button{
+  background:none;
+  border:none;
+}
