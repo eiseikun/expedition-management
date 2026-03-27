@@ -448,6 +448,44 @@ window.addMatch = async function(matchNumber){
 
   loadExpeditions();
 };
+// ===== 指定週に回戦追加（強化版）=====
+window.addMatchToWeek = async function(docId, matchNumber){
+
+  const ref = doc(db, "expeditions", docId);
+  const snap = await getDocs(collection(db, "expeditions"));
+  const target = snap.docs.find(d => d.id === docId);
+
+  if(!target) return;
+
+  const data = target.data();
+
+  // 既存チェック
+  const existsIndex = data.matches.findIndex(m => m.matchNumber === matchNumber);
+  const matchPlayers = players
+    .filter(p => p.lane >= 1 && p.lane <= 3)
+    .sort((a,b)=>a.order - b.order)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range,
+      damageTypes: []
+    }));
+  if(existsIndex >= 0){
+    // 既にある → 上書き（復活・再生成）
+    data.matches[existsIndex] = {
+      matchNumber,
+      players: matchPlayers
+    };
+  }else{
+    // ない → 新規追加
+    data.matches.push({
+      matchNumber,
+      players: matchPlayers
+    });
+  }
+  await updateDoc(ref, data);
+  loadExpeditions();
+};
 // ===== 週保存（1回戦のみ作成）=====
 window.saveWeek = async function(){
   if(players.length === 0){
@@ -528,16 +566,22 @@ async function loadExpeditions(){
 
 header.innerHTML = `
   <h3 style="display:inline;">${formatRange(exp.date)}</h3>
+  <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
+  <button onclick="addMatchToWeek('${d.id}',2)">2回戦追加</button>
+  <button onclick="addMatchToWeek('${d.id}',3)">3回戦追加</button>
+  
   <button onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
   <button onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
   <button onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
+  
   <button onclick="deleteWeek('${d.id}')">週ごと削除</button>
 `;
     header.style.cursor = "pointer";
 
     const content = document.createElement("div");
 
-    header.onclick = () => {
+    header.onclick = (e) => {
+      if(e.target.tagName === "BUTTON") return;
       content.style.display =
         (content.style.display === "none") ? "block" : "none";
     };
