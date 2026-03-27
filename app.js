@@ -574,16 +574,20 @@ async function loadExpeditions(){
     const header = document.createElement("div");
 
 header.innerHTML = `
-  <h3 style="display:inline;">${formatRange(exp.date)}</h3>
-  <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
-  <button onclick="addMatchToWeek('${d.id}',2)">2回戦追加</button>
-  <button onclick="addMatchToWeek('${d.id}',3)">3回戦追加</button>
-  
-  <button onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
-  <button onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
-  <button onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
-  
-  <button onclick="deleteWeek('${d.id}')">週ごと削除</button>
+  <div class="week-header-row date-row">
+    <h3>${formatRange(exp.date)}</h3>
+  </div>
+  <div class="week-header-row add-row">
+    <button onclick="addMatchToWeek('${d.id}',1)">1回戦追加</button>
+    <button onclick="addMatchToWeek('${d.id}',2)">2回戦追加</button>
+    <button onclick="addMatchToWeek('${d.id}',3)">3回戦追加</button>
+  </div>
+  <div class="week-header-row delete-row">
+    <button onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
+    <button onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
+    <button onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
+    <button onclick="deleteWeek('${d.id}')">週ごと削除</button>
+  </div>
 `;
     header.style.cursor = "pointer";
 
