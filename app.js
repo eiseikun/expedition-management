@@ -617,8 +617,12 @@ header.innerHTML = `
     let header2 = `<tr><th></th>`;
 
     matchNumbers.forEach(mn=>{
-      header1 += `<th colspan="3">${mn}回戦</th>`;
-      header2 += `<th>名前</th><th>戦術</th><th>火力内訳</th>`;
+      header1 += `<th colspan="3" data-match-number="${mn}">${mn}回戦</th>`;
+      header2 += `
+      <th data-match-number="${mn}">名前</th>
+      <th data-match-number="${mn}">戦術</th>
+      <th data-match-number="${mn}">火力内訳</th>
+      `;
     });
     header1 += `</tr>`;
     header2 += `</tr>`;
@@ -983,12 +987,12 @@ window.saveMatchImage = async function(btn, matchNumber){
   const original = btn.closest(".week-block");
   const clone = original.cloneNode(true);
   clone.querySelectorAll("button").forEach(b => b.remove());
-  clone.querySelectorAll("td").forEach(td=>{
-    const match = td.getAttribute("data-match-number");
-    if(match && match !== String(matchNumber)){
-      td.style.display = "none";
-    }
-  });
+  clone.querySelectorAll("td, th").forEach(cell=>{
+  const match = cell.getAttribute("data-match-number");
+  if(match && match !== String(matchNumber)){
+    cell.style.display = "none";
+  }
+});
   clone.querySelectorAll("tr").forEach(row=>{
     const visibleTd = Array.from(row.querySelectorAll("td"))
       .some(td => td.style.display !== "none");
