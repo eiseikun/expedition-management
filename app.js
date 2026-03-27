@@ -448,6 +448,48 @@ window.addMatch = async function(matchNumber){
 
   loadExpeditions();
 };
+// ===== 週保存（1回戦のみ作成）=====
+window.saveWeek = async function(){
+  if(players.length === 0){
+    alert("プレイヤーが読み込まれていません。ページ1を開いてください");
+    return;
+  }
+  const date = document.getElementById("weekDate").value;
+  if(!date) return alert("日付を選択して");
+  
+  // プレイヤーデータ作成
+  const matchPlayers = players
+    .filter(p => p.lane >= 1 && p.lane <= 3)
+    .sort((a,b)=>a.order - b.order)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range,
+      damageTypes: []
+    }));
+  const snap = await getDocs(collection(db,"expeditions"));
+  const existing = snap.docs.find(d=>d.data().date === date);
+  if(existing){
+    const data = existing.data();
+
+    // 1回戦があれば上書き、なければ追加
+    const idx = data.matches.findIndex(m=>m.matchNumber === 1);
+    if(idx >= 0){
+      data.matches[idx] = { matchNumber: 1, players: matchPlayers };
+    }else{
+      data.matches.push({ matchNumber: 1, players: matchPlayers });
+    }
+    await updateDoc(doc(db,"expeditions",existing.id), data);
+  }else{
+    // 新規作成（1回戦だけ）
+    await addDoc(collection(db,"expeditions"), {
+      date,
+      matches: [{ matchNumber: 1, players: matchPlayers }]
+    });
+  }
+  loadExpeditions();
+};
+
   // 2ページ目データ削除
 window.deleteMatch = async function(matchNumber){
   const date = document.getElementById("weekDate").value;
