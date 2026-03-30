@@ -106,32 +106,42 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 /* ==============================
    モーダル（編集画面）
 ============================== */
+/* モーダル本体 */
 .editor {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  margin: 10px auto;       /* 中央寄せ＋余白 */
-  max-width: 400px;       /* 横幅制限 */
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  max-width: 400px;
   background: #222;
-  padding: 20px;
   border-radius: 10px;
-  overflow-y: auto;       /* 縦スクロール */
-  overflow-x: hidden;
-  z-index: 9999;          /* 最前面表示 */
-  box-sizing: border-box;
-  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
 }
-/* モーダル内の入力欄 */
+
+/* 中身だけスクロール */
+.editor-inner {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+}
+/* フッター固定 */
+.editor-footer {
+  padding: 10px;
+  background: #222;
+  border-top: 1px solid #444;
+  display: flex;
+  gap: 8px;
+}
+/* 入力 */
 #editor input,
 #editor select {
   width: 100%;
   box-sizing: border-box;
-}
-/* モーダル下のボタンエリア */
-.editor-footer {
-  margin-top: 10px;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
 }
 /* ==============================
    ボタン関連
