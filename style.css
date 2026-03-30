@@ -108,24 +108,17 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 ============================== */
 .editor {
   position: fixed;
-  top: 10px;
-  bottom: 10px;
-  left: 0;
-  right: 0;
-
-  margin: 0 auto;
-  max-width: 400px;
-
-  background: #222;          /* ← 元の見た目戻す */
-  border-radius: 10px;       /* ← 元の見た目戻す */
-
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-
+  top: 0; left: 0; right: 0; bottom: 0;
+  margin: 10px auto;       /* 中央寄せ＋余白 */
+  max-width: 400px;       /* 横幅制限 */
+  background: #222;
   padding: 20px;
+  border-radius: 10px;
+  overflow-y: auto;       /* 縦スクロール */
+  overflow-x: hidden;
+  z-index: 9999;          /* 最前面表示 */
   box-sizing: border-box;
-
-  z-index: 9999;
+  pointer-events: auto;
 }
 /* モーダル内の入力欄 */
 #editor input,
@@ -318,7 +311,6 @@ td { position: relative; }
 .dropdown-item:hover {
   background: #333;
 }
-
 
 
 
