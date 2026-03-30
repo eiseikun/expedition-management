@@ -119,7 +119,7 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   z-index: 9999;          /* 最前面表示 */
   box-sizing: border-box;
   pointer-events: auto;
-　padding-bottom: 80px; /* ← 追加（超重要） */
+　padding-bottom: 150px; /* ← 追加（超重要） */
 }
 /* モーダル内の入力欄 */
 #editor input,
