@@ -108,7 +108,10 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 ============================== */
 .editor {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0; left: 0; right: 0;
+　height: 100vh;        /* ← 追加 */
+  max-height: 100vh;    /* ← 追加 */
+
   margin: 10px auto;       /* 中央寄せ＋余白 */
   max-width: 400px;       /* 横幅制限 */
   background: #222;
