@@ -119,21 +119,38 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   background: #222;
   border-radius: 10px;
 
-  display: flex;
-  flex-direction: column;
-
-  height: calc(100vh - 20px); /* ←これが超重要 */
-
   z-index: 9999;
 }
+
+/* スクロール部分 */
 .editor-inner {
-  flex: 1;
+  position: absolute;
+  top: 0;
+  bottom: 60px; /* ← フッター分確保 */
+  left: 0;
+  right: 0;
+
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 
   padding: 20px;
+}
 
-  min-height: 0; /* ←これも重要（flexバグ対策） */
+/* フッター固定 */
+.editor-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  height: 60px;
+
+  background: #222;
+  border-top: 1px solid #444;
+
+  display: flex;
+  gap: 8px;
+  padding: 10px;
 }
 /* ==============================
    ボタン関連
