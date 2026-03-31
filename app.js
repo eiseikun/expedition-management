@@ -578,18 +578,6 @@ window.resetLane = async function(docId, matchNumber, lane){
   await updateDoc(ref, data);
   loadExpeditions();
 };
-window.toggleMatchReset = function(el, event){
-  event.stopPropagation();
-  event.stopImmediatePropagation(); // 🔥 保険
-
-  const parent = el.parentElement;              // div.match-reset-title
-  const buttons = parent.nextElementSibling;    // ボタン群
-
-  const isOpen = buttons.style.display === "block";
-  buttons.style.display = isOpen ? "none" : "block";
-
-  el.innerText = (isOpen ? "▶ " : "▼ ") + el.innerText.replace("▶ ","").replace("▼ ","");
-};
 
 
 // ===== 2ページ目表示032121更新 =====
@@ -629,14 +617,11 @@ header.innerHTML = `
   <div class="week-header-row lane-reset-row">
   ${[1,2,3].map(mn => `
     <div class="match-reset-block">
-      <div class="match-reset-title">
-      <span onclick="toggleMatchReset(this, event)">▶ ${mn}回戦</span>
-      </div>
-      <div class="match-reset-buttons" style="display:none;">
-        <button onclick="resetLane('${d.id}',${mn},1)">L1更新</button>
-        <button onclick="resetLane('${d.id}',${mn},2)">L2更新</button>
-        <button onclick="resetLane('${d.id}',${mn},3)">L3更新</button>
-      </div>
+      <span class="match-label">${mn}回戦</span>
+
+      <button onclick="resetLane('${d.id}',${mn},1)">L1更新</button>
+      <button onclick="resetLane('${d.id}',${mn},2)">L2更新</button>
+      <button onclick="resetLane('${d.id}',${mn},3)">L3更新</button>
     </div>
   `).join("")}
 </div>
