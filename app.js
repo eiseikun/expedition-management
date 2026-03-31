@@ -615,16 +615,25 @@ header.innerHTML = `
   </div>
 
   <div class="week-header-row lane-reset-row">
-  ${[1,2,3].map(mn => `
-    <div class="match-reset-block">
-      <span class="match-label">${mn}回戦</span>
+  <div class="lane-grid">
+    <div></div>
+    <div class="col-title">1回戦</div>
+    <div class="col-title">2回戦</div>
+    <div class="col-title">3回戦</div>
+    ${[1,2,3].map(lane => `
+      <div class="row-title">L${lane}</div>
 
-<button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">L1更新</button>
-<button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">L2更新</button>
-<button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">L3更新</button>
-    </div>
-  `).join("")}
+      ${[1,2,3].map(match => `
+        <button onclick="event.stopPropagation(); resetLane('${d.id}',${match},${lane})">
+          更新
+        </button>
+      `).join("")}
+
+    `).join("")}
+
+  </div>
 </div>
+  
 
   <div class="week-header-row delete-row">
     <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
