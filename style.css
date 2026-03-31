@@ -311,23 +311,12 @@ td { position: relative; }
 }
 
 .match-reset-block{
-  margin-bottom: 6px;
+  margin: 6px 0;
 }
-.match-reset-title{
-  cursor: pointer;
-  background: #222;
-  padding: 6px 10px;
-  border-radius: 6px;
+
+.match-label{
+  display: inline-block;
+  width: 60px;
   font-weight: bold;
 }
-.match-reset-buttons{
-  margin-top: 4px;
-  display: flex;
-  gap: 6px;
-}
-.match-reset-buttons button{
-  flex: 1;
-}
-
-
 
