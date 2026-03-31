@@ -579,11 +579,11 @@ window.resetLane = async function(docId, matchNumber, lane){
   loadExpeditions();
 };
 
-window.toggleMatchReset = function(el){
+window.toggleMatchReset = function(el, event){
+  event.stopPropagation(); // 🔥 追加（これが本体）
   const buttons = el.nextElementSibling;
   const isOpen = buttons.style.display === "block";
   buttons.style.display = isOpen ? "none" : "block";
-  // 矢印も変える
   el.innerText = (isOpen ? "▶ " : "▼ ") + el.innerText.replace("▶ ","").replace("▼ ","");
 };
 
@@ -624,7 +624,7 @@ header.innerHTML = `
   <div class="week-header-row lane-reset-row">
   ${[1,2,3].map(mn => `
     <div class="match-reset-block">
-      <div class="match-reset-title" onclick="toggleMatchReset(this)">
+      <div class="match-reset-title" onclick="toggleMatchReset(this, event)">
         ▶ ${mn}回戦
       </div>
       <div class="match-reset-buttons" style="display:none;">
