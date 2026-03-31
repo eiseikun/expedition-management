@@ -621,18 +621,14 @@ matchNumbers.forEach(mn=>{
     <th colspan="3">
       ${mn}回戦<br>
       <div class="lane-grid">
-        <span></span>
-        <span class="col-title">L1</span>
-        <span class="col-title">L2</span>
-        <span class="col-title">L3</span>
-
         <span class="row-title">更新</span>
-        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">1</button>
-        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">2</button>
-        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">3</button>
+        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
+        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
+        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
       </div>
     </th>
   `;
+});
 
   header2 += `
     <th>名前</th>
