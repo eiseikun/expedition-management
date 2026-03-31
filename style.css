@@ -353,32 +353,3 @@ td { position: relative; }
   line-height: 1;
   border-radius: 4px;
 }
-.name-cell{
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.player-name{
-  font-weight: bold;
-  line-height: 1.2;
-}
-
-.update-row{
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 2px;
-  opacity: 0.8;
-}
-
-.update-btn{
-  font-size: 10px;
-  padding: 1px 5px;
-  height: 18px;
-}
-
-.update-time{
-  font-size: 9px;
-  color: #aaa;
-}
