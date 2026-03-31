@@ -314,17 +314,17 @@ td { position: relative; }
 
 .lane-grid{
   display: grid;
-  grid-template-columns: 50px repeat(3, auto);
+  grid-template-columns: 50px repeat(3, 1fr); /* ←均等にする */
   gap: 4px;
   justify-content: center;
   align-items: center;
 }
-
 .lane-grid button{
-  width: 24px;
+  width: auto;          /* ←固定やめる */
   height: 24px;
-  font-size: 12px;
-  padding: 0;
+  font-size: 11px;
+  padding: 0 6px;       /* ←横余白追加 */
+  white-space: nowrap;  /* ←改行防止 */
 }
 
 
