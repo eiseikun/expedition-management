@@ -636,18 +636,42 @@ matchNumbers.forEach(mn=>{
 header1 += `</tr>`;
     
     let header2 = `<tr><th></th>`;
+    let header1 = `<tr><th>レーン</th>`;
 
-    matchNumbers.forEach(mn=>{
-      header1 += `<th colspan="3" data-match-number="${mn}">${mn}回戦</th>`;
-      header2 += `
-      <th data-match-number="${mn}">名前</th>
-      <th data-match-number="${mn}">戦術</th>
-      <th data-match-number="${mn}">火力内訳</th>
-      `;
-    });
-    header1 += `</tr>`;
-    header2 += `</tr>`;
-    table.innerHTML = header1 + header2;
+matchNumbers.forEach(mn=>{
+  header1 += `
+    <th colspan="3">
+      ${mn}回戦<br>
+      <div class="lane-grid">
+        <span></span>
+        <span class="col-title">L1</span>
+        <span class="col-title">L2</span>
+        <span class="col-title">L3</span>
+
+        <span class="row-title">更新</span>
+        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">1</button>
+        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">2</button>
+        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">3</button>
+      </div>
+    </th>
+  `;
+});
+
+header1 += `</tr>`;
+
+// 👇 名前とかの列だけ別で作る
+let header2 = `<tr><th></th>`;
+matchNumbers.forEach(mn=>{
+  header2 += `
+    <th>名前</th>
+    <th>戦術</th>
+    <th>火力内訳</th>
+  `;
+});
+header2 += `</tr>`;
+
+table.innerHTML = header1 + header2;
+   
 
     const lanes = [1,2,3];
 
