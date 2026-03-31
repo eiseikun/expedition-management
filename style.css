@@ -319,4 +319,18 @@ td { position: relative; }
   width: 60px;
   font-weight: bold;
 }
+.lane-grid{
+  display: grid;
+  grid-template-columns: 60px repeat(3, 1fr);
+  gap: 6px;
+  align-items: center;
+}
 
+.col-title{
+  font-size: 12px;
+  color: #aaa;
+}
+
+.row-title{
+  font-weight: bold;
+}
