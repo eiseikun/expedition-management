@@ -179,6 +179,7 @@ window.savePlayer = async function(){
   const p = {
     name: document.getElementById("name").value.trim(),
     power: Number(document.getElementById("power").value),
+    updatedAt: editIndex !== null ? players[editIndex].updatedAt || "" : "",
     range: document.getElementById("range").value,
     style: document.getElementById("style").value,
     hero: document.getElementById("hero").value,
@@ -350,7 +351,11 @@ function render(){
         row.classList.add("lane-3");
       }
       row.innerHTML=`
-        <td>${p.name}</td>
+        <td>
+        ${p.name}
+        ${p.updatedAt ? `<div class="update-time">${p.updatedAt}</div>` : ""}
+        <button class="update-btn" onclick="updatePlayer(${i})">更新</button>
+        </td>
         <td>${formatPower(p.power)}</td>
         <td>
         <span class="strategy-label ${
@@ -933,6 +938,18 @@ flatpickr("#weekDate", {
     }
   }
 });
+window.updatePlayer = async function(i){
+  const now = new Date().toLocaleString();
+
+  players[i].updatedAt = now;
+
+  await updateDoc(
+    doc(db,"players",playerDocs[i]),
+    players[i]
+  );
+
+  render();
+};
 
 // 1ページ目並べ替えの中身
 window.moveUp = async function(i){
