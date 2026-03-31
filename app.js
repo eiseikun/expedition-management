@@ -614,35 +614,29 @@ header.innerHTML = `
     matchNumbers.sort((a,b)=>a-b);
     // ★ヘッダー生成
     let header1 = `<tr><th>レーン</th>`;
-let header2 = `<tr><th></th>`;
-
-matchNumbers.forEach(mn=>{
-  header1 += `
-    <th colspan="3">
+    let header2 = `<tr><th></th>`;
+    matchNumbers.forEach(mn=>{
+      header1 += `
+      <th colspan="3">
       ${mn}回戦<br>
       <div class="lane-grid">
-        <span class="row-title">更新</span>
-        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
-        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
-        <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
+      <span class="row-title">更新</span>
+      <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
+      <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
+      <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
       </div>
-    </th>
-  `;
-});
-
-  header2 += `
-    <th>名前</th>
-    <th>戦術</th>
-    <th>火力内訳</th>
-  `;
-});
-
-header1 += `</tr>`;
-header2 += `</tr>`;
-
-table.innerHTML = header1 + header2;
-   
-
+      </th>
+      `;
+      header2 += `
+      <th>名前</th>
+      <th>戦術</th>
+      <th>火力内訳</th>
+      `;
+    });
+    header1 += `</tr>`;
+    header2 += `</tr>`;
+    
+    table.innerHTML = header1 + header2;
     const lanes = [1,2,3];
 
     lanes.forEach(lane=>{
