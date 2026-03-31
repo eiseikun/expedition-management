@@ -312,7 +312,20 @@ td { position: relative; }
   background: #333;
 }
 
+.lane-grid{
+  display: grid;
+  grid-template-columns: 50px repeat(3, auto);
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
 
+.lane-grid button{
+  width: auto;
+  padding: 2px 6px;
+  font-size: 11px;
+  border-radius: 4px;
+}
 
 
 
