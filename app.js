@@ -351,11 +351,13 @@ function render(){
         row.classList.add("lane-3");
       }
       row.innerHTML=`
-        <td>
-        ${p.name}
-        ${p.updatedAt ? `<div class="update-time">${p.updatedAt}</div>` : ""}
-        <button class="update-btn" onclick="updatePlayer(${i})">更新</button>
-        </td>
+      <td class="name-cell">
+      <div class="player-name">${p.name}</div>
+      <div class="update-row">
+      <button class="update-btn" onclick="updatePlayer(${i})">更新</button>
+      ${p.updatedAt ? `<span class="update-time">${p.updatedAt}</span>` : ""}
+      </div>
+      </td>
         <td>${formatPower(p.power)}</td>
         <td>
         <span class="strategy-label ${
