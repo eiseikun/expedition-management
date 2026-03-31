@@ -614,6 +614,8 @@ header.innerHTML = `
     matchNumbers.sort((a,b)=>a-b);
     // ★ヘッダー生成
     let header1 = `<tr><th>レーン</th>`;
+let header2 = `<tr><th></th>`;
+
 matchNumbers.forEach(mn=>{
   header1 += `
     <th colspan="3">
@@ -631,21 +633,15 @@ matchNumbers.forEach(mn=>{
       </div>
     </th>
   `;
-});
 
-header1 += `</tr>`;
-    
-    let header2 = `<tr><th></th>`;
-
-// 👇 名前とかの列だけ別で作る
-let header2 = `<tr><th></th>`;
-matchNumbers.forEach(mn=>{
   header2 += `
     <th>名前</th>
     <th>戦術</th>
     <th>火力内訳</th>
   `;
 });
+
+header1 += `</tr>`;
 header2 += `</tr>`;
 
 table.innerHTML = header1 + header2;
