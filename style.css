@@ -330,11 +330,11 @@ td { position: relative; }
   border: none;
   font-weight: bold;
   color: #000;
-　background: none;
+  background: none;
 }
-.lane-btn.lane1{background: rgba(180,210,255,0.9);}　/* レーン1（青） */
-.lane-btn.lane2{background: rgba(170,230,180,0.9);}　/* レーン2（緑） */
-.lane-btn.lane3{background: rgba(240,180,150,0.9);}　/* レーン3（赤） */
+.lane-btn.lane1{background: rgba(180,210,255,0.9);} /* レーン1（青） */
+.lane-btn.lane2{background: rgba(170,230,180,0.9);} /* レーン2（緑） */
+.lane-btn.lane3{background: rgba(240,180,150,0.9);} /* レーン3（赤） */
 
 /* ホバーでちょい強調 */
 .lane-btn:hover{
