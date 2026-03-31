@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ===== Firebase =====
 const firebaseConfig = {
@@ -844,7 +844,38 @@ document.addEventListener("click", function(e){
     if(view) view.style.display = "block";
   });
 });
-                
+
+// ===== レーン単位リセット（←追加）=====
+window.resetLane = async function(docId, matchNumber, lane){
+
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+
+  // 指定レーン削除
+  match.players = match.players.filter(p=>p.lane !== lane);
+
+  // 最新playersから再生成
+  const lanePlayers = players
+    .filter(p=>p.lane === lane)
+    .sort((a,b)=>a.order - b.order)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range,
+      damageTypes: []
+    }));
+
+  match.players.push(...lanePlayers);
+
+  await updateDoc(ref, data);
+
+  loadExpeditions();
+};
+
 // 回戦削除（週指定）
 window.deleteMatchByWeek = async function(docId, matchNumber){
 
