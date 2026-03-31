@@ -346,4 +346,10 @@ td { position: relative; }
   color:rgba(255,255,255,0.4);
   margin-top:2px;
 }
-
+.update-btn{
+  font-size: 9px;     /* 文字小さく */
+  padding: 1px 4px;    /* 余白縮小 */
+  height: 16px;        /* 高さ小さく */
+  line-height: 1;
+  border-radius: 4px;
+}
