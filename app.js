@@ -620,7 +620,7 @@ header.innerHTML = `
       <th colspan="3">
       ${mn}回戦<br>
       <div class="lane-grid">
-      <span class="row-title">更新</span>
+      <span class="row-title no-export">更新</span>
       <button class="lane-btn lane1" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
       <button class="lane-btn lane2" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
       <button class="lane-btn lane3" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
@@ -992,7 +992,7 @@ window.saveWeekImage = async function(btn){
   const clone = original.cloneNode(true);
   // 不要なボタン削除
   clone.querySelectorAll("button").forEach(b => b.remove());
-  
+  clone.querySelectorAll(".no-export").forEach(el => el.remove());
   // スタイル
   clone.style.width = original.scrollWidth + "px";
   clone.style.background = "#111";
@@ -1030,6 +1030,7 @@ window.saveMatchImage = async function(btn, matchNumber){
   const original = btn.closest(".week-block");
   const clone = original.cloneNode(true);
   clone.querySelectorAll("button").forEach(b => b.remove());
+  clone.querySelectorAll(".no-export").forEach(el => el.remove());
   clone.querySelectorAll("td, th").forEach(cell=>{
   const match = cell.getAttribute("data-match-number");
   if(match && match !== String(matchNumber)){
