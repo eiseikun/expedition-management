@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ===== Firebase =====
 const firebaseConfig = {
@@ -454,14 +453,18 @@ window.addMatch = async function(matchNumber){
 };
 // ===== 指定週に回戦追加（強化版）=====
 window.addMatchToWeek = async function(docId, matchNumber){
+
   const ref = doc(db, "expeditions", docId);
   const snap = await getDocs(collection(db, "expeditions"));
   const target = snap.docs.find(d => d.id === docId);
+
   if(!target) return;
+
   const data = {
   ...target.data(),
   matches: [...target.data().matches]
 };
+
   // 既存チェック
   const existsIndex = data.matches.findIndex(m => m.matchNumber === matchNumber);
   const matchPlayers = players
@@ -552,32 +555,6 @@ if(!date) return alert("日付を選択して");
   await updateDoc(doc(db,"expeditions",docSnap.id), data);
   loadExpeditions();
 };
-// ピンポイント削除追加
-window.resetLane = async function(docId, matchNumber, lane){
-  if(!confirm(`回戦${matchNumber}のレーン${lane}を再編成しますか？`)) return;
-  // Firestoreから対象データ取得
-  const ref = doc(db,"expeditions",docId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-  // 対象回戦を取得
-  const match = data.matches.find(m => m.matchNumber === matchNumber);
-  if(!match) return;
-  // そのレーンだけ削除
-  match.players = match.players.filter(p => p.lane !== lane);
-  // ページ1のプレイヤーから再生成
-  const newPlayers = players
-    .filter(p => p.lane === lane)
-    .sort((a,b)=>a.order - b.order)
-    .map(p => ({
-      name: p.name,
-      lane: p.lane,
-      style: p.range,
-      damageTypes: []
-    }));
-  match.players.push(...newPlayers);
-  await updateDoc(ref, data);
-  loadExpeditions();
-};
 
 
 // ===== 2ページ目表示032121更新 =====
@@ -607,34 +584,11 @@ header.innerHTML = `
     <button class="btn-save" onclick="saveMatchImage(this,2)">2回戦保存📷</button>
     <button class="btn-save" onclick="saveMatchImage(this,3)">3回戦保存📷</button>
   </div>
-
   <div class="week-header-row add-row">
     <button class="btn-add" onclick="addMatchToWeek('${d.id}',1)">1回戦追加🖋</button>
     <button class="btn-add" onclick="addMatchToWeek('${d.id}',2)">2回戦追加🖋</button>
     <button class="btn-add" onclick="addMatchToWeek('${d.id}',3)">3回戦追加🖋</button>
   </div>
-
-  <div class="week-header-row lane-reset-row">
-  <div class="lane-grid">
-    <div></div>
-    <div class="col-title">1回戦</div>
-    <div class="col-title">2回戦</div>
-    <div class="col-title">3回戦</div>
-    ${[1,2,3].map(lane => `
-      <div class="row-title">L${lane}</div>
-
-      ${[1,2,3].map(match => `
-        <button onclick="event.stopPropagation(); resetLane('${d.id}',${match},${lane})">
-          更新
-        </button>
-      `).join("")}
-
-    `).join("")}
-
-  </div>
-</div>
-  
-
   <div class="week-header-row delete-row">
     <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
     <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
