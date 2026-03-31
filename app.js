@@ -619,9 +619,9 @@ header.innerHTML = `
     <div class="match-reset-block">
       <span class="match-label">${mn}回戦</span>
 
-      <button onclick="resetLane('${d.id}',${mn},1)">L1更新</button>
-      <button onclick="resetLane('${d.id}',${mn},2)">L2更新</button>
-      <button onclick="resetLane('${d.id}',${mn},3)">L3更新</button>
+<button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">L1更新</button>
+<button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">L2更新</button>
+<button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">L3更新</button>
     </div>
   `).join("")}
 </div>
