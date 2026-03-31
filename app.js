@@ -268,7 +268,7 @@ window.deletePlayer = async function(i){
 window.saveTableImage = async function(){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
-
+  clone.querySelectorAll(".update-btn, .update-time").forEach(el => el.remove());
   const rows = clone.querySelectorAll("tr");
   let hide = false;
   rows.forEach(row=>{
