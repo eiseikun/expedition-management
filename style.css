@@ -321,11 +321,10 @@ td { position: relative; }
 }
 
 .lane-grid button{
-  width: auto;
-  padding: 2px 6px;
-  font-size: 11px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  padding: 0;
 }
-
 
 
