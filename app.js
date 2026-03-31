@@ -621,9 +621,9 @@ header.innerHTML = `
       ${mn}回戦<br>
       <div class="lane-grid">
       <span class="row-title">更新</span>
-      <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
-      <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
-      <button onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
+      <button class="lane-btn lane1" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
+      <button class="lane-btn lane2" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
+      <button class="lane-btn lane3" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
       </div>
       </th>
       `;
