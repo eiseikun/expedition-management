@@ -939,7 +939,7 @@ flatpickr("#weekDate", {
   }
 });
 window.updatePlayer = async function(i){
-  const now = new Date().toLocaleString();
+  const now = new Date().toLocaleDateString();
 
   players[i].updatedAt = now;
 
