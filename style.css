@@ -321,9 +321,17 @@ td { position: relative; }
 }
 .lane-grid{
   display: grid;
-  grid-template-columns: 60px repeat(3, 1fr);
+  grid-template-columns: 50px repeat(3, auto);
   gap: 6px;
   align-items: center;
+}
+
+.lane-grid button{
+  width: auto;
+  justify-self: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  min-width: 50px;
 }
 
 .col-title{
