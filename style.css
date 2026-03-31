@@ -326,5 +326,17 @@ td { position: relative; }
   padding: 0 6px;       /* ←横余白追加 */
   white-space: nowrap;  /* ←改行防止 */
 }
+.lane-btn{
+  border: none;
+  font-weight: bold;
+  color: #000;
+}
+.lane-btn.lane1{background: rgba(180,210,255,0.9);}　/* レーン1（青） */
+.lane-btn.lane2{background: rgba(170,230,180,0.9);}　/* レーン2（緑） */
+.lane-btn.lane3{background: rgba(240,180,150,0.9);}　/* レーン3（赤） */
 
+/* ホバーでちょい強調 */
+.lane-btn:hover{
+  filter: brightness(1.1);
+}
 
