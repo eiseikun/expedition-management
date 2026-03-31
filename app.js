@@ -578,6 +578,15 @@ window.resetLane = async function(docId, matchNumber, lane){
   await updateDoc(ref, data);
   loadExpeditions();
 };
+
+window.toggleMatchReset = function(el){
+  const buttons = el.nextElementSibling;
+  const isOpen = buttons.style.display === "block";
+  buttons.style.display = isOpen ? "none" : "block";
+  // 矢印も変える
+  el.innerText = (isOpen ? "▶ " : "▼ ") + el.innerText.replace("▶ ","").replace("▼ ","");
+};
+
 // ===== 2ページ目表示032121更新 =====
 
 // 表示（横テーブル＋レーン区切り）
@@ -612,20 +621,20 @@ header.innerHTML = `
     <button class="btn-add" onclick="addMatchToWeek('${d.id}',3)">3回戦追加🖋</button>
   </div>
 
-  <!-- 🔥 ここ追加 -->
   <div class="week-header-row lane-reset-row">
-    <button class="btn-delete" onclick="resetLane('${d.id}',1,1)">1回戦 L1更新</button>
-    <button class="btn-delete" onclick="resetLane('${d.id}',1,2)">1回戦 L2更新</button>
-    <button class="btn-delete" onclick="resetLane('${d.id}',1,3)">1回戦 L3更新</button>
-
-    <button class="btn-delete" onclick="resetLane('${d.id}',2,1)">2回戦 L1更新</button>
-    <button class="btn-delete" onclick="resetLane('${d.id}',2,2)">2回戦 L2更新</button>
-    <button class="btn-delete" onclick="resetLane('${d.id}',2,3)">2回戦 L3更新</button>
-
-    <button class="btn-delete" onclick="resetLane('${d.id}',3,1)">3回戦 L1更新</button>
-    <button class="btn-delete" onclick="resetLane('${d.id}',3,2)">3回戦 L2更新</button>
-    <button class="btn-delete" onclick="resetLane('${d.id}',3,3)">3回戦 L3更新</button>
-  </div>
+  ${[1,2,3].map(mn => `
+    <div class="match-reset-block">
+      <div class="match-reset-title" onclick="toggleMatchReset(this)">
+        ▶ ${mn}回戦
+      </div>
+      <div class="match-reset-buttons" style="display:none;">
+        <button onclick="resetLane('${d.id}',${mn},1)">L1更新</button>
+        <button onclick="resetLane('${d.id}',${mn},2)">L2更新</button>
+        <button onclick="resetLane('${d.id}',${mn},3)">L3更新</button>
+      </div>
+    </div>
+  `).join("")}
+</div>
 
   <div class="week-header-row delete-row">
     <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
