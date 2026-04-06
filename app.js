@@ -395,6 +395,8 @@ function render(){
 }
 // ===== 初期ロード =====
 async function load(){
+  players = [];
+  playerDocs = [];
   const snap = await getDocs(collection(db,"players"));
   snap.forEach(d=>{
     players.push({
@@ -408,6 +410,13 @@ async function load(){
     if(p.order === undefined){
       p.order = i;
     }
+  });
+   const used = new Set();
+  players.forEach(p=>{
+    while(used.has(p.order)){
+      p.order += 1;
+    }
+    used.add(p.order);
   });
   render();
 }
