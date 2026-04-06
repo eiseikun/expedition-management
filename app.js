@@ -997,14 +997,15 @@ window.moveUp = async function(order){
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
-  console.log(
-  players
-    .filter(p => p.lane === target.lane)
-    .sort((a,b)=>a.order - b.order)
-    .map(p => `${p.name}:${p.order}`)
-);
   const target = players.find(p => p.order === order);
   if(!target) return;
+
+  console.log(
+    players
+      .filter(p => p.lane === target.lane)
+      .sort((a,b)=>a.order - b.order)
+      .map(p => `${p.name}:${p.order}`)
+  );
 
   const sameLane = players
     .filter(p => p.lane === target.lane)
@@ -1016,12 +1017,10 @@ window.moveDown = async function(order){
   const a = sameLane[index];
   const b = sameLane[index + 1];
 
-  // 入れ替え
   const temp = a.order;
   a.order = b.order;
   b.order = temp;
 
-  // 正しい更新
   await updateDoc(doc(db,"players",a.id), { order: a.order });
   await updateDoc(doc(db,"players",b.id), { order: b.order });
 
