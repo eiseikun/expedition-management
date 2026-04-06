@@ -971,6 +971,9 @@ window.updatePlayer = async function(order){
 // 1ページ目並べ替えの中身
 // ===== 並び替え（上）=====
 window.moveUp = async function(order){
+  console.log(
+  sameLane.map(p => `${p.name}:${p.order}`)
+);
   const target = players.find(p => p.order === order);
   if(!target) return;
 
@@ -997,6 +1000,9 @@ window.moveUp = async function(order){
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
+  console.log(
+  sameLane.map(p => `${p.name}:${p.order}`)
+);
   const target = players.find(p => p.order === order);
   if(!target) return;
 
