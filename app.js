@@ -989,23 +989,14 @@ window.moveUp = async function(order){
   a.order = b.order;
   b.order = temp;
 
-  // 正しい更新（id使う）
+  // Firestore更新
   await updateDoc(doc(db,"players",a.id), { order: a.order });
   await updateDoc(doc(db,"players",b.id), { order: b.order });
-
-  render();
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
   const target = players.find(p => p.order === order);
   if(!target) return;
-
-  console.log(
-    players
-      .filter(p => p.lane === target.lane)
-      .sort((a,b)=>a.order - b.order)
-      .map(p => `${p.name}:${p.order}`)
-  );
 
   const sameLane = players
     .filter(p => p.lane === target.lane)
@@ -1024,7 +1015,6 @@ window.moveDown = async function(order){
   await updateDoc(doc(db,"players",a.id), { order: a.order });
   await updateDoc(doc(db,"players",b.id), { order: b.order });
 
-  render();
 };
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
