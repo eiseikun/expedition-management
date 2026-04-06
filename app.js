@@ -992,6 +992,7 @@ window.moveUp = async function(order){
   // Firestore更新
   await updateDoc(doc(db,"players",a.id), { order: a.order });
   await updateDoc(doc(db,"players",b.id), { order: b.order });
+  await load();
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
@@ -1014,7 +1015,7 @@ window.moveDown = async function(order){
 
   await updateDoc(doc(db,"players",a.id), { order: a.order });
   await updateDoc(doc(db,"players",b.id), { order: b.order });
-
+  await load();
 };
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
