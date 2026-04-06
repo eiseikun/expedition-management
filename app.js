@@ -214,7 +214,10 @@ window.savePlayer = async function(){
 };
 
 // ===== 編集 =====
-window.editPlayer = function(i){
+window.editPlayer = function(order){
+  const i = players.findIndex(p => p.order === order);
+  if(i === -1) return;
+
   const p = players[i];
   openEditor();
   editIndex = i;
@@ -256,13 +259,15 @@ window.editPlayer = function(i){
 };
 
 // ===== 削除 =====
-window.deletePlayer = async function(i){
+window.deletePlayer = async function(order){
+  const i = players.findIndex(p => p.order === order);
+  if(i === -1) return;
+
   if(!confirm("削除しますか？")) return;
+
   await deleteDoc(doc(db,"players",playerDocs[i]));
   players.splice(i,1);
   playerDocs.splice(i,1);
-  render();
-};
 
 // ===== 画像保存 =====
 window.saveTableImage = async function(){
@@ -354,7 +359,7 @@ function render(){
       <td class="name-cell">
       <div class="player-name">${p.name}</div>
       <div class="update-row">
-      <button class="update-btn" onclick="updatePlayer(${i})">更新</button>
+      <button class="update-btn" onclick="updatePlayer(${p.order})">更新</button>
       ${p.updatedAt ? `<span class="update-time">${p.updatedAt}</span>` : ""}
       </div>
       </td>
@@ -374,11 +379,11 @@ function render(){
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
         <td>
-        <button onclick="moveUp(${i})">↑</button>
-        <button onclick="moveDown(${i})">↓</button>
+        <button onclick="moveUp(${p.order})">↑</button>
+        <button onclick="moveDown(${p.order})">↓</button>
         </td>
-        <td><button onclick="editPlayer(${i})">編集</button></td>
-        <td><button onclick="deletePlayer(${i})">削除</button></td>
+        <td><button onclick="editPlayer(${p.order})">編集</button></td>
+        <td><button onclick="deletePlayer(${p.order})">削除</button></td>
       `;
       body.appendChild(row);
     });
@@ -940,7 +945,10 @@ flatpickr("#weekDate", {
     }
   }
 });
-window.updatePlayer = async function(i){
+window.updatePlayer = async function(order){
+  const i = players.findIndex(p => p.order === order);
+  if(i === -1) return;
+
   const now = new Date().toLocaleDateString();
 
   players[i].updatedAt = now;
@@ -954,52 +962,55 @@ window.updatePlayer = async function(i){
 };
 
 // 1ページ目並べ替えの中身
-window.moveUp = async function(i){
-  const p = players[i];
+// ===== 並び替え（上）=====
+window.moveUp = async function(order){
+  const target = players.find(p => p.order === order);
+  if(!target) return;
 
   const sameLane = players
-    .map((p,idx)=>({p,idx}))
-    .filter(x=>x.p.lane === p.lane)
-    .sort((a,b)=>a.p.order - b.p.order);
+    .filter(p => p.lane === target.lane)
+    .sort((a,b)=>a.order - b.order);
 
-  const index = sameLane.findIndex(x=>x.idx === i);
-  if(index === 0) return;
+  const index = sameLane.findIndex(p => p.order === order);
+  if(index <= 0) return;
 
   const a = sameLane[index];
-  const b = sameLane[index-1];
+  const b = sameLane[index - 1];
 
-  // 順番入れ替え
-  const temp = players[a.idx].order;
-  players[a.idx].order = players[b.idx].order;
-  players[b.idx].order = temp;
+  // 入れ替え
+  const temp = a.order;
+  a.order = b.order;
+  b.order = temp;
 
-  // Firestore保存
-  await updateDoc(doc(db,"players",playerDocs[a.idx]), players[a.idx]);
-  await updateDoc(doc(db,"players",playerDocs[b.idx]), players[b.idx]);
+  // Firestore更新
+  await updateDoc(doc(db,"players",playerDocs[players.indexOf(a)]), a);
+  await updateDoc(doc(db,"players",playerDocs[players.indexOf(b)]), b);
 
   render();
 };
-
-window.moveDown = async function(i){
-  const p = players[i];
+// ===== 並び替え（下）=====
+window.moveDown = async function(order){
+  const target = players.find(p => p.order === order);
+  if(!target) return;
 
   const sameLane = players
-    .map((p,idx)=>({p,idx}))
-    .filter(x=>x.p.lane === p.lane)
-    .sort((a,b)=>a.p.order - b.p.order);
+    .filter(p => p.lane === target.lane)
+    .sort((a,b)=>a.order - b.order);
 
-  const index = sameLane.findIndex(x=>x.idx === i);
-  if(index === sameLane.length-1) return;
+  const index = sameLane.findIndex(p => p.order === order);
+  if(index === sameLane.length - 1) return;
 
   const a = sameLane[index];
-  const b = sameLane[index+1];
+  const b = sameLane[index + 1];
 
-  const temp = players[a.idx].order;
-  players[a.idx].order = players[b.idx].order;
-  players[b.idx].order = temp;
+  // 入れ替え
+  const temp = a.order;
+  a.order = b.order;
+  b.order = temp;
 
-  await updateDoc(doc(db,"players",playerDocs[a.idx]), players[a.idx]);
-  await updateDoc(doc(db,"players",playerDocs[b.idx]), players[b.idx]);
+  // Firestore更新
+  await updateDoc(doc(db,"players",playerDocs[players.indexOf(a)]), a);
+  await updateDoc(doc(db,"players",playerDocs[players.indexOf(b)]), b);
 
   render();
 };
