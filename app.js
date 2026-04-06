@@ -397,7 +397,10 @@ function render(){
 async function load(){
   const snap = await getDocs(collection(db,"players"));
   snap.forEach(d=>{
-    players.push(d.data());
+    players.push({
+  id: d.id,
+  ...d.data()
+});
     playerDocs.push(d.id);
   });
   
@@ -968,14 +971,10 @@ window.updatePlayer = async function(order){
 // 1ページ目並べ替えの中身
 // ===== 並び替え（上）=====
 window.moveUp = async function(order){
-  const targetIndex = players.findIndex(p => p.order === order);
-  if(targetIndex === -1) return;
+  const target = players.find(p => p.order === order);
+  if(!target) return;
 
-  const target = players[targetIndex];
-
-  // index付きで保持（ここが最重要）
   const sameLane = players
-    .map((p, i) => ({...p, _index: i}))
     .filter(p => p.lane === target.lane)
     .sort((a,b)=>a.order - b.order);
 
@@ -985,31 +984,23 @@ window.moveUp = async function(order){
   const a = sameLane[index];
   const b = sameLane[index - 1];
 
-  // order入れ替え（元配列に対してやる）
-  const temp = players[a._index].order;
-  players[a._index].order = players[b._index].order;
-  players[b._index].order = temp;
+  // 入れ替え
+  const temp = a.order;
+  a.order = b.order;
+  b.order = temp;
 
-  // Firestore更新（同時にやると安定）
-  await Promise.all([
-    updateDoc(doc(db,"players",playerDocs[a._index]), players[a._index]),
-    updateDoc(doc(db,"players",playerDocs[b._index]), players[b._index])
-  ]);
+  // 正しい更新（id使う）
+  await updateDoc(doc(db,"players",a.id), { order: a.order });
+  await updateDoc(doc(db,"players",b.id), { order: b.order });
 
   render();
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
-  console.log(players.map(p => p.order));
+  const target = players.find(p => p.order === order);
+  if(!target) return;
 
-  const targetIndex = players.findIndex(p => p.order === order);
-  if(targetIndex === -1) return;
-
-  const target = players[targetIndex];
-
-  // index付きで保持（これが重要）
   const sameLane = players
-    .map((p, i) => ({...p, _index: i}))
     .filter(p => p.lane === target.lane)
     .sort((a,b)=>a.order - b.order);
 
@@ -1019,16 +1010,14 @@ window.moveDown = async function(order){
   const a = sameLane[index];
   const b = sameLane[index + 1];
 
-  // order入れ替え
-  const temp = players[a._index].order;
-  players[a._index].order = players[b._index].order;
-  players[b._index].order = temp;
+  // 入れ替え
+  const temp = a.order;
+  a.order = b.order;
+  b.order = temp;
 
-  // Firestore更新
-  await Promise.all([
-    updateDoc(doc(db,"players",playerDocs[a._index]), players[a._index]),
-    updateDoc(doc(db,"players",playerDocs[b._index]), players[b._index])
-  ]);
+  // 正しい更新
+  await updateDoc(doc(db,"players",a.id), { order: a.order });
+  await updateDoc(doc(db,"players",b.id), { order: b.order });
 
   render();
 };
