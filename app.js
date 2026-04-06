@@ -269,6 +269,10 @@ window.deletePlayer = async function(order){
   players.splice(i,1);
   playerDocs.splice(i,1);
 
+  render(); // ← ついでにこれも追加
+};
+  
+
 // ===== 画像保存 =====
 window.saveTableImage = async function(){
   const original = document.getElementById("captureArea");
