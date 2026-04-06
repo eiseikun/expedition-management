@@ -1000,7 +1000,7 @@ window.moveUp = async function(order){
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
-  console.log(players.map(p => p.lane));
+  console.log(players.map(p => p.order));
 
   const targetIndex = players.findIndex(p => p.order === order);
   if(targetIndex === -1) return;
