@@ -110,12 +110,11 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   margin: 10px auto;       /* 中央寄せ＋余白 */
-  padding-bottom: 120px;
   max-width: 400px;       /* 横幅制限 */
   background: #222;
   padding: 20px;
   border-radius: 10px;
-  overflow-y: scroll;       /* 縦スクロール */
+  overflow-y: auto;       /* 縦スクロール */
   overflow-x: hidden;
   z-index: 9999;          /* 最前面表示 */
   box-sizing: border-box;
@@ -124,8 +123,8 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 /* モーダル内の入力欄 */
 #editor input,
 #editor select {
+   font-size: 16px; /*これ追加*/
   width: 100%;
-   font-size: 16px;
   box-sizing: border-box;
 }
 /* モーダル下のボタンエリア */
