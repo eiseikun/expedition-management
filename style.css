@@ -107,31 +107,22 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
    モーダル（編集画面）
 ============================== */
 .editor {
-   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  margin: 0 auto;
-  max-width: 400px;
-
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  margin: 10px auto;       /* 中央寄せ＋余白 */
+  max-width: 400px;       /* 横幅制限 */
   background: #222;
-  padding: 16px;
-  padding-bottom: 120px; /* ←これが命 */
-
-  border-radius: 0; /* iPhoneはフル画面の方が安定 */
-
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-
-  z-index: 9999;
+  padding: 20px;
+  border-radius: 10px;
+  overflow-y: auto;       /* 縦スクロール */
+  overflow-x: hidden;
+  z-index: 9999;          /* 最前面表示 */
   box-sizing: border-box;
+  pointer-events: auto;
 }
 /* モーダル内の入力欄 */
 #editor input,
 #editor select {
-   font-size: 16px;
   width: 100%;
   box-sizing: border-box;
 }
