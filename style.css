@@ -108,34 +108,25 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 ============================== */
 .editor {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  margin: 0 auto;
-  max-width: 400px;
-
+  top: 0; left: 0; right: 0; bottom: 0;
+  margin: 10px auto;       /* 中央寄せ＋余白 */
+  padding-bottom: 120px;
+  max-width: 400px;       /* 横幅制限 */
   background: #222;
   padding: 20px;
-  padding-bottom: 120px; /* ← 下ボタンに到達できるように */
-
-  border-radius: 0;
-
-  overflow-y: scroll; /* ← autoじゃなくscroll */
+  border-radius: 10px;
+  overflow-y: scroll;       /* 縦スクロール */
   overflow-x: hidden;
-
-  -webkit-overflow-scrolling: touch; /* ← iPhone必須 */
-  
+  z-index: 9999;          /* 最前面表示 */
   box-sizing: border-box;
-  z-index: 9999;
+  pointer-events: auto;
 }
 /* モーダル内の入力欄 */
 #editor input,
 #editor select {
   width: 100%;
+   font-size: 16px;
   box-sizing: border-box;
-font-size: 16px;
 }
 /* モーダル下のボタンエリア */
 .editor-footer {
@@ -231,12 +222,7 @@ button:hover {
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
-  .editor {
-  margin: 0;
-  max-width: none;
-  height: 100%;
-  border-radius: 0;
-}
+  .editor { margin: 5px; max-width: none; height: 100%; border-radius: 12px; }
   .editor-footer { flex-direction: column; }
 }
 /* ==============================
