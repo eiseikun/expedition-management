@@ -123,7 +123,6 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 /* モーダル内の入力欄 */
 #editor input,
 #editor select {
-   font-size: 16px; /*これ追加*/
   width: 100%;
   box-sizing: border-box;
 }
@@ -221,7 +220,7 @@ button:hover {
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
-  .editor { margin: 5px; max-width: none; height: 100%; border-radius: 12px; }
+  .editor { margin: 5px; max-width: none; height: 90vh; border-radius: 12px; }
   .editor-footer { flex-direction: column; }
 }
 /* ==============================
