@@ -1,6 +1,9 @@
 /* ==============================
    ページ全体設定
 ============================== */
+html, body {
+  height: 100%;
+}
 body {
   font-family: sans-serif;     /* フォント */
   background: #111;            /* 背景色 */
@@ -8,6 +11,10 @@ body {
   text-align: center;          /* 中央寄せ */
   margin: 0;                   /* 余白なし */
   overflow-x: hidden;          /* 横スクロール防止 */
+}
+/* モーダル開いてる時は背景スクロール禁止 */
+body.modal-open {
+  overflow: hidden;
 }
 /* ==============================
    テーブル全体
@@ -108,23 +115,26 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 ============================== */
 .editor {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  margin: 10px auto;       /* 中央寄せ＋余白 */
-  max-width: 400px;       /* 横幅制限 */
+  top: 10; left: 0; right: 0; bottom: 10;
+  margin: 0 auto;
+  max-width: 400px;
   background: #222;
   padding: 20px;
   border-radius: 10px;
-  overflow-y: auto;       /* 縦スクロール */
+  overflow-y: scroll;
   overflow-x: hidden;
-  z-index: 9999;          /* 最前面表示 */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  z-index: 9999;
   box-sizing: border-box;
-  pointer-events: auto;
 }
 /* モーダル内の入力欄 */
 #editor input,
 #editor select {
   width: 100%;
   box-sizing: border-box;
+  font-size: 16px;
 }
 /* モーダル下のボタンエリア */
 .editor-footer {
@@ -215,12 +225,11 @@ button:hover {
 @media (max-width: 600px) {
   body { font-size: 14px; }
   th, td { font-size: 11px; padding: 6px; }  /* 📊 テーブル調整 */
-  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }  /* 横スクロールを少し快適に */
   button { padding: 6px 10px; font-size: 12px; border-radius: 6px; }  /* ボタン小さく */
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
-  .editor { margin: 5px; max-width: none; height: 90vh; border-radius: 12px; }
+  .editor {top: 5px; bottom: 5px; max-width: none; border-radius: 12px; }
   .editor-footer { flex-direction: column; }
 }
 /* ==============================
