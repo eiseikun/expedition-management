@@ -113,35 +113,58 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 /* ==============================
    モーダル（編集画面）
 ============================== */
+/* モーダル本体 */
 .editor {
   position: fixed;
-  top: 10px; left: 0; right: 0; bottom: 10px;
-  margin: 0 auto;
-  max-width: 400px;
+  top: 20px;              /* ← 少し余白増やす */
+  left: 10px;
+  right: 10px;
+  bottom: 20px;           /* ← 下も余白 */
+  
   background: #222;
-  padding: 20px;
-  border-radius: 10px;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  padding: 24px 16px 32px; /* ← 内側に余裕 */
+  border-radius: 14px;
+
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 
   z-index: 9999;
   box-sizing: border-box;
 }
-/* モーダル内の入力欄 */
-#editor input,
-#editor select {
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 16px;
+
+/* iPhoneの下の安全エリア対策 */
+.editor {
+  padding-bottom: calc(32px + env(safe-area-inset-bottom));
 }
-/* モーダル下のボタンエリア */
-.editor-footer {
-  margin-top: 10px;
+
+/* タイトル */
+.editor h2 {
+  margin-bottom: 20px;
+}
+
+/* 入力系まとめて余白 */
+.editor input,
+.editor select {
+  margin-bottom: 14px;   /* ← ここが重要 */
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* 装備セクション */
+.editor h3 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+/* 2列レイアウトの間隔 */
+.equipment-row {
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 10px; /* ← 横の隙間 */
+}
+
+/* 各ブロック */
+.equipment-row > div {
+  flex: 1;
 }
 /* ==============================
    ボタン関連
