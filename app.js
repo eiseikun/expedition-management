@@ -35,6 +35,7 @@ window.showPage = async function(n){
 
 // ===== モーダル =====
 window.openEditor = function(){
+  document.body.classList.add("modal-open");
   document.getElementById("editor").style.display = "block";
   document.getElementById("modeIndicator").innerText = "追加モード";
 
@@ -44,6 +45,7 @@ window.openEditor = function(){
 };
 
 window.closeEditor = function(){
+  document.body.classList.remove("modal-open");
   document.getElementById("editor").style.display = "none";
   document.getElementById("modeIndicator").innerText = "通常モード";
 };
