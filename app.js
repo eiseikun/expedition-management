@@ -3,7 +3,7 @@ import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, g
 
 // ===== Firebase =====
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "AIzaSyCflhFHEMcgqfkr6Dhp4SwlC1A8dmcMwWE",
   authDomain: "expedition-management-date.firebaseapp.com",
   projectId: "expedition-management-date",
 };
