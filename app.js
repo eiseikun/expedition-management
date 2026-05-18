@@ -599,7 +599,7 @@ async function loadExpeditions(){
   const docs = snap.docs.sort(
     (a,b)=> new Date(b.data().date) - new Date(a.data().date)
   );
-  docs.forEach(d=>{
+  docs.forEach((d, index)=>{
     const exp = d.data();
 
     const weekDiv = document.createElement("div");
@@ -629,6 +629,16 @@ header.innerHTML = `
     header.style.cursor = "pointer";
 
     const content = document.createElement("div");
+    // 最新週だけ開く
+    if(index !== 0){
+      content.style.display = "none";
+    }
+    // 閉じてる週はボタン非表示
+    if(index !== 0){
+      header.querySelectorAll("button").forEach(btn => {
+        btn.style.display = "none";
+      });
+    }
     header.onclick = (e) => {
       const isHidden = content.style.display === "none";
       content.style.display = isHidden ? "block" : "none";
