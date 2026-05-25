@@ -429,14 +429,14 @@ load();
 // ============================
 // タグ・火力色設定（ページ2用）
 const damageColors = {
-  "メイン": "#ff4d4f",
-  "エレ": "#4096ff",
+  "メイン武器": "#ff4d4f",
+  "エレメント": "#4096ff",
   "爆発": "#ff7a45",
-  "スト": "#69c0ff",
+  "ストライク": "#69c0ff",
   "メテオ": "#ad4e00",
   "サークル": "#b37feb",
   "精霊": "#ff85c0",
-  "植物": "#389e0d",
+  "植物の守り手": "#389e0d",
   "その他": "#8c8c8c"
 };
 
@@ -713,7 +713,7 @@ header.innerHTML = `
           const p = lanePlayers[i];
           row.setAttribute("data-match-number", mn);
           
-          const damageList = ["メイン","エレ","爆発","スト","メテオ","サークル","精霊","植物","その他"];
+          const damageList = ["メイン武器","エレメント","爆発","ストライク","メテオ","サークル","精霊","植物の守り手","その他"];
           row.innerHTML += `
 <td data-match-number="${mn}">${p?.name || ""}</td>
 
