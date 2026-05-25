@@ -439,6 +439,12 @@ const damageColors = {
   "植物の守り手": "#389e0d",
   "その他": "#8c8c8c"
 };
+const damageShortNames = {
+  "メイン武器": "メイン",
+  "エレメント": "エレ",
+  "ストライク": "スト",
+  "植物の守り手": "植物"
+};
 
 window.addMatch = async function(matchNumber){
   if(players.length === 0){
@@ -746,7 +752,7 @@ ${p ? `
         return `
           <span class="tag active tag-${size}" 
             style="background:${damageColors[type] || 'gray'}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
-            ${type}
+            ${damageShortNames[type] || type}
           </span>
         `;
       }).join("")
@@ -846,8 +852,13 @@ window.closeTagEdit = async function(button){
 
   // 表示更新
   viewDiv.innerHTML = active.length > 0
-    ? active.map(t => `<span class="tag active tag-${t.size}" style="background:${damageColors[t.type] || 'gray'};">${t.type}</span>`).join("")
-    : '<span class="no-tag">未設定</span>';
+  ? active.map(t => `
+      <span class="tag active tag-${t.size}" 
+        style="background:${damageColors[t.type] || 'gray'};">
+        ${damageShortNames[t.type] || t.type}
+      </span>
+    `).join("")
+  : '<span class="no-tag">未設定</span>';
 
   // Firestore 更新
   const ref = doc(db,"expeditions",docId);
