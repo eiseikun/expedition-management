@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ===== Firebase =====
 const firebaseConfig = {
@@ -26,11 +26,6 @@ window.showPage = async function(n){
   page2.style.display = (n === 2) ? "block" : "none";
   topButtons.style.display = (n === 1) ? "flex" : "none";
 
-  if(players.length === 0){
-    await load();
-  }
-
-  if(n === 2) loadExpeditions();
 };
 
 // ===== モーダル =====
@@ -396,34 +391,42 @@ function render(){
   });
 }
 // ===== 初期ロード =====
-async function load(){
-  players = [];
-  playerDocs = [];
-  const snap = await getDocs(collection(db,"players"));
-  snap.forEach(d=>{
-    players.push({
-  id: d.id,
-  ...d.data()
-});
-    playerDocs.push(d.id);
+function subscribePlayers(){
+
+  onSnapshot(collection(db,"players"), (snap)=>{
+
+    players = [];
+    playerDocs = [];
+
+    snap.forEach(d=>{
+      players.push({
+        id: d.id,
+        ...d.data()
+      });
+
+      playerDocs.push(d.id);
+    });
+
+    // order重複防止
+    const used = new Set();
+
+    players.forEach((p,i)=>{
+      if(p.order === undefined){
+        p.order = i;
+      }
+
+      while(used.has(p.order)){
+        p.order += 1;
+      }
+
+      used.add(p.order);
+    });
+
+    render();
   });
-  
- players.forEach((p,i)=>{
-    if(p.order === undefined){
-      p.order = i;
-    }
-  });
-   const used = new Set();
-  players.forEach(p=>{
-    while(used.has(p.order)){
-      p.order += 1;
-    }
-    used.add(p.order);
-  });
-  render();
 }
 
-load();
+
 // ============================
 // ===== ここから2ページ目 =====
 // ============================
@@ -485,7 +488,6 @@ window.addMatch = async function(matchNumber){
     });
   }
 
-  loadExpeditions();
 };
 // ===== 指定週に回戦追加（強化版）=====
 window.addMatchToWeek = async function(docId, matchNumber){
@@ -532,7 +534,6 @@ window.addMatchToWeek = async function(docId, matchNumber){
   });
 }
   await updateDoc(ref, data);
-  loadExpeditions();
 };
 // ===== 週保存（1回戦のみ作成）=====
 window.saveWeek = async function(){
@@ -573,7 +574,6 @@ window.saveWeek = async function(){
       matches: [{ matchNumber: 1, players: matchPlayers }]
     });
   }
-  loadExpeditions();
 };
 
   // 2ページ目データ削除
@@ -589,25 +589,21 @@ if(!date) return alert("日付を選択して");
   const data = docSnap.data();
   data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
   await updateDoc(doc(db,"expeditions",docSnap.id), data);
-  loadExpeditions();
 };
 
 
 // ===== 2ページ目表示032121更新 =====
 
 // 表示（横テーブル＋レーン区切り）
-async function loadExpeditions(){
-
-  const container = document.getElementById("expeditionContainer");
-  container.innerHTML = "";
-
-  const snap = await getDocs(collection(db,"expeditions"));
-  const docs = snap.docs.sort(
-    (a,b)=> new Date(b.data().date) - new Date(a.data().date)
-  );
-  docs.forEach((d, index)=>{
-    const exp = d.data();
-
+function subscribeExpeditions(){
+  onSnapshot(collection(db,"expeditions"), (snap)=>{
+    const container = document.getElementById("expeditionContainer");
+    container.innerHTML = "";
+    const docs = snap.docs.sort(
+      (a,b)=> new Date(b.data().date) - new Date(a.data().date)
+    );
+    docs.forEach((d,index)=>{
+      const exp = d.data();
     const weekDiv = document.createElement("div");
     weekDiv.className = "week-block";
     const header = document.createElement("div");
@@ -912,7 +908,6 @@ window.resetLane = async function(docId, matchNumber, lane){
 
   await updateDoc(ref, data);
 
-  loadExpeditions();
 };
 
 // 回戦削除（週指定）
@@ -927,7 +922,6 @@ window.deleteMatchByWeek = async function(docId, matchNumber){
   data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
 
   await updateDoc(ref, data);
-  loadExpeditions();
 };
 
 // 週ごと削除
@@ -936,7 +930,6 @@ window.deleteWeek = async function(docId){
   if(!confirm("この週を全部削除しますか？")) return;
 
   await deleteDoc(doc(db,"expeditions",docId));
-  loadExpeditions();
 };
 // 日付
 function formatRange(dateStr){
@@ -1024,7 +1017,6 @@ window.moveUp = async function(order){
   // Firestore更新
   await updateDoc(doc(db,"players",a.id), { order: a.order });
   await updateDoc(doc(db,"players",b.id), { order: b.order });
-  await load();
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
@@ -1047,7 +1039,6 @@ window.moveDown = async function(order){
 
   await updateDoc(doc(db,"players",a.id), { order: a.order });
   await updateDoc(doc(db,"players",b.id), { order: b.order });
-  await load();
 };
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
@@ -1134,3 +1125,6 @@ window.saveMatchImage = async function(btn, matchNumber){
     }
   });
 };
+
+subscribePlayers();
+subscribeExpeditions();
