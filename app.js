@@ -796,6 +796,7 @@ ${p ? `
     weekDiv.appendChild(header);
     weekDiv.appendChild(content);
     container.appendChild(weekDiv);
+    });
   });
 }
 window.enableEdit = function(el){
