@@ -340,7 +340,7 @@ function render(){
 
     const tr=document.createElement("tr");
     tr.className="lane-header";
-    if(l === 0){
+    if(l === 0 || l === -1){
       tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
     }else{
       tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
