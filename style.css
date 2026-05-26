@@ -389,3 +389,14 @@ td { position: relative; }
   line-height: 1;
   border-radius: 4px;
 }
+/* ==============================
+   クラン外メンバー折り畳み
+============================== */
+.toggle-clanout{
+  cursor:pointer;
+  user-select:none;
+}
+
+.toggle-clanout:hover{
+  background:#444;
+}
