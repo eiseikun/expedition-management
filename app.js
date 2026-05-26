@@ -329,9 +329,9 @@ function render(){
   const body=document.getElementById("playerBody");
   body.innerHTML="";
   const total = 8;
-  const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え"};
+  const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"引退・移籍"};
 
-  [1,2,3,0].forEach(l=>{
+  [1,2,3,0,-1].forEach(l=>{
     const list=players.filter(p=>p.lane===l);
     if(!list.length)return;
 
