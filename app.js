@@ -279,7 +279,10 @@ window.saveTableImage = async function(){
   let hide = false;
   rows.forEach(row=>{
     if(row.classList.contains("lane-header")){
-      if(row.innerText.includes("控え")){
+      if(
+        row.innerText.includes("控え") ||
+        row.innerText.includes("引退")
+      ){
         hide = true;
         row.remove();
         return;
@@ -329,7 +332,7 @@ function render(){
   const body=document.getElementById("playerBody");
   body.innerHTML="";
   const total = 8;
-  const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"引退・移籍"};
+  const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"クラン外"};
 
   [1,2,3,0,-1].forEach(l=>{
     const list=players.filter(p=>p.lane===l);
