@@ -337,21 +337,42 @@ function render(){
   [1,2,3,0,-1].forEach(l=>{
     const list=players.filter(p=>p.lane===l);
     if(!list.length)return;
-
+    
     const tr=document.createElement("tr");
     tr.className="lane-header";
+    if(l === -1){
+      tr.classList.add("clanout-header");
+    }
     if(l === 0 || l === -1){
       tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
     }else{
       tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
     }
+    
     body.appendChild(tr);
-
     list.sort((a,b)=>a.order - b.order);
-
+    // クラン外は初期非表示
+    const hidden = (l === -1);
+    tr.innerHTML = `
+    <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
+    ${laneNames[l]} ${
+      (l === 0 || l === -1)
+      ? `(${list.length})`
+      : `(${list.length} / ${total})`
+    }
+    ${l === -1 ? ' ▼' : ''}
+    </td>
+    `;
+    
     list.forEach(p=>{
       const i=players.indexOf(p);
       const row=document.createElement("tr");
+      if(p.lane === -1){
+        row.classList.add("clanout-row");
+      }
+      if(hidden){
+        row.style.display = "none";
+      }
       if(p.lane === 1){
         row.classList.add("lane-1");
       }else if(p.lane === 2){
@@ -393,6 +414,27 @@ function render(){
     });
   });
 }
+// ===== クラン外開閉処理 =====
+document.addEventListener("click", function(e){
+
+  const toggle = e.target.closest(".toggle-clanout");
+  if(!toggle) return;
+
+  const hiddenRows = document.querySelectorAll(".clanout-row");
+
+  const isHidden =
+    hiddenRows.length > 0 &&
+    hiddenRows[0].style.display === "none";
+
+  hiddenRows.forEach(row=>{
+    row.style.display = isHidden ? "" : "none";
+  });
+
+  toggle.innerHTML = toggle.innerHTML.includes("▼")
+    ? toggle.innerHTML.replace("▼","▲")
+    : toggle.innerHTML.replace("▲","▼");
+
+});
 // ===== 初期ロード =====
 function subscribePlayers(){
 
