@@ -195,11 +195,9 @@ window.savePlayer = async function(){
     alert("名前と戦力必須");
     return;
   }
-
+  
   if(editIndex===null){
-    const docRef = await addDoc(collection(db,"players"), p);
-    players.push(p);
-    playerDocs.push(docRef.id);
+    await addDoc(collection(db,"players"), p);
   }else{
     await updateDoc(doc(db,"players",playerDocs[editIndex]), p);
     players[editIndex]=p;
