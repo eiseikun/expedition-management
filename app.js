@@ -413,6 +413,9 @@ function render(){
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
         <td class="comment-cell">
         ${p.comment ? `
+        <div class="comment-preview">
+        ${p.comment}
+        </div>
         <button onclick="toggleComment(this)">💬</button>
         <div class="comment-popup">
         ${p.comment}
