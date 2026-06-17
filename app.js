@@ -183,7 +183,6 @@ window.savePlayer = async function(){
     formation: document.getElementById("formation").value,
     mythic: Number(document.getElementById("mythic").value),
     legend: Number(document.getElementById("legend").value),
-    comment: document.getElementById("comment").value,
     lane: Number(document.getElementById("lane").value),
     
     order: editIndex === null ? Date.now() : players[editIndex].order,
@@ -226,8 +225,6 @@ window.editPlayer = function(order){
   document.getElementById("formation").value = p.formation;
   document.getElementById("mythic").value = p.mythic;
   document.getElementById("legend").value = p.legend;
-  document.getElementById("comment").value =
-  p.comment || "";
   document.getElementById("lane").value = p.lane;
 
   document.querySelectorAll("#chaos div").forEach(div=>{
@@ -294,8 +291,7 @@ window.saveTableImage = async function(){
 
   clone.querySelectorAll("tr").forEach(row=>{
     const cells = row.querySelectorAll("th, td");
-    if(cells.length >= 12){
-      cells[11]?.remove(); // コメント
+    if(cells.length >= 11){
       cells[10]?.remove();
       cells[9]?.remove();
       cells[8]?.remove();
@@ -346,9 +342,9 @@ function render(){
       tr.classList.add("clanout-header");
     }
     if(l === 0 || l === -1){
-      tr.innerHTML = `<td colspan="12">${laneNames[l]} (${list.length})</td>`;
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
     }else{
-      tr.innerHTML = `<td colspan="12">${laneNames[l]} (${list.length} / ${total})</td>`;
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
     }
     
     body.appendChild(tr);
@@ -356,7 +352,7 @@ function render(){
     // クラン外は初期非表示
     const hidden = (l === -1);
     tr.innerHTML = `
-    <td colspan="12" class="${l === -1 ? 'toggle-clanout' : ''}">
+    <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
     ${laneNames[l]} ${
       (l === 0 || l === -1)
       ? `(${list.length})`
@@ -411,24 +407,11 @@ function render(){
         </td>
         <td><button onclick="editPlayer(${p.order})">編集</button></td>
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
-        <td class="comment-cell">
-        ${p.comment ? `
-        <div class="comment-preview"
-        onclick="toggleComment(this)">
-        ${p.comment}
-        </div>
-        <div class="comment-popup">
-        ${p.comment}
-        </div>
-        ` : ""}
-        </td>
-        `;
+      `;
       body.appendChild(row);
     });
   });
 }
-
-
 // ===== クラン外開閉処理 =====
 document.addEventListener("click", function(e){
 
@@ -1185,19 +1168,6 @@ window.saveMatchImage = async function(btn, matchNumber){
       link.click();
     }
   });
-};
-// ===== コメント折り畳み =====
-window.toggleComment = function(preview){
-
-  const popup = preview.nextElementSibling;
-
-  document.querySelectorAll(".comment-popup").forEach(el=>{
-    if(el !== popup){
-      el.classList.remove("show");
-    }
-  });
-
-  popup.classList.toggle("show");
 };
 
 subscribePlayers();
