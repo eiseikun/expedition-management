@@ -411,9 +411,12 @@ function render(){
         </td>
         <td><button onclick="editPlayer(${p.order})">編集</button></td>
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
-        <td>
+        <td class="comment-cell">
         ${p.comment ? `
-        <button onclick="showComment(${i})">💬</button>
+        <button onclick="toggleComment(this)">💬</button>
+        <div class="comment-popup">
+        ${p.comment}
+        </div>
         ` : ""}
         </td>
       `;
@@ -422,16 +425,7 @@ function render(){
   });
 }
 
-window.showComment = function(index){
-  const p = players[index];
 
-  if(!p.comment){
-    alert("コメントなし");
-    return;
-  }
-
-  alert(p.comment);
-}
 // ===== クラン外開閉処理 =====
 document.addEventListener("click", function(e){
 
@@ -1188,6 +1182,19 @@ window.saveMatchImage = async function(btn, matchNumber){
       link.click();
     }
   });
+};
+// ===== コメント折り畳み =====
+window.toggleComment = function(btn){
+
+  const popup = btn.nextElementSibling;
+
+  document.querySelectorAll(".comment-popup").forEach(el=>{
+    if(el !== popup){
+      el.classList.remove("show");
+    }
+  });
+
+  popup.classList.toggle("show");
 };
 
 subscribePlayers();
