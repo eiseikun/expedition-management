@@ -403,4 +403,36 @@ td { position: relative; }
 .toggle-clanout:hover{
   background:#444;
 }
+/* ==============================
+   コメント
+============================== */
+.comment-cell{
+  position: relative;
+}
 
+.comment-popup{
+  display: none;
+
+  position: absolute;
+  left: 35px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  background: #222;
+  color: white;
+  border: 1px solid #666;
+  border-radius: 8px;
+
+  padding: 8px 12px;
+  min-width: 200px;
+  max-width: 400px;
+
+  white-space: normal;
+  text-align: left;
+
+  z-index: 1000;
+}
+
+.comment-popup.show{
+  display: block;
+}
