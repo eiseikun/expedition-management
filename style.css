@@ -400,3 +400,13 @@ td { position: relative; }
 .toggle-clanout:hover{
   background:#444;
 }
+/* ==============================
+   コメント
+============================== */
+.editor textarea{
+  width:100%;
+  box-sizing:border-box;
+  margin-bottom:14px;
+  padding:10px;
+  border-radius:8px;
+}
