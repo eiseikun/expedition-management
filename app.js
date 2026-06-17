@@ -356,7 +356,7 @@ function render(){
     // クラン外は初期非表示
     const hidden = (l === -1);
     tr.innerHTML = `
-    <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
+    <td colspan="12" class="${l === -1 ? 'toggle-clanout' : ''}">
     ${laneNames[l]} ${
       (l === 0 || l === -1)
       ? `(${list.length})`
