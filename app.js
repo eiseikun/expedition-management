@@ -183,6 +183,7 @@ window.savePlayer = async function(){
     formation: document.getElementById("formation").value,
     mythic: Number(document.getElementById("mythic").value),
     legend: Number(document.getElementById("legend").value),
+    comment: document.getElementById("comment").value,
     lane: Number(document.getElementById("lane").value),
     
     order: editIndex === null ? Date.now() : players[editIndex].order,
@@ -225,6 +226,8 @@ window.editPlayer = function(order){
   document.getElementById("formation").value = p.formation;
   document.getElementById("mythic").value = p.mythic;
   document.getElementById("legend").value = p.legend;
+  document.getElementById("comment").value =
+  p.comment || "";
   document.getElementById("lane").value = p.lane;
 
   document.querySelectorAll("#chaos div").forEach(div=>{
@@ -291,7 +294,8 @@ window.saveTableImage = async function(){
 
   clone.querySelectorAll("tr").forEach(row=>{
     const cells = row.querySelectorAll("th, td");
-    if(cells.length >= 11){
+    if(cells.length >= 12){
+      cells[11]?.remove(); // コメント
       cells[10]?.remove();
       cells[9]?.remove();
       cells[8]?.remove();
@@ -407,6 +411,7 @@ function render(){
         </td>
         <td><button onclick="editPlayer(${p.order})">編集</button></td>
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
+        <td>${p.comment || ""}</td>
       `;
       body.appendChild(row);
     });
