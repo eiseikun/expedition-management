@@ -413,16 +413,16 @@ function render(){
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
         <td class="comment-cell">
         ${p.comment ? `
-        <div class="comment-preview">
+        <div class="comment-preview"
+        onclick="toggleComment(this)">
         ${p.comment}
         </div>
-        <button onclick="toggleComment(this)">💬</button>
         <div class="comment-popup">
         ${p.comment}
         </div>
         ` : ""}
         </td>
-      `;
+        `;
       body.appendChild(row);
     });
   });
@@ -1187,9 +1187,9 @@ window.saveMatchImage = async function(btn, matchNumber){
   });
 };
 // ===== コメント折り畳み =====
-window.toggleComment = function(btn){
+window.toggleComment = function(preview){
 
-  const popup = btn.nextElementSibling;
+  const popup = preview.nextElementSibling;
 
   document.querySelectorAll(".comment-popup").forEach(el=>{
     if(el !== popup){
