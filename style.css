@@ -148,8 +148,11 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
 /* 入力系まとめて余白 */
 .editor input,
-.editor select {
-  margin-bottom: 14px;   /* ← ここが重要 */
+.editor select,
+.editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 14px;
   padding: 10px;
   border-radius: 8px;
 }
@@ -399,14 +402,4 @@ td { position: relative; }
 
 .toggle-clanout:hover{
   background:#444;
-}
-/* ==============================
-   コメント
-============================== */
-.editor textarea{
-  width:100%;
-  box-sizing:border-box;
-  margin-bottom:14px;
-  padding:10px;
-  border-radius:8px;
 }
