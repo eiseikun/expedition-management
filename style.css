@@ -407,32 +407,46 @@ td { position: relative; }
    コメント
 ============================== */
 .comment-cell{
-  position: relative;
+  position:relative;
+  max-width:120px;
 }
 
+/* 常時表示 */
+.comment-preview{
+  max-width:80px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:11px;
+  color:#ccc;
+  margin-bottom:3px;
+}
+
+/* 折り畳み本文 */
 .comment-popup{
-  display: none;
+  display:none;
 
-  position: absolute;
-  left: 35px;
-  top: 50%;
-  transform: translateY(-50%);
+  position:absolute;
+  left:0;
+  top:100%;
 
-  background: #222;
-  color: white;
-  border: 1px solid #666;
-  border-radius: 8px;
+  background:#222;
+  color:white;
 
-  padding: 8px 12px;
-  min-width: 200px;
-  max-width: 400px;
+  border:1px solid #555;
+  border-radius:6px;
 
-  white-space: normal;
-  text-align: left;
+  padding:8px;
 
-  z-index: 1000;
+  min-width:200px;
+  max-width:300px;
+
+  white-space:pre-wrap;
+  word-break:break-word;
+
+  z-index:1000;
 }
 
 .comment-popup.show{
-  display: block;
+  display:block;
 }
