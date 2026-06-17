@@ -417,9 +417,11 @@ td { position: relative; }
   overflow:hidden;
   white-space:nowrap;
   text-overflow:ellipsis;
+
   font-size:11px;
   color:#ccc;
-  margin-bottom:3px;
+
+  cursor:pointer;
 }
 
 /* 折り畳み本文 */
