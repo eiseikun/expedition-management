@@ -148,11 +148,8 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
 /* 入力系まとめて余白 */
 .editor input,
-.editor select,
-.editor textarea {
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 14px;
+.editor select {
+  margin-bottom: 14px;   /* ← ここが重要 */
   padding: 10px;
   border-radius: 8px;
 }
@@ -402,53 +399,4 @@ td { position: relative; }
 
 .toggle-clanout:hover{
   background:#444;
-}
-/* ==============================
-   コメント
-============================== */
-.comment-cell{
-  position:relative;
-  max-width:120px;
-}
-
-/* 常時表示 */
-.comment-preview{
-  max-width:80px;
-  overflow:hidden;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-
-  font-size:11px;
-  color:#ccc;
-
-  cursor:pointer;
-}
-
-/* 折り畳み本文 */
-.comment-popup{
-  display:none;
-
-  position:absolute;
-  left:0;
-  top:100%;
-
-  background:#222;
-  color:white;
-
-  border:1px solid #555;
-  border-radius:6px;
-
-  padding:8px;
-
-  min-width:200px;
-  max-width:300px;
-
-  white-space:pre-wrap;
-  word-break:break-word;
-
-  z-index:1000;
-}
-
-.comment-popup.show{
-  display:block;
 }
