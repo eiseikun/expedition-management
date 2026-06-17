@@ -346,9 +346,9 @@ function render(){
       tr.classList.add("clanout-header");
     }
     if(l === 0 || l === -1){
-      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
+      tr.innerHTML = `<td colspan="12">${laneNames[l]} (${list.length})</td>`;
     }else{
-      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
+      tr.innerHTML = `<td colspan="12">${laneNames[l]} (${list.length} / ${total})</td>`;
     }
     
     body.appendChild(tr);
@@ -411,11 +411,26 @@ function render(){
         </td>
         <td><button onclick="editPlayer(${p.order})">編集</button></td>
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
-        <td>${p.comment || ""}</td>
+        <td>
+        ${p.comment ? `
+        <button onclick="showComment(${i})">💬</button>
+        ` : ""}
+        </td>
       `;
       body.appendChild(row);
     });
   });
+}
+
+window.showComment = function(index){
+  const p = players[index];
+
+  if(!p.comment){
+    alert("コメントなし");
+    return;
+  }
+
+  alert(p.comment);
 }
 // ===== クラン外開閉処理 =====
 document.addEventListener("click", function(e){
