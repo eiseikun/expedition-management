@@ -4,6 +4,9 @@
 html, body {
   height: 100%;
 }
+html {
+  scroll-behavior: smooth;
+}
 body {
   font-family: sans-serif;     /* フォント */
   background: #111;            /* 背景色 */
@@ -11,6 +14,11 @@ body {
   text-align: center;          /* 中央寄せ */
   margin: 0;                   /* 余白なし */
   overflow-x: hidden;          /* 横スクロール防止 */
+  overscroll-behavior-y: contain; /* 引っ張って更新のバウンド防止 */
+  -webkit-tap-highlight-color: transparent; /* タップ時の青ハイライト消す */
+}
+* {
+  -webkit-overflow-scrolling: touch; /* iOSの慣性スクロール全体に */
 }
 /* モーダル開いてる時は背景スクロール禁止 */
 body.modal-open {
@@ -33,6 +41,9 @@ th,td{
 /* ヘッダー（タイトル行） */
 th{
   background:#222;            /* 少し明るい黒 */
+  position: sticky;           /* スクロールしても見出しを固定 */
+  top: 0;
+  z-index: 6;
 }
 /* レーン見出し（レーン1とか） */
 .lane-header{
@@ -48,6 +59,8 @@ tr:hover{
 /* 横スクロール用の外枠 */
 .table-container{
   overflow-x:auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
 }
 
 /* ==============================
@@ -118,8 +131,8 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   position: fixed;
   top: 20px;
   left: 50%;              /* ← 変更 */
-  transform: translateX(-50%); /* ← 中央寄せ */
-  
+  transform: translateX(-50%) translateY(0); /* ← 中央寄せ */
+
   width: calc(100% - 20px); /* ← スマホ対応 */
   max-width: 500px;         /* ← PCで広がらない */
 
@@ -131,9 +144,29 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 
   z-index: 9999;
   box-sizing: border-box;
+
+  animation: editorIn 0.22s ease-out;
+}
+@keyframes editorIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(14px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+/* モーダル背景の暗幕（body.modal-openの時に表示） */
+body.modal-open::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9998;
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* iPhoneの下の安全エリア対策 */
@@ -399,4 +432,245 @@ td { position: relative; }
 
 .toggle-clanout:hover{
   background:#444;
+}
+/* ==============================
+   v2 改良: 操作性・見た目・機能
+============================== */
+
+/* --- ボタンのタップ領域を広げる（誤タップ防止） --- */
+button {
+  min-height: 34px;
+  touch-action: manipulation; /* ダブルタップズーム無効化でワンタップの反応を速く */
+}
+#playerTable button,
+.lane-grid button {
+  min-width: 30px;
+}
+
+/* --- 行の増減・並び替え時のアニメーション --- */
+#playerBody tr,
+#expeditionContainer tr {
+  animation: rowIn 0.18s ease-out;
+}
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 開閉コンテンツをなめらかに（display:noneの代わりにJSでmax-heightを制御） --- */
+.collapsible {
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+.collapsible.closed {
+  max-height: 0 !important;
+  opacity: 0;
+}
+
+/* --- 検索バー --- */
+.search-bar {
+  max-width: 500px;
+  margin: 0 auto 12px;
+  padding: 0 10px;
+}
+.search-bar input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 20px;
+  border: 1px solid #444;
+  background: #1c1c1c;
+  color: white;
+  font-size: 14px;
+}
+.search-bar input:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+.empty-state {
+  padding: 24px;
+  color: #888;
+  font-size: 13px;
+}
+
+/* --- トースト通知（alertの代替） --- */
+.toast-container {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.toast {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  animation: toastIn 0.2s ease-out, toastOut 0.25s ease-in 2.2s forwards;
+  max-width: 400px;
+}
+.toast.toast-error { border-color: #f44336; }
+.toast.toast-success { border-color: #4caf50; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(-6px); }
+}
+
+/* --- カスタム確認ダイアログ（confirmの代替） --- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease-out;
+}
+.confirm-box {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 14px;
+  padding: 22px 20px;
+  width: calc(100% - 60px);
+  max-width: 320px;
+  text-align: center;
+  animation: editorIn 0.18s ease-out;
+}
+.confirm-box p {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.confirm-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.confirm-buttons button {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* --- 初期ローディング --- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  z-index: 10003;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: opacity 0.3s ease;
+}
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #333;
+  border-top-color: #4caf50;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.loading-text {
+  font-size: 12px;
+  color: #888;
+}
+
+/* --- ページ2: レーン列を横スクロール中も固定表示 --- */
+#expeditionContainer table td:first-child,
+#expeditionContainer table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: #1a1a1a;
+}
+#expeditionContainer table th:first-child {
+  z-index: 7;
+}
+
+/* --- スマホ：1ページ目テーブルをカード表示に切り替え --- */
+@media (max-width: 700px) {
+  #playerTable thead {
+    display: none; /* カード表示ではヘッダー行は不要 */
+  }
+  #playerTable, #playerTable tbody, #playerTable tr, #playerTable td {
+    display: block;
+    width: 100%;
+  }
+  #playerTable {
+    min-width: 0;
+  }
+  #playerTable tr.lane-header {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    margin-top: 10px;
+    border-radius: 8px;
+  }
+  #playerTable tbody tr:not(.lane-header) {
+    background: #1a1a1a;
+    border: 1px solid #2c2c2c;
+    border-radius: 10px;
+    margin: 8px 4px;
+    padding: 6px 4px 10px;
+  }
+  #playerTable tbody tr:not(.lane-header) td {
+    border: none;
+    white-space: normal;
+    text-align: left;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #playerTable tbody tr:not(.lane-header) td::before {
+    content: attr(data-label);
+    flex: 0 0 64px;
+    color: #888;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  #playerTable tbody tr:not(.lane-header) td.name-cell {
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px 8px 0 0;
+    font-size: 15px;
+  }
+  #playerTable tbody tr:not(.lane-header) td.name-cell::before {
+    content: "";
+    flex: 0;
+  }
+}
+
+/* --- 動きを抑えたい人向け（アクセシビリティ） --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
