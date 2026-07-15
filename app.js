@@ -15,59 +15,6 @@ let players = [];
 let playerDocs = [];
 let editIndex = null;
 
-// ===== v2: 状態保持（再描画でリセットされないように） =====
-let clanOutOpen = false;          // クラン外の開閉状態
-let openWeekIds = new Set();      // 2ページ目：開いている週のID
-let weekStateInitialized = false; // 初回だけ最新週を自動で開く
-let playerSearchTerm = "";        // プレイヤー検索キーワード
-let reorderLock = false;          // 並び替えの連打防止
-let firstPlayerLoad = true;       // 初期ローディング表示の制御
-
-// ===== v2: トースト通知（alertの代わり） =====
-function showToast(msg, type = ""){
-  const container = document.getElementById("toastContainer");
-  if(!container){ return; }
-  const el = document.createElement("div");
-  el.className = "toast" + (type ? ` toast-${type}` : "");
-  el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(()=> el.remove(), 2500);
-}
-
-// ===== v2: カスタム確認ダイアログ（confirmの代わり） =====
-function showConfirm(msg){
-  return new Promise(resolve=>{
-    const overlay = document.getElementById("confirmOverlay");
-    document.getElementById("confirmMessage").textContent = msg;
-    overlay.style.display = "flex";
-    const okBtn = document.getElementById("confirmOkBtn");
-    const cancelBtn = document.getElementById("confirmCancelBtn");
-    function cleanup(result){
-      overlay.style.display = "none";
-      okBtn.removeEventListener("click", onOk);
-      cancelBtn.removeEventListener("click", onCancel);
-      resolve(result);
-    }
-    function onOk(){ cleanup(true); }
-    function onCancel(){ cleanup(false); }
-    okBtn.addEventListener("click", onOk);
-    cancelBtn.addEventListener("click", onCancel);
-  });
-}
-
-// ===== v2: スクロール位置を保持したまま再描画する =====
-function preserveScroll(renderFn){
-  const y = window.scrollY;
-  renderFn();
-  requestAnimationFrame(()=> window.scrollTo(0, y));
-}
-
-// ===== v2: 初期ローディング表示を消す =====
-function hideLoadingOverlay(){
-  const el = document.getElementById("loadingOverlay");
-  if(el) el.classList.add("hidden");
-}
-
 
 // ===== ページ切替 =====
 window.showPage = async function(n){
@@ -245,7 +192,7 @@ window.savePlayer = async function(){
   };
 
   if(!p.name || isNaN(p.power)){
-    showToast("名前と戦力必須", "error");
+    alert("名前と戦力必須");
     return;
   }
   
@@ -311,7 +258,7 @@ window.deletePlayer = async function(order){
   const i = players.findIndex(p => p.order === order);
   if(i === -1) return;
 
-  if(!(await showConfirm("削除しますか？"))) return;
+  if(!confirm("削除しますか？")) return;
 
   await deleteDoc(doc(db,"players",playerDocs[i]));
   players.splice(i,1);
@@ -381,38 +328,29 @@ function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
 
 function render(){
   const body=document.getElementById("playerBody");
-  const emptyState=document.getElementById("playerEmptyState");
   body.innerHTML="";
   const total = 8;
   const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"クラン外"};
 
-  const term = playerSearchTerm.trim().toLowerCase();
-  const searchActive = term.length > 0;
-  let anyVisible = false;
-
   [1,2,3,0,-1].forEach(l=>{
-    const laneList=players.filter(p=>p.lane===l);
-    if(!laneList.length)return;
-
-    // 検索中はレーン内で名前が一致するプレイヤーだけ表示
-    const list = searchActive
-      ? laneList.filter(p=>(p.name||"").toLowerCase().includes(term))
-      : laneList;
-
-    if(searchActive && !list.length) return; // 検索でこのレーンが空なら見出しごと非表示
-
-    anyVisible = true;
-
+    const list=players.filter(p=>p.lane===l);
+    if(!list.length)return;
+    
     const tr=document.createElement("tr");
     tr.className="lane-header";
     if(l === -1){
       tr.classList.add("clanout-header");
     }
-
+    if(l === 0 || l === -1){
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
+    }else{
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
+    }
+    
     body.appendChild(tr);
     list.sort((a,b)=>a.order - b.order);
-    // クラン外は状態を保持（毎回リセットしない）。検索中は強制的に開く
-    const hidden = (l === -1) && !clanOutOpen && !searchActive;
+    // クラン外は初期非表示
+    const hidden = (l === -1);
     tr.innerHTML = `
     <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
     ${laneNames[l]} ${
@@ -420,11 +358,12 @@ function render(){
       ? `(${list.length})`
       : `(${list.length} / ${total})`
     }
-    ${l === -1 ? (hidden ? ' ▼' : ' ▲') : ''}
+    ${l === -1 ? ' ▼' : ''}
     </td>
     `;
-
+    
     list.forEach(p=>{
+      const i=players.indexOf(p);
       const row=document.createElement("tr");
       if(p.lane === -1){
         row.classList.add("clanout-row");
@@ -447,8 +386,8 @@ function render(){
       ${p.updatedAt ? `<span class="update-time">${p.updatedAt}</span>` : ""}
       </div>
       </td>
-        <td data-label="戦力">${formatPower(p.power)}</td>
-        <td data-label="戦術">
+        <td>${formatPower(p.power)}</td>
+        <td>
         <span class="strategy-label ${
           p.range === "近距離" ? "strategy-close" :
           p.range === "中距離" ? "strategy-mid" :
@@ -457,46 +396,36 @@ function render(){
         ${p.range} / ${p.style}
         </span>
         </td>
-        <td data-label="装備">${gearText(p.gearDetail)}</td>
-        <td data-label="主キャラ">${p.hero}</td>
-        <td data-label="ルーン">${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
-        <td data-label="編成">${p.formation}</td>
-        <td data-label="聖物%">${relicBuff(p.mythic,p.legend)}</td>
-        <td data-label="並び替え">
+        <td>${gearText(p.gearDetail)}</td>
+        <td>${p.hero}</td>
+        <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
+        <td>${p.formation}</td>
+        <td>${relicBuff(p.mythic,p.legend)}</td>
+        <td>
         <button onclick="moveUp(${p.order})">↑</button>
         <button onclick="moveDown(${p.order})">↓</button>
         </td>
-        <td data-label="編集"><button onclick="editPlayer(${p.order})">編集</button></td>
-        <td data-label="削除"><button onclick="deletePlayer(${p.order})">削除</button></td>
+        <td><button onclick="editPlayer(${p.order})">編集</button></td>
+        <td><button onclick="deletePlayer(${p.order})">削除</button></td>
       `;
       body.appendChild(row);
     });
   });
-
-  if(emptyState){
-    emptyState.style.display = anyVisible ? "none" : "block";
-  }
 }
-
-// ===== v2: プレイヤー検索 =====
-const playerSearchInput = document.getElementById("playerSearch");
-if(playerSearchInput){
-  playerSearchInput.addEventListener("input", function(){
-    playerSearchTerm = this.value;
-    preserveScroll(render);
-  });
-}
-// ===== クラン外開閉処理（状態を保持して再描画のたびにリセットされないように） =====
+// ===== クラン外開閉処理 =====
 document.addEventListener("click", function(e){
 
   const toggle = e.target.closest(".toggle-clanout");
   if(!toggle) return;
 
-  clanOutOpen = !clanOutOpen;
-
   const hiddenRows = document.querySelectorAll(".clanout-row");
+
+  const isHidden =
+    hiddenRows.length > 0 &&
+    hiddenRows[0].style.display === "none";
+
   hiddenRows.forEach(row=>{
-    row.style.display = clanOutOpen ? "" : "none";
+    row.style.display = isHidden ? "" : "none";
   });
 
   toggle.innerHTML = toggle.innerHTML.includes("▼")
@@ -536,9 +465,7 @@ function subscribePlayers(){
       used.add(p.order);
     });
 
-    preserveScroll(render);
-    hideLoadingOverlay();
-    firstPlayerLoad = false;
+    render();
   });
 }
 
@@ -567,11 +494,11 @@ const damageShortNames = {
 
 window.addMatch = async function(matchNumber){
   if(players.length === 0){
-  showToast("プレイヤーが読み込まれていません。ページ1を開いてください", "error");
+  alert("プレイヤーが読み込まれていません。ページ1を開いてください");
   return;
 }
   const date = document.getElementById("weekDate").value;
-  if(!date){ showToast("日付を選択して", "error"); return; }
+  if(!date) return alert("日付を選択して");
   const matchPlayers = players
   .filter(p => p.lane >= 1 && p.lane <= 3)
   .sort((a,b)=>a.order - b.order)
@@ -654,11 +581,11 @@ window.addMatchToWeek = async function(docId, matchNumber){
 // ===== 週保存（1回戦のみ作成）=====
 window.saveWeek = async function(){
   if(players.length === 0){
-    showToast("プレイヤーが読み込まれていません。ページ1を開いてください", "error");
+    alert("プレイヤーが読み込まれていません。ページ1を開いてください");
     return;
   }
   const date = document.getElementById("weekDate").value;
-  if(!date){ showToast("日付を選択して", "error"); return; }
+  if(!date) return alert("日付を選択して");
   
   // プレイヤーデータ作成
   const matchPlayers = players
@@ -695,11 +622,11 @@ window.saveWeek = async function(){
   // 2ページ目データ削除
 window.deleteMatch = async function(matchNumber){
   const date = document.getElementById("weekDate").value;
-if(!date){ showToast("日付を選択して", "error"); return; }
+if(!date) return alert("日付を選択して");
   const snap = await getDocs(collection(db,"expeditions"));
   const docSnap = snap.docs.find(d=>d.data().date === date);
   if(!docSnap){
-    showToast("この週のデータがありません", "error");
+    alert("この週のデータがありません");
     return;
   }
   const data = docSnap.data();
@@ -713,22 +640,13 @@ if(!date){ showToast("日付を選択して", "error"); return; }
 // 表示（横テーブル＋レーン区切り）
 function subscribeExpeditions(){
   onSnapshot(collection(db,"expeditions"), (snap)=>{
+    const container = document.getElementById("expeditionContainer");
+    container.innerHTML = "";
     const docs = snap.docs.sort(
       (a,b)=> new Date(b.data().date) - new Date(a.data().date)
     );
-
-    // 初回だけ最新週を自動で開く。以降はユーザーが開閉した状態を保持する。
-    if(!weekStateInitialized){
-      if(docs[0]) openWeekIds.add(docs[0].id);
-      weekStateInitialized = true;
-    }
-
-    const container = document.getElementById("expeditionContainer");
-    preserveScroll(()=>{
-      container.innerHTML = "";
-      docs.forEach((d)=>{
+    docs.forEach((d,index)=>{
       const exp = d.data();
-      const isOpen = openWeekIds.has(d.id);
     const weekDiv = document.createElement("div");
     weekDiv.className = "week-block";
     const header = document.createElement("div");
@@ -756,42 +674,21 @@ header.innerHTML = `
     header.style.cursor = "pointer";
 
     const content = document.createElement("div");
-    content.className = "collapsible";
-    // 開閉状態はopenWeekIdsで保持（再描画されても維持される）
-    if(!isOpen){
-      content.style.maxHeight = "0px";
-      content.style.opacity = "0";
+    // 最新週だけ開く
+    if(index !== 0){
+      content.style.display = "none";
     }
     // 閉じてる週はボタン非表示
-    if(!isOpen){
+    if(index !== 0){
       header.querySelectorAll("button").forEach(btn => {
         btn.style.display = "none";
       });
     }
     header.onclick = (e) => {
-      const nowOpen = openWeekIds.has(d.id);
-      if(nowOpen){
-        // 閉じる
-        content.style.maxHeight = content.scrollHeight + "px";
-        requestAnimationFrame(()=>{
-          content.style.maxHeight = "0px";
-          content.style.opacity = "0";
-        });
-        openWeekIds.delete(d.id);
-      }else{
-        // 開く
-        content.style.maxHeight = content.scrollHeight + "px";
-        content.style.opacity = "1";
-        content.addEventListener("transitionend", function handler(ev){
-          if(ev.propertyName === "max-height"){
-            content.style.maxHeight = "none"; // 中身が増えても対応できるように
-            content.removeEventListener("transitionend", handler);
-          }
-        });
-        openWeekIds.add(d.id);
-      }
+      const isHidden = content.style.display === "none";
+      content.style.display = isHidden ? "block" : "none";
       header.querySelectorAll("button").forEach(btn => {
-        btn.style.display = nowOpen ? "none" : "inline-block";
+        btn.style.display = isHidden ? "inline-block" : "none";
       });
     };
     const table = document.createElement("table");
@@ -942,9 +839,7 @@ ${p ? `
     weekDiv.appendChild(header);
     weekDiv.appendChild(content);
     container.appendChild(weekDiv);
-      });
     });
-    hideLoadingOverlay();
   });
 }
 window.enableEdit = function(el){
@@ -1062,7 +957,7 @@ window.resetLane = async function(docId, matchNumber, lane){
 // 回戦削除（週指定）
 window.deleteMatchByWeek = async function(docId, matchNumber){
 
-  if(!(await showConfirm("この回戦を削除しますか？"))) return;
+  if(!confirm("この回戦を削除しますか？")) return;
 
   const ref = doc(db,"expeditions",docId);
   const snap = await getDocs(collection(db,"expeditions"));
@@ -1076,7 +971,7 @@ window.deleteMatchByWeek = async function(docId, matchNumber){
 // 週ごと削除
 window.deleteWeek = async function(docId){
 
-  if(!(await showConfirm("この週を全部削除しますか？"))) return;
+  if(!confirm("この週を全部削除しますか？")) return;
 
   await deleteDoc(doc(db,"expeditions",docId));
 };
@@ -1105,7 +1000,7 @@ document.getElementById("weekDate").addEventListener("input", function(){
   const date = new Date(this.value);
   const day = date.getDay(); // 0=日〜6=土
   if(day !== 5){
-    showToast("金曜日を選択してください", "error");
+    alert("金曜日を選択してください");
     this.value = "";
   }
 });
@@ -1145,7 +1040,6 @@ window.updatePlayer = async function(order){
 // 1ページ目並べ替えの中身
 // ===== 並び替え（上）=====
 window.moveUp = async function(order){
-  if(reorderLock) return; // 連打で順序が壊れるのを防止
   const target = players.find(p => p.order === order);
   if(!target) return;
 
@@ -1164,18 +1058,12 @@ window.moveUp = async function(order){
   a.order = b.order;
   b.order = temp;
 
-  reorderLock = true;
-  try{
-    // Firestore更新
-    await updateDoc(doc(db,"players",a.id), { order: a.order });
-    await updateDoc(doc(db,"players",b.id), { order: b.order });
-  } finally {
-    reorderLock = false;
-  }
+  // Firestore更新
+  await updateDoc(doc(db,"players",a.id), { order: a.order });
+  await updateDoc(doc(db,"players",b.id), { order: b.order });
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
-  if(reorderLock) return; // 連打で順序が壊れるのを防止
   const target = players.find(p => p.order === order);
   if(!target) return;
 
@@ -1193,13 +1081,8 @@ window.moveDown = async function(order){
   a.order = b.order;
   b.order = temp;
 
-  reorderLock = true;
-  try{
-    await updateDoc(doc(db,"players",a.id), { order: a.order });
-    await updateDoc(doc(db,"players",b.id), { order: b.order });
-  } finally {
-    reorderLock = false;
-  }
+  await updateDoc(doc(db,"players",a.id), { order: a.order });
+  await updateDoc(doc(db,"players",b.id), { order: b.order });
 };
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
