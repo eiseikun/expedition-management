@@ -1,124 +1,1218 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ねこ海賊団 遠征管理</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
-</head>
-<body>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, onSnapshot, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<h1>ねこ海賊団 遠征管理</h1>
-<div class="mode-indicator" id="modeIndicator">通常モード</div>
+// ===== Firebase =====
+const firebaseConfig = {
+  apiKey: "AIzaSyCflhFHEMcgqfkr6Dhp4SwlC1A8dmcMwWE",
+  authDomain: "expedition-management-date.firebaseapp.com",
+  projectId: "expedition-management-date",
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-<div class="top-buttons" id="topButtons">
-  <button onclick="openEditor()">プレイヤー追加</button>
-  <button onclick="saveTableImage()">画像保存</button>
-</div>
+// ===== データ =====
+let players = [];
+let playerDocs = [];
+let editIndex = null;
 
-<div class="page-buttons">
-  <button onclick="showPage(1)">ページ1</button>
-  <button onclick="showPage(2)">ページ2</button>
-</div>
+// ===== UI状態（再描画されても消えないように保持）=====
+let clanoutOpen = false;           // クラン外の開閉状態
+let openWeekIds = new Set();       // 開いている週ブロックのdocId
+let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
+let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
 
-<!-- ===== 1ページ目 ===== -->
-<div class="table-container" id="captureArea">
-  <table id="playerTable">
-    <thead>
-      <tr>
-        <th>名前</th><th>戦力</th><th>戦術</th><th>装備</th><th>主キャラ</th>
-        <th>ルーン</th><th>編成</th><th>聖物%</th><th>並び替え</th><th>編集</th><th>削除</th>
-      </tr>
-    </thead>
-    <tbody id="playerBody"></tbody>
-  </table>
-</div>
 
-<!-- ===== 2ページ目 ===== -->
-<div class="table-container" id="page2" style="display:none;">
-  <h2>遠征記録（週ごと）</h2>
-<div class="expedition-controls">
-  日付：
-  <input id="weekDate" placeholder="金曜日を選択">
-  <button onclick="saveWeek()">週を保存（1回戦）</button>
-</div>
-  <div id="expeditionContainer"></div>
-</div>
+// ===== ページ切替 =====
+window.showPage = async function(n){
+  const page1 = document.getElementById("captureArea");
+  const page2 = document.getElementById("page2");
+  const topButtons = document.getElementById("topButtons");
 
-<!-- モーダル（1ページ目用） -->
-<div id="editor" class="editor" style="display:none;">
-  <h2>プレイヤー追加 / 編集</h2>
-  <input id="name" placeholder="名前">
-  <input id="power" type="number" placeholder="戦力">
-  <select id="range">
-    <option>遠距離</option>
-    <option>中距離</option>
-    <option>近距離</option>
-  </select>
-  <select id="style">
-    <option>バランス</option>
-    <option>攻撃優先</option>
-    <option>移動優先</option>
-    <option>取得優先</option>
-  </select>
-  <h3>装備</h3>
-  <div id="chaos" class="gear-grid"></div>
-  <h3>ルーン</h3>
-  <div class="rune-row">
-    <span>鋭利</span>
-    <select id="sharpQuality">
+  page1.style.display = (n === 1) ? "block" : "none";
+  page2.style.display = (n === 2) ? "block" : "none";
+  topButtons.style.display = (n === 1) ? "flex" : "none";
+
+};
+
+// ===== モーダル =====
+window.openEditor = function(){
+  document.body.classList.add("modal-open");
+  document.getElementById("editor").style.display = "block";
+  document.getElementById("modeIndicator").innerText = "追加モード";
+
+  document.querySelectorAll("#editor input").forEach(i=>i.value="");
+  document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
+  editIndex = null;
+};
+
+window.closeEditor = function(){
+  document.body.classList.remove("modal-open");
+  document.getElementById("editor").style.display = "none";
+  document.getElementById("modeIndicator").innerText = "通常モード";
+};
+
+// ===== ルーン =====
+const runeOptions = {
+  炎毒の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
+  氷雷の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
+  ドラスト: ["キャノドラ"],
+  苦痛の輪: ["サークルダメup","サークル会心ダメup","固有","クリダメ軽減"],
+  炎毒の触: ["エレダメup","エレ会心ダメup","固有","クリダメ軽減"],
+  氷雷の触: ["エレダメup","エレ会心ダメup","固有","クリダメ軽減"],
+  ストポショ: ["無敵効果"]
+};
+
+function updateEnchant(nameSelect, enchantSelect){
+  const effects = runeOptions[nameSelect.value] || [];
+  enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
+}
+
+window.addSelectRune = function(rune = {name:"炎毒の印", q:"none", e:""}){
+  const div = document.createElement("div");
+  div.className = "rune-row";
+  div.innerHTML = `
+    <select class="rune-name">
+      ${Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("")}
+    </select>
+    <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
     </select>
-    <select id="sharpEnchant">
-      <option>跳ね返り</option>
-      <option>主武器up</option>
-      <option>メイン会心率up</option>
-      <option>クリダメUP</option>
-    </select>
-  </div>
-  <div class="rune-row">
-    <span>アロレ</span>
-    <select id="arrowQuality">
+    <select class="rune-e"></select>
+    <button onclick="this.parentNode.remove()">削除</button>
+  `;
+  const nameSel = div.querySelector(".rune-name");
+  const qSel = div.querySelector(".rune-q");
+  const eSel = div.querySelector(".rune-e");
+  nameSel.value = rune.name;
+  qSel.value = rune.q;
+  updateEnchant(nameSel, eSel);
+  eSel.value = rune.e;
+  nameSel.onchange = () => updateEnchant(nameSel, eSel);
+  document.getElementById("runeContainer").appendChild(div);
+};
+
+window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
+  const div = document.createElement("div");
+  div.className = "rune-row";
+  div.innerHTML = `
+    <input class="rune-name" placeholder="ルーン名" value="${rune.name}">
+    <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
     </select>
-    <select id="arrowEnchant">
-      <option>固有</option>
-      <option>主武器UP</option>
-      <option>メイン会心ダメUP</option>
-      <option>クリダメ軽減</option>
-    </select>
-  </div>
-  <div id="runeContainer"></div>
-  <div style="margin-top:10px;">
-    <button onclick="addSelectRune()">選択ルーン追加</button>
-    <button onclick="addFreeRune()">自由ルーン追加</button>
-  </div>
-  <h3>その他</h3>
-  <input id="hero" placeholder="主キャラ">
-  <input id="formation" placeholder="編成">
-  <input id="mythic" placeholder="ミシック数">
-  <input id="legend" placeholder="レジェンド数">
-  <select id="lane">
-    <option value="-1">クラン外</option>
-    <option value="0">控え</option>
-    <option value="1">レーン1</option>
-    <option value="2">レーン2</option>
-    <option value="3">レーン3</option>
+    <input class="rune-e" placeholder="効果" value="${rune.e}">
+    <button onclick="this.parentNode.remove()">削除</button>
+  `;
+  div.querySelector(".rune-q").value = rune.q;
+  document.getElementById("runeContainer").appendChild(div);
+};
+
+// ===== 装備 =====
+const parts = ["武器","兜","お守り","鎧","指輪","靴"];
+document.getElementById("chaos").innerHTML = parts.map(p=>`
+<div>
+  <label>${p}</label>
+  <select data-part="${p}" data-type="set">
+    <option value="">なし</option>
+    <option>神託</option>
+    <option>ドラグーン</option>
+    <option>グリフォン</option>
   </select>
-  <div class="editor-footer">
-    <button onclick="savePlayer()">保存</button>
-    <button onclick="closeEditor()">閉じる</button>
+  <select data-part="${p}" data-type="quality">
+    <option value="">なし</option>
+    <option value="chaos">カオス</option>
+    <option value="mythic">ミシック</option>
+    <option value="legend">レジェンド</option>
+  </select>
+</div>
+`).join("");
+
+// ===== 表示用関数 =====
+function gearText(gearDetail){
+  const mark = {神託:"神",ドラグーン:"ド",グリフォン:"グ"};
+  return `<div class="gear-box">${parts.map(p=>{
+    const g = gearDetail?.find(x=>x.part===p);
+    return `<div class="cell ${g?.type||"empty"}">${g?mark[g.set]:""}</div>`;
+  }).join("")}</div>`;
+}
+
+function runeHTML(name,q,e){
+  if(q==="none") return "";
+  let cls = "rune ";
+  if(q==="mythic") cls+="rune-mythic";
+  else if(q==="legend") cls+="rune-legend";
+  return `<div class="${cls}">${name}<br>${e}</div>`;
+}
+
+// ===== 保存 =====
+window.savePlayer = async function(){
+  const runes = [];
+  if(document.getElementById("sharpQuality").value!=="none"){
+    runes.push({
+      name:"鋭利",
+      q:document.getElementById("sharpQuality").value,
+      e:document.getElementById("sharpEnchant").value
+    });
+  }
+  if(document.getElementById("arrowQuality").value!=="none"){
+    runes.push({
+      name:"アロレ",
+      q:document.getElementById("arrowQuality").value,
+      e:document.getElementById("arrowEnchant").value
+    });
+  }
+  document.querySelectorAll("#runeContainer .rune-row").forEach(row=>{
+    const name = row.querySelector(".rune-name").value;
+    const q = row.querySelector(".rune-q").value;
+    const e = row.querySelector(".rune-e").value;
+    if(name && q!=="none") runes.push({name,q,e});
+  });
+
+  const gearDetail = [];
+  document.querySelectorAll("#chaos div").forEach(div=>{
+    const set = div.querySelector("[data-type='set']").value;
+    const type = div.querySelector("[data-type='quality']").value;
+    const part = div.querySelector("[data-type='set']").dataset.part;
+    if(set && type) gearDetail.push({part,set,type});
+  });
+
+  const p = {
+    name: document.getElementById("name").value.trim(),
+    power: Number(document.getElementById("power").value),
+    updatedAt: editIndex !== null ? players[editIndex].updatedAt || "" : "",
+    range: document.getElementById("range").value,
+    style: document.getElementById("style").value,
+    hero: document.getElementById("hero").value,
+    formation: document.getElementById("formation").value,
+    mythic: Number(document.getElementById("mythic").value),
+    legend: Number(document.getElementById("legend").value),
+    lane: Number(document.getElementById("lane").value),
+    
+    order: editIndex === null ? Date.now() : players[editIndex].order,
+    
+    gearDetail,
+    runes
+  };
+
+  if(!p.name || isNaN(p.power)){
+    alert("名前と戦力必須");
+    return;
+  }
+  
+  if(editIndex===null){
+    await addDoc(collection(db,"players"), p);
+  }else{
+    await updateDoc(doc(db,"players",playerDocs[editIndex]), p);
+    players[editIndex]=p;
+    editIndex=null;
+  }
+
+  closeEditor();
+  render();
+};
+
+// ===== 編集 =====
+window.editPlayer = function(order){
+  const i = players.findIndex(p => p.order === order);
+  if(i === -1) return;
+
+  const p = players[i];
+  openEditor();
+  editIndex = i;
+
+  document.getElementById("name").value = p.name;
+  document.getElementById("power").value = p.power;
+  document.getElementById("range").value = p.range;
+  document.getElementById("style").value = p.style;
+  document.getElementById("hero").value = p.hero;
+  document.getElementById("formation").value = p.formation;
+  document.getElementById("mythic").value = p.mythic;
+  document.getElementById("legend").value = p.legend;
+  document.getElementById("lane").value = p.lane;
+
+  document.querySelectorAll("#chaos div").forEach(div=>{
+    const part = div.querySelector("[data-type='set']").dataset.part;
+    const g = p.gearDetail?.find(x=>x.part===part);
+    div.querySelector("[data-type='set']").value = g?.set || "";
+    div.querySelector("[data-type='quality']").value = g?.type || "";
+  });
+
+  document.getElementById("runeContainer").innerHTML = "";
+  document.getElementById("sharpQuality").value = "none";
+  document.getElementById("arrowQuality").value = "none";
+
+  (p.runes || []).forEach(r=>{
+    if(r.name === "鋭利"){
+      document.getElementById("sharpQuality").value = r.q;
+      document.getElementById("sharpEnchant").value = r.e;
+    }else if(r.name === "アロレ"){
+      document.getElementById("arrowQuality").value = r.q;
+      document.getElementById("arrowEnchant").value = r.e;
+    }else if(runeOptions[r.name]){
+      addSelectRune(r);
+    }else{
+      addFreeRune(r);
+    }
+  });
+};
+
+// ===== 削除 =====
+window.deletePlayer = async function(order){
+  const i = players.findIndex(p => p.order === order);
+  if(i === -1) return;
+
+  if(!confirm("削除しますか？")) return;
+
+  await deleteDoc(doc(db,"players",playerDocs[i]));
+  players.splice(i,1);
+  playerDocs.splice(i,1);
+
+  render(); // ← ついでにこれも追加
+};
+  
+
+// ===== 画像保存 =====
+window.saveTableImage = async function(){
+  const original = document.getElementById("captureArea");
+  const clone = original.cloneNode(true);
+  clone.querySelectorAll(".update-btn, .update-time").forEach(el => el.remove());
+  const rows = clone.querySelectorAll("tr");
+  let hide = false;
+  rows.forEach(row=>{
+    if(row.classList.contains("lane-header")){
+      if(
+        row.innerText.includes("控え") ||
+        row.innerText.includes("引退")
+      ){
+        hide = true;
+        row.remove();
+        return;
+      }else hide=false;
+    }
+    if(hide) row.remove();
+  });
+
+  clone.querySelectorAll("tr").forEach(row=>{
+    const cells = row.querySelectorAll("th, td");
+    if(cells.length >= 11){
+      cells[10]?.remove();
+      cells[9]?.remove();
+      cells[8]?.remove();
+    }
+  });
+
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{scale:3, backgroundColor:"#111", width:clone.scrollWidth});
+  document.body.removeChild(clone);
+
+  canvas.toBlob(async blob=>{
+    const file=new File([blob],"expedition.png",{type:"image/png"});
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="expedition.png";
+      link.click();
+    }
+  });
+};
+
+// ===== 表示 =====
+function formatPower(v){return v.toFixed(2)+"M";}
+function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
+
+function render(){
+  const y = window.scrollY;
+  const body=document.getElementById("playerBody");
+  body.innerHTML="";
+  const total = 8;
+  const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"クラン外"};
+
+  [1,2,3,0,-1].forEach(l=>{
+    const list=players.filter(p=>p.lane===l);
+    if(!list.length)return;
+    
+    const tr=document.createElement("tr");
+    tr.className="lane-header";
+    if(l === -1){
+      tr.classList.add("clanout-header");
+    }
+    if(l === 0 || l === -1){
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
+    }else{
+      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
+    }
+    
+    body.appendChild(tr);
+    list.sort((a,b)=>a.order - b.order);
+    // クラン外は前回の開閉状態を維持（毎回勝手に閉じないように）
+    const hidden = (l === -1) && !clanoutOpen;
+    tr.innerHTML = `
+    <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
+    ${laneNames[l]} ${
+      (l === 0 || l === -1)
+      ? `(${list.length})`
+      : `(${list.length} / ${total})`
+    }
+    ${l === -1 ? (clanoutOpen ? ' ▲' : ' ▼') : ''}
+    </td>
+    `;
+    
+    list.forEach(p=>{
+      const i=players.indexOf(p);
+      const row=document.createElement("tr");
+      if(p.lane === -1){
+        row.classList.add("clanout-row");
+      }
+      if(hidden){
+        row.style.display = "none";
+      }
+      if(p.lane === 1){
+        row.classList.add("lane-1");
+      }else if(p.lane === 2){
+        row.classList.add("lane-2");
+      }else if(p.lane === 3){
+        row.classList.add("lane-3");
+      }
+      row.innerHTML=`
+      <td class="name-cell">
+      <div class="player-name">${p.name}</div>
+      <div class="update-row">
+      <button class="update-btn" onclick="updatePlayer(${p.order})">更新</button>
+      ${p.updatedAt ? `<span class="update-time">${p.updatedAt}</span>` : ""}
+      </div>
+      </td>
+        <td>${formatPower(p.power)}</td>
+        <td>
+        <span class="strategy-label ${
+          p.range === "近距離" ? "strategy-close" :
+          p.range === "中距離" ? "strategy-mid" :
+          "strategy-long"
+        }">
+        ${p.range} / ${p.style}
+        </span>
+        </td>
+        <td>${gearText(p.gearDetail)}</td>
+        <td>${p.hero}</td>
+        <td><div class="rune-list">${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</div></td>
+        <td>${p.formation}</td>
+        <td>${relicBuff(p.mythic,p.legend)}</td>
+        <td>
+        <button onclick="moveUp(${p.order})">↑</button>
+        <button onclick="moveDown(${p.order})">↓</button>
+        </td>
+        <td><button onclick="editPlayer(${p.order})">編集</button></td>
+        <td><button onclick="deletePlayer(${p.order})">削除</button></td>
+      `;
+      body.appendChild(row);
+    });
+  });
+  // 再描画でスクロール位置が飛ばないように復元
+  window.scrollTo(0, y);
+}
+// ===== クラン外開閉処理 =====
+document.addEventListener("click", function(e){
+
+  const toggle = e.target.closest(".toggle-clanout");
+  if(!toggle) return;
+
+  clanoutOpen = !clanoutOpen;
+
+  const hiddenRows = document.querySelectorAll(".clanout-row");
+  hiddenRows.forEach(row=>{
+    row.style.display = clanoutOpen ? "" : "none";
+  });
+
+  toggle.innerHTML = toggle.innerHTML.includes("▼")
+    ? toggle.innerHTML.replace("▼","▲")
+    : toggle.innerHTML.replace("▲","▼");
+
+});
+// ===== 初期ロード =====
+function subscribePlayers(){
+
+  onSnapshot(collection(db,"players"), (snap)=>{
+
+    players = [];
+    playerDocs = [];
+
+    snap.forEach(d=>{
+      players.push({
+        id: d.id,
+        ...d.data()
+      });
+
+      playerDocs.push(d.id);
+    });
+
+    // order重複防止
+    const used = new Set();
+
+    players.forEach((p,i)=>{
+      if(p.order === undefined){
+        p.order = i;
+      }
+
+      while(used.has(p.order)){
+        p.order += 1;
+      }
+
+      used.add(p.order);
+    });
+
+    render();
+  });
+}
+
+
+// ============================
+// ===== ここから2ページ目 =====
+// ============================
+// タグ・火力色設定（ページ2用）
+const damageColors = {
+  "メイン武器": "#ff4d4f",
+  "エレメント": "#4096ff",
+  "爆発": "#ff7a45",
+  "ストライク": "#69c0ff",
+  "メテオ": "#ad4e00",
+  "サークル": "#b37feb",
+  "精霊": "#ff85c0",
+  "植物の守り手": "#389e0d",
+  "その他": "#8c8c8c"
+};
+const damageShortNames = {
+  "メイン武器": "メイン",
+  "エレメント": "エレ",
+  "ストライク": "スト",
+  "植物の守り手": "植物"
+};
+
+window.addMatch = async function(matchNumber){
+  if(players.length === 0){
+  alert("プレイヤーが読み込まれていません。ページ1を開いてください");
+  return;
+}
+  const date = document.getElementById("weekDate").value;
+  if(!date) return alert("日付を選択して");
+  const matchPlayers = players
+  .filter(p => p.lane >= 1 && p.lane <= 3)
+  .sort((a,b)=>a.order - b.order)
+  .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range, // ←画像に合わせて戦術じゃなく距離に変更OK
+      damageTypes: []
+    }));
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
+  const existing = snap.docs[0];
+
+  if(existing){
+    const data = existing.data();
+
+    // 同じ回戦あれば上書き
+    const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
+    if(idx >= 0){
+      data.matches[idx] = { matchNumber, players: matchPlayers };
+    }else{
+      data.matches.push({ matchNumber, players: matchPlayers });
+    }
+
+    await updateDoc(doc(db,"expeditions",existing.id), data);
+
+  }else{
+    await addDoc(collection(db,"expeditions"), {
+      date,
+      matches: [{ matchNumber, players: matchPlayers }]
+    });
+  }
+
+};
+// ===== 指定週に回戦追加（強化版）=====
+window.addMatchToWeek = async function(docId, matchNumber){
+
+  const ref = doc(db, "expeditions", docId);
+  const target = await getDoc(ref);
+
+  if(!target.exists()) return;
+
+  const data = {
+  ...target.data(),
+  matches: [...target.data().matches]
+};
+
+  // 既存チェック
+  const existsIndex = data.matches.findIndex(m => m.matchNumber === matchNumber);
+  const matchPlayers = players
+    .filter(p => p.lane >= 1 && p.lane <= 3)
+    .sort((a,b)=>a.order - b.order)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range,
+      damageTypes: []
+    }));
+ if(existsIndex >= 0){
+  const oldMatch = data.matches[existsIndex];
+  const newPlayers = matchPlayers.map(p=>{
+    const old = oldMatch.players.find(op => op.name === p.name);
+    return {
+      ...p,
+      damageTypes: old?.damageTypes || []
+    };
+  });
+  data.matches[existsIndex] = {
+    matchNumber,
+    players: newPlayers
+  };
+}else{
+  data.matches.push({
+    matchNumber,
+    players: matchPlayers
+  });
+}
+  await updateDoc(ref, data);
+};
+// ===== 週保存（1回戦のみ作成）=====
+window.saveWeek = async function(){
+  if(players.length === 0){
+    alert("プレイヤーが読み込まれていません。ページ1を開いてください");
+    return;
+  }
+  const date = document.getElementById("weekDate").value;
+  if(!date) return alert("日付を選択して");
+  
+  // プレイヤーデータ作成
+  const matchPlayers = players
+    .filter(p => p.lane >= 1 && p.lane <= 3)
+    .sort((a,b)=>a.order - b.order)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range,
+      damageTypes: []
+    }));
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
+  const existing = snap.docs[0];
+  if(existing){
+    const data = existing.data();
+
+    // 1回戦があれば上書き、なければ追加
+    const idx = data.matches.findIndex(m=>m.matchNumber === 1);
+    if(idx >= 0){
+      data.matches[idx] = { matchNumber: 1, players: matchPlayers };
+    }else{
+      data.matches.push({ matchNumber: 1, players: matchPlayers });
+    }
+    await updateDoc(doc(db,"expeditions",existing.id), data);
+  }else{
+    // 新規作成（1回戦だけ）
+    await addDoc(collection(db,"expeditions"), {
+      date,
+      matches: [{ matchNumber: 1, players: matchPlayers }]
+    });
+  }
+};
+
+  // 2ページ目データ削除
+window.deleteMatch = async function(matchNumber){
+  const date = document.getElementById("weekDate").value;
+if(!date) return alert("日付を選択して");
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
+  const docSnap = snap.docs[0];
+  if(!docSnap){
+    alert("この週のデータがありません");
+    return;
+  }
+  const data = docSnap.data();
+  data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
+  await updateDoc(doc(db,"expeditions",docSnap.id), data);
+};
+
+
+// ===== 2ページ目表示032121更新 =====
+
+// 表示（横テーブル＋レーン区切り）
+function subscribeExpeditions(){
+  onSnapshot(collection(db,"expeditions"), (snap)=>{
+    const container = document.getElementById("expeditionContainer");
+    const y = window.scrollY;
+    container.innerHTML = "";
+    const docs = snap.docs.sort(
+      (a,b)=> new Date(b.data().date) - new Date(a.data().date)
+    );
+    // 初回ロード時だけ最新週を自動で開く。以降はユーザーの開閉状態を維持する。
+    if(expeditionFirstLoad){
+      if(docs[0]) openWeekIds.add(docs[0].id);
+      expeditionFirstLoad = false;
+    }
+    docs.forEach((d,index)=>{
+      const exp = d.data();
+    const weekDiv = document.createElement("div");
+    weekDiv.className = "week-block";
+    const header = document.createElement("div");
+
+header.innerHTML = `
+  <div class="week-header-row date-row">
+    <h3>${formatRange(exp.date)}</h3>
+    <button class="btn-save" onclick="saveWeekImage(this)">週全体保存📷</button>
+    <button class="btn-save" onclick="saveMatchImage(this,1)">1回戦保存📷</button>
+    <button class="btn-save" onclick="saveMatchImage(this,2)">2回戦保存📷</button>
+    <button class="btn-save" onclick="saveMatchImage(this,3)">3回戦保存📷</button>
   </div>
+  <div class="week-header-row add-row">
+    <button class="btn-add" onclick="addMatchToWeek('${d.id}',1)">1回戦追加🖋</button>
+    <button class="btn-add" onclick="addMatchToWeek('${d.id}',2)">2回戦追加🖋</button>
+    <button class="btn-add" onclick="addMatchToWeek('${d.id}',3)">3回戦追加🖋</button>
+  </div>
+  <div class="week-header-row delete-row">
+    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
+    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
+    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
+    <button class="btn-delete" onclick="deleteWeek('${d.id}')">週ごと削除</button>
+  </div>
+`;
+    header.style.cursor = "pointer";
+
+    const content = document.createElement("div");
+    const isOpen = openWeekIds.has(d.id);
+    if(!isOpen){
+      content.style.display = "none";
+    }
+    // 閉じてる週はボタン非表示
+    if(!isOpen){
+      header.querySelectorAll("button").forEach(btn => {
+        btn.style.display = "none";
+      });
+    }
+    header.onclick = (e) => {
+      const willOpen = content.style.display === "none";
+      content.style.display = willOpen ? "block" : "none";
+      header.querySelectorAll("button").forEach(btn => {
+        btn.style.display = willOpen ? "inline-block" : "none";
+      });
+      if(willOpen){
+        openWeekIds.add(d.id);
+      }else{
+        openWeekIds.delete(d.id);
+      }
+    };
+    const table = document.createElement("table");
+
+    // ===== ヘッダー =====
+    // ★追加：存在する回戦を取得
+    const matchNumbers = exp.matches.map(m => m.matchNumber);
+    matchNumbers.sort((a,b)=>a-b);
+    // ★ヘッダー生成
+    let header1 = `<tr><th>レーン</th>`;
+    let header2 = `<tr><th></th>`;
+    matchNumbers.forEach(mn=>{
+      header1 += `
+      <th colspan="3">
+      ${mn}回戦<br>
+      <div class="lane-grid">
+      <span class="row-title no-export">更新</span>
+      <button class="lane-btn lane1" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
+      <button class="lane-btn lane2" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
+      <button class="lane-btn lane3" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
+      </div>
+      </th>
+      `;
+      header2 += `
+      <th>名前</th>
+      <th>戦術</th>
+      <th>火力内訳</th>
+      `;
+    });
+    header1 += `</tr>`;
+    header2 += `</tr>`;
+    
+    table.innerHTML = header1 + header2;
+    const lanes = [1,2,3];
+
+    lanes.forEach(lane=>{
+
+      // ★そのレーンの最大人数を取得
+      let max = 0;
+      matchNumbers.forEach(mn=>{
+        const match = exp.matches.find(m=>m.matchNumber === mn);
+        const count = match ? match.players.filter(p=>p.lane === lane).length : 0;
+        if(count > max) max = count;
+      });
+
+      // ★人数分ループ（縦に増やす）
+      for(let i=0;i<max;i++){
+        const row = document.createElement("tr");
+        if(lane === 1){
+          row.classList.add("lane-1");
+        }else if(lane === 2){
+          row.classList.add("lane-2");
+        }else if(lane === 3){
+          row.classList.add("lane-3");
+        }
+        // レーン表示（最初の行だけ）
+        if(i === 0){
+          row.innerHTML += `<td rowspan="${max}">${lane}</td>`;
+        }
+        
+        matchNumbers.forEach(mn=>{
+          const match = exp.matches.find(m=>m.matchNumber === mn);
+          const lanePlayers = match
+            ? match.players.filter(p=>p.lane === lane)
+            : [];
+
+          const p = lanePlayers[i];
+          row.setAttribute("data-match-number", mn);
+          
+          const damageList = ["メイン武器","エレメント","爆発","ストライク","メテオ","サークル","精霊","植物の守り手","その他"];
+          row.innerHTML += `
+<td data-match-number="${mn}">${p?.name || ""}</td>
+
+<td data-match-number="${mn}">
+${p ? `
+<span class="strategy-label ${
+  p.style === "近距離" ? "strategy-close" :
+  p.style === "中距離" ? "strategy-mid" :
+  "strategy-long"
+}">
+${p.style}
+</span>
+` : ""}
+</td>
+
+<td 
+  data-doc-id="${d.id}" 
+  data-match-number="${mn}" 
+  data-player-name="${p?.name || ""}"
+>
+          
+${p ? `
+<div class="tag-view" onclick="enableEdit(this)">
+  ${
+    p.damageTypes && p.damageTypes.length > 0
+    ? p.damageTypes.map(t => {
+        const type = typeof t === "string" ? t : t.type;
+        const size = typeof t === "string" ? "medium" : t.size;
+
+        return `
+          <span class="tag active tag-${size}" 
+            style="background:${damageColors[type] || 'gray'}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
+            ${damageShortNames[type] || type}
+          </span>
+        `;
+      }).join("")
+    : '<span class="no-tag">未設定</span>'
+  }
 </div>
 
-<script type="module" src="app.js"></script>
-</body>
-</html>
+<div class="tag-edit" style="display:none;">
+  <div class="dropdown-box">
+   ${damageList.map(type => {
+  const found = p.damageTypes?.find(t => 
+    (typeof t === "string" ? t : t.type) === type
+  );
+  const size = found
+    ? (typeof found === "string" ? "medium" : found.size)
+    : "medium";
+  return `
+    <label class="dropdown-item" onclick="event.stopPropagation()">
+      <input type="checkbox"
+        value="${type}"
+        ${found ? "checked" : ""}
+        onclick="event.stopPropagation()"
+      />
+      ${type}
+      <select class="size-select">
+        <option value="small" ${size==="small"?"selected":""}>小</option>
+        <option value="medium" ${size==="medium"?"selected":""}>中</option>
+        <option value="large" ${size==="large"?"selected":""}>大</option>
+      </select>
+    </label>
+  `;
+}).join("")}
+  </div>
+  <button onclick="event.stopPropagation(); closeTagEdit(this)">OK</button>
+</div>
+
+` : ""}
+</td>
+`;
+        });
+        table.appendChild(row);
+      }
+    });
+    content.appendChild(table);
+    weekDiv.appendChild(header);
+    weekDiv.appendChild(content);
+    container.appendChild(weekDiv);
+    });
+
+    // 火力内訳を編集中だった場合はそのセルを再度開いた状態に戻す
+    if(openTagEditKey){
+      const target = Array.from(
+        container.querySelectorAll("td[data-doc-id]")
+      ).find(td =>
+        `${td.dataset.docId}|${td.dataset.matchNumber}|${td.dataset.playerName}` === openTagEditKey
+      );
+      if(target){
+        const view = target.querySelector(".tag-view");
+        if(view) window.enableEdit(view);
+      }else{
+        openTagEditKey = null;
+      }
+    }
+
+    window.scrollTo(0, y);
+  });
+}
+window.enableEdit = function(el){
+  const parent = el.parentNode;
+  document.querySelectorAll(".tag-edit").forEach(edit => {
+    edit.style.display = "none";
+    edit.previousElementSibling.style.display = "block";
+  });
+  parent.querySelector(".tag-view").style.display = "none";
+  parent.querySelector(".tag-edit").style.display = "block";
+
+  const container = parent.closest("td");
+  if(container){
+    openTagEditKey = `${container.dataset.docId}|${container.dataset.matchNumber}|${container.dataset.playerName}`;
+  }
+};
+window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, checkbox){
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const docData = snap.data();
+  const match = docData.matches.find(m=>m.matchNumber === matchNumber);
+  const player = match.players.find(p=>p.name === playerName);
+
+  if(!player.damageTypes) player.damageTypes = [];
+
+  if(checkbox.checked){
+    if(!player.damageTypes.some(t=>t.type===checkbox.value)){
+      player.damageTypes.push({ type: checkbox.value, size: "medium" });
+    }
+  }else{
+    player.damageTypes = player.damageTypes.filter(v=>v.type !== checkbox.value);
+  }
+
+  await updateDoc(ref, docData);
+};
+
+window.closeTagEdit = async function(button){
+  const editDiv = button.parentNode;
+  const viewDiv = editDiv.previousElementSibling;
+
+  const container = viewDiv.closest("td");
+  const docId = container.dataset.docId;
+  const matchNumber = parseInt(container.dataset.matchNumber);
+  const playerName = container.dataset.playerName;
+
+  const tags = editDiv.querySelectorAll("input[type=checkbox]");
+  const active = [];
+  tags.forEach(cb => {
+    if(cb.checked){
+      const sizeSel = cb.closest("label").querySelector("select.size-select");
+      const size = sizeSel ? sizeSel.value : "medium";
+      active.push({ type: cb.value, size });
+    }
+  });
+
+  // 表示更新
+  viewDiv.innerHTML = active.length > 0
+  ? active.map(t => `
+      <span class="tag active tag-${t.size}" 
+        style="background:${damageColors[t.type] || 'gray'};">
+        ${damageShortNames[t.type] || t.type}
+      </span>
+    `).join("")
+  : '<span class="no-tag">未設定</span>';
+
+  // Firestore 更新
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const docData = snap.data();
+  const match = docData.matches.find(m=>m.matchNumber === matchNumber);
+  const player = match.players.find(p=>p.name === playerName);
+
+  player.damageTypes = active; // ここでサイズ反映
+  await updateDoc(ref, docData);
+
+  editDiv.style.display = "none";
+  viewDiv.style.display = "block";
+  openTagEditKey = null;
+};
+
+// クリックで外側を閉じる処理はそのまま
+document.addEventListener("click", function(e){
+  if(e.target.closest(".tag-edit") || e.target.closest(".tag-view")) return;
+  document.querySelectorAll(".tag-edit").forEach(edit => {
+    edit.style.display = "none";
+    const view = edit.previousElementSibling;
+    if(view) view.style.display = "block";
+  });
+  openTagEditKey = null;
+});
+
+// ===== レーン単位リセット（←追加）=====
+window.resetLane = async function(docId, matchNumber, lane){
+
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+
+  // 指定レーン削除
+  match.players = match.players.filter(p=>p.lane !== lane);
+
+  // 最新playersから再生成
+  const lanePlayers = players
+    .filter(p=>p.lane === lane)
+    .sort((a,b)=>a.order - b.order)
+    .map(p=>({
+      name: p.name,
+      lane: p.lane,
+      style: p.range,
+      damageTypes: []
+    }));
+
+  match.players.push(...lanePlayers);
+
+  await updateDoc(ref, data);
+
+};
+
+// 回戦削除（週指定）
+window.deleteMatchByWeek = async function(docId, matchNumber){
+
+  if(!confirm("この回戦を削除しますか？")) return;
+
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
+
+  await updateDoc(ref, data);
+};
+
+// 週ごと削除
+window.deleteWeek = async function(docId){
+
+  if(!confirm("この週を全部削除しますか？")) return;
+
+  await deleteDoc(doc(db,"expeditions",docId));
+};
+// 日付
+function formatRange(dateStr){
+  const start = new Date(dateStr);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 2);
+
+  const y = start.getFullYear();
+  const m1 = start.getMonth() + 1;
+  const d1 = start.getDate();
+
+  const m2 = end.getMonth() + 1;
+  const d2 = end.getDate();
+
+  if(m1 === m2){
+    return `${y}/${m1}/${d1}〜${d2}`;
+  }else{
+    return `${y}/${m1}/${d1}〜${m2}/${d2}`;
+  }
+}
+// 金曜だけ選択可能
+document.getElementById("weekDate").addEventListener("input", function(){
+  if(!this.value) return;
+  const date = new Date(this.value);
+  const day = date.getDay(); // 0=日〜6=土
+  if(day !== 5){
+    alert("金曜日を選択してください");
+    this.value = "";
+  }
+});
+flatpickr("#weekDate", {
+  locale: "ja",
+  dateFormat: "Y-m-d",
+  enable: [
+    function(date){
+      return date.getDay() === 5;
+    }
+  ],
+  onDayCreate: function(dObj, dStr, fp, dayElem){
+    const date = dayElem.dateObj;
+    if(date.getDay() === 5){
+      dayElem.style.background = "#4caf50";
+      dayElem.style.color = "white";
+      dayElem.style.borderRadius = "50%";
+    }
+  }
+});
+window.updatePlayer = async function(order){
+  const i = players.findIndex(p => p.order === order);
+  if(i === -1) return;
+
+  const now = new Date().toLocaleDateString();
+
+  players[i].updatedAt = now;
+
+  await updateDoc(
+    doc(db,"players",playerDocs[i]),
+    players[i]
+  );
+
+  render();
+};
+
+// 1ページ目並べ替えの中身
+// ===== 並び替え（上）=====
+window.moveUp = async function(order){
+  const target = players.find(p => p.order === order);
+  if(!target) return;
+
+  const sameLane = players
+    .filter(p => p.lane === target.lane)
+    .sort((a,b)=>a.order - b.order);
+
+  const index = sameLane.findIndex(p => p.order === order);
+  if(index <= 0) return;
+
+  const a = sameLane[index];
+  const b = sameLane[index - 1];
+
+  // 入れ替え
+  const temp = a.order;
+  a.order = b.order;
+  b.order = temp;
+
+  // Firestore更新（1回の書き込みにまとめて再描画のチラつきを防ぐ）
+  const batch = writeBatch(db);
+  batch.update(doc(db,"players",a.id), { order: a.order });
+  batch.update(doc(db,"players",b.id), { order: b.order });
+  await batch.commit();
+};
+// ===== 並び替え（下）=====
+window.moveDown = async function(order){
+  const target = players.find(p => p.order === order);
+  if(!target) return;
+
+  const sameLane = players
+    .filter(p => p.lane === target.lane)
+    .sort((a,b)=>a.order - b.order);
+
+  const index = sameLane.findIndex(p => p.order === order);
+  if(index === sameLane.length - 1) return;
+
+  const a = sameLane[index];
+  const b = sameLane[index + 1];
+
+  const temp = a.order;
+  a.order = b.order;
+  b.order = temp;
+
+  const batch = writeBatch(db);
+  batch.update(doc(db,"players",a.id), { order: a.order });
+  batch.update(doc(db,"players",b.id), { order: b.order });
+  await batch.commit();
+};
+// ===== 週ごと画像保存 =====
+window.saveWeekImage = async function(btn){
+  // 対象の週ブロック取得
+  const original = btn.closest(".week-block");
+  // クローン
+  const clone = original.cloneNode(true);
+  // 不要なボタン削除
+  clone.querySelectorAll("button").forEach(b => b.remove());
+  clone.querySelectorAll(".no-export").forEach(el => el.remove());
+  // スタイル
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+
+  document.body.appendChild(clone);
+
+  // 画像化
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111",
+    width:clone.scrollWidth
+  });
+
+  document.body.removeChild(clone);
+
+  // 保存 or 共有）
+  canvas.toBlob(async blob=>{
+    const file = new File([blob], "expedition-week.png", {type:"image/png"});
+
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "expedition-week.png";
+      link.click();
+    }
+  });
+};
+// ===== 回戦ごと画像保存 =====
+window.saveMatchImage = async function(btn, matchNumber){
+  const original = btn.closest(".week-block");
+  const clone = original.cloneNode(true);
+  clone.querySelectorAll("button").forEach(b => b.remove());
+  clone.querySelectorAll(".no-export").forEach(el => el.remove());
+  clone.querySelectorAll("td, th").forEach(cell=>{
+  const match = cell.getAttribute("data-match-number");
+  if(match && match !== String(matchNumber)){
+    cell.style.display = "none";
+  }
+});
+  clone.querySelectorAll("tr").forEach(row=>{
+    const visibleTd = Array.from(row.querySelectorAll("td"))
+      .some(td => td.style.display !== "none");
+
+    if(!visibleTd && !row.querySelector("th")){
+      row.remove();
+    }
+  });
+
+  clone.style.width = original.scrollWidth + "px";
+  clone.style.background = "#111";
+  clone.style.color = "white";
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+  document.body.appendChild(clone);
+  const canvas = await html2canvas(clone,{
+    scale:3,
+    backgroundColor:"#111"
+  });
+  document.body.removeChild(clone);
+  canvas.toBlob(async blob=>{
+    const file = new File([blob], `match-${matchNumber}.png`, {type:"image/png"});
+    if(navigator.share && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+    }else{
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `match-${matchNumber}.png`;
+      link.click();
+    }
+  });
+};
+
+subscribePlayers();
+subscribeExpeditions();
