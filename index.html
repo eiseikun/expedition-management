@@ -56,7 +56,7 @@
 
   <div class="settings-section">
     <h3>ルーン設定（種類と効果）</h3>
-    <p class="settings-hint">ここで追加したルーンの種類と効果が、プレイヤー編集画面の「選択ルーン追加」で選べるようになります。</p>
+    <p class="settings-hint">ここで追加したルーンの種類と効果が、プレイヤー編集画面の「ルーン追加」で選べるようになります。（鋭利・アロレも他のルーンと同じくここで管理します）</p>
     <div class="add-rune-type-row">
       <input id="newRuneTypeName" placeholder="新しいルーン名（例：炎毒の印）">
       <button onclick="addRuneType()">ルーン種類を追加</button>
@@ -87,38 +87,9 @@
   <h3>装備</h3>
   <div id="chaos" class="gear-grid"></div>
   <h3>ルーン</h3>
-  <div class="rune-row">
-    <span>鋭利</span>
-    <select id="sharpQuality">
-      <option value="none">なし</option>
-      <option value="legend">レジェンド</option>
-      <option value="mythic">ミシック</option>
-    </select>
-    <select id="sharpEnchant">
-      <option>跳ね返り</option>
-      <option>主武器up</option>
-      <option>メイン会心率up</option>
-      <option>クリダメUP</option>
-    </select>
-  </div>
-  <div class="rune-row">
-    <span>アロレ</span>
-    <select id="arrowQuality">
-      <option value="none">なし</option>
-      <option value="legend">レジェンド</option>
-      <option value="mythic">ミシック</option>
-    </select>
-    <select id="arrowEnchant">
-      <option>固有</option>
-      <option>主武器UP</option>
-      <option>メイン会心ダメUP</option>
-      <option>クリダメ軽減</option>
-    </select>
-  </div>
   <div id="runeContainer"></div>
   <div style="margin-top:10px;">
-    <button onclick="addSelectRune()">選択ルーン追加</button>
-    <button onclick="addFreeRune()">自由ルーン追加</button>
+    <button onclick="addRune()">ルーン追加</button>
   </div>
   <h3>その他</h3>
   <input id="hero" placeholder="主キャラ">
