@@ -104,6 +104,19 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
 .rune-legend { background: #db9000; color: #000; }
 .rune-mythic { background: #c11333; color: #fff; }
+/* ルーン一覧：最大2行分の高さに固定し、収まらない分は中でスクロール */
+.rune-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 2px;
+  max-height: 54px;      /* ルーン2行ぶんの高さ */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.rune-list .rune {
+  white-space: nowrap;   /* 1個ずつは折り返さず1行で表示 */
+}
 /* ルーン追加欄の区切り線 */
 #runeContainer {
   margin-top: 10px;
@@ -256,6 +269,7 @@ button:hover {
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
+  .rune-list { max-height: 44px; }               /* スマホでも最大2行に固定 */
   .editor {top: 5px; bottom: 5px; max-width: none; border-radius: 12px; }
   .editor-footer { flex-direction: column; }
 }
