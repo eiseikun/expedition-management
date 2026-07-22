@@ -104,14 +104,15 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
 .rune-legend { background: #db9000; color: #000; }
 .rune-mythic { background: #c11333; color: #fff; }
-/* ルーン一覧：折り返さず常に1行で横に並べる。幅が足りない分はテーブル全体の横スクロールに任せる */
+/* ルーン一覧：横に並べていき、確保した幅に収まりきらなくなったら次の段へ折り返す */
 .rune-list {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 2px;
+  min-width: 150px;   /* 早すぎる折り返しを防ぐための最低幅 */
 }
 .rune-list .rune {
-  flex: none;   /* 幅に押しつぶされて折り返さないように */
+  white-space: nowrap;   /* 1個ずつは途中で割れずに次の段へ */
 }
 /* ルーン追加欄の区切り線 */
 #runeContainer {
@@ -265,6 +266,7 @@ button:hover {
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
+  .rune-list { min-width: 110px; }               /* スマホの小さいチップに合わせて調整 */
   .editor {top: 5px; bottom: 5px; max-width: none; border-radius: 12px; }
   .editor-footer { flex-direction: column; }
 }
