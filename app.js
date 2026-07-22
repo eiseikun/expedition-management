@@ -144,7 +144,7 @@ function runeHTML(name,q,e){
   let cls = "rune ";
   if(q==="mythic") cls+="rune-mythic";
   else if(q==="legend") cls+="rune-legend";
-  return `<span class="${cls}" title="${name}：${e}">${name}：${e}</span>`;
+  return `<div class="${cls}">${name}<br>${e}</div>`;
 }
 
 // ===== 保存 =====
