@@ -157,6 +157,61 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   padding-top: 10px;
   border-top: 1px solid #555;
 }
+/* 選択チェックボックス列 */
+.select-cell {
+  text-align: center;
+  width: 34px;
+}
+.select-cell input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* 選択したプレイヤーをまとめて移動するバー */
+.bulk-selection-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1c1c1c;
+  border: 1px solid #2196f3;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  z-index: 9998;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100% - 24px);
+}
+.bulk-selection-bar select {
+  background: #111;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.bulk-selection-bar button {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: #2196f3;
+  color: white;
+}
+.bulk-selection-bar .btn-clear-selection {
+  background: #444;
+}
+.bulk-selection-bar button:hover {
+  filter: brightness(1.1);
+}
+
 /* ==============================
    モーダル（編集画面）
 ============================== */
@@ -306,6 +361,8 @@ button:hover {
   .lane-header-row { gap: 4px; }
   .lane-bulk-move select { font-size: 11px; padding: 2px 4px; }
   .lane-bulk-move button { font-size: 10px; padding: 3px 7px; }
+  .bulk-selection-bar { bottom: 12px; padding: 6px 12px; font-size: 12px; gap: 6px; }
+  .bulk-selection-bar button { font-size: 11px; padding: 5px 10px; }
   .rune-list {                                   /* スマホでは横4個まで、5個目から2段目へ */
     display: grid;
     grid-template-columns: repeat(4, 72px);
@@ -335,6 +392,7 @@ button:hover {
 .strategy-close { background: rgba(251,226,213,0.9); color:#5a2a1f; }
 .strategy-mid   { background: rgba(202,237,251,0.9); color:#1f3f5a; }
 .strategy-long  { background: rgba(218,242,208,0.9); color:#2d5a1f; }
+.strategy-none  { background: rgba(255,255,255,0.15); color:#ccc; }
 
 /* ==============================
    カレンダー見た目
