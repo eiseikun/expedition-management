@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, onSnapshot, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, setDoc, onSnapshot, writeBatch, query, where, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ===== Firebase =====
 const firebaseConfig = {
@@ -20,6 +20,7 @@ let clanoutOpen = false;           // クラン外の開閉状態
 let openWeekIds = new Set();       // 開いている週ブロックのdocId
 let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
 let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
+let customRuneEntries = [];        // 自由入力で一度でも使ったルーン名・効果の履歴
 
 
 // ===== ページ切替 =====
@@ -67,6 +68,37 @@ function updateEnchant(nameSelect, enchantSelect){
   enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
 }
 
+// ===== 自由入力ルーンの履歴（一度使った名前・効果を選択肢として提案） =====
+function renderCustomRuneDatalists(){
+  const nameList = document.getElementById("customRuneNameList");
+  const effectList = document.getElementById("customRuneEffectList");
+  if(!nameList || !effectList) return;
+
+  const names = [...new Set(customRuneEntries.map(e=>e.name))];
+  const effects = [...new Set(customRuneEntries.map(e=>e.effect))];
+
+  nameList.innerHTML = names.map(n=>`<option value="${n}"></option>`).join("");
+  effectList.innerHTML = effects.map(e=>`<option value="${e}"></option>`).join("");
+}
+
+function subscribeCustomRunes(){
+  onSnapshot(doc(db,"customRunes","list"), (snap)=>{
+    customRuneEntries = snap.exists() ? (snap.data().entries || []) : [];
+    renderCustomRuneDatalists();
+  });
+}
+
+// 自由入力で新しいルーン名・効果が使われたら、次回から選択肢に出るよう記憶する
+async function registerCustomRune(name, effect){
+  if(!name || !effect) return;
+  const exists = customRuneEntries.some(e=>e.name===name && e.effect===effect);
+  if(exists) return;
+
+  await setDoc(doc(db,"customRunes","list"), {
+    entries: arrayUnion({ name, effect })
+  }, { merge: true });
+}
+
 window.addSelectRune = function(rune = {name:"炎毒の印", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
@@ -97,13 +129,13 @@ window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
   const div = document.createElement("div");
   div.className = "rune-row";
   div.innerHTML = `
-    <input class="rune-name" placeholder="ルーン名" value="${rune.name}">
+    <input class="rune-name" placeholder="ルーン名" value="${rune.name}" list="customRuneNameList">
     <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
       <option value="mythic">ミシック</option>
     </select>
-    <input class="rune-e" placeholder="効果" value="${rune.e}">
+    <input class="rune-e" placeholder="効果" value="${rune.e}" list="customRuneEffectList">
     <button onclick="this.parentNode.remove()">削除</button>
   `;
   div.querySelector(".rune-q").value = rune.q;
@@ -169,6 +201,12 @@ window.savePlayer = async function(){
     const q = row.querySelector(".rune-q").value;
     const e = row.querySelector(".rune-e").value;
     if(name && q!=="none") runes.push({name,q,e});
+
+    // 自由入力（input）のルーンだけ、選択肢の履歴に登録する
+    const isFreeInput = row.querySelector(".rune-name").tagName === "INPUT";
+    if(isFreeInput && name && e){
+      registerCustomRune(name, e);
+    }
   });
 
   const gearDetail = [];
@@ -1216,3 +1254,4 @@ window.saveMatchImage = async function(btn, matchNumber){
 
 subscribePlayers();
 subscribeExpeditions();
+subscribeCustomRunes();
