@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, onSnapshot, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ===== Firebase =====
 const firebaseConfig = {
@@ -14,6 +14,12 @@ const db = getFirestore(app);
 let players = [];
 let playerDocs = [];
 let editIndex = null;
+
+// ===== UI状態（再描画されても消えないように保持）=====
+let clanoutOpen = false;           // クラン外の開閉状態
+let openWeekIds = new Set();       // 開いている週ブロックのdocId
+let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
+let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
 
 
 // ===== ページ切替 =====
@@ -327,6 +333,7 @@ function formatPower(v){return v.toFixed(2)+"M";}
 function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
 
 function render(){
+  const y = window.scrollY;
   const body=document.getElementById("playerBody");
   body.innerHTML="";
   const total = 8;
@@ -349,8 +356,8 @@ function render(){
     
     body.appendChild(tr);
     list.sort((a,b)=>a.order - b.order);
-    // クラン外は初期非表示
-    const hidden = (l === -1);
+    // クラン外は前回の開閉状態を維持（毎回勝手に閉じないように）
+    const hidden = (l === -1) && !clanoutOpen;
     tr.innerHTML = `
     <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
     ${laneNames[l]} ${
@@ -358,7 +365,7 @@ function render(){
       ? `(${list.length})`
       : `(${list.length} / ${total})`
     }
-    ${l === -1 ? ' ▼' : ''}
+    ${l === -1 ? (clanoutOpen ? ' ▲' : ' ▼') : ''}
     </td>
     `;
     
@@ -411,6 +418,8 @@ function render(){
       body.appendChild(row);
     });
   });
+  // 再描画でスクロール位置が飛ばないように復元
+  window.scrollTo(0, y);
 }
 // ===== クラン外開閉処理 =====
 document.addEventListener("click", function(e){
@@ -418,14 +427,11 @@ document.addEventListener("click", function(e){
   const toggle = e.target.closest(".toggle-clanout");
   if(!toggle) return;
 
+  clanoutOpen = !clanoutOpen;
+
   const hiddenRows = document.querySelectorAll(".clanout-row");
-
-  const isHidden =
-    hiddenRows.length > 0 &&
-    hiddenRows[0].style.display === "none";
-
   hiddenRows.forEach(row=>{
-    row.style.display = isHidden ? "" : "none";
+    row.style.display = clanoutOpen ? "" : "none";
   });
 
   toggle.innerHTML = toggle.innerHTML.includes("▼")
@@ -508,8 +514,8 @@ window.addMatch = async function(matchNumber){
       style: p.range, // ←画像に合わせて戦術じゃなく距離に変更OK
       damageTypes: []
     }));
-  const snap = await getDocs(collection(db,"expeditions"));
-  const existing = snap.docs.find(d=>d.data().date === date);
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
+  const existing = snap.docs[0];
 
   if(existing){
     const data = existing.data();
@@ -536,10 +542,9 @@ window.addMatch = async function(matchNumber){
 window.addMatchToWeek = async function(docId, matchNumber){
 
   const ref = doc(db, "expeditions", docId);
-  const snap = await getDocs(collection(db, "expeditions"));
-  const target = snap.docs.find(d => d.id === docId);
+  const target = await getDoc(ref);
 
-  if(!target) return;
+  if(!target.exists()) return;
 
   const data = {
   ...target.data(),
@@ -597,8 +602,8 @@ window.saveWeek = async function(){
       style: p.range,
       damageTypes: []
     }));
-  const snap = await getDocs(collection(db,"expeditions"));
-  const existing = snap.docs.find(d=>d.data().date === date);
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
+  const existing = snap.docs[0];
   if(existing){
     const data = existing.data();
 
@@ -623,8 +628,8 @@ window.saveWeek = async function(){
 window.deleteMatch = async function(matchNumber){
   const date = document.getElementById("weekDate").value;
 if(!date) return alert("日付を選択して");
-  const snap = await getDocs(collection(db,"expeditions"));
-  const docSnap = snap.docs.find(d=>d.data().date === date);
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
+  const docSnap = snap.docs[0];
   if(!docSnap){
     alert("この週のデータがありません");
     return;
@@ -641,10 +646,16 @@ if(!date) return alert("日付を選択して");
 function subscribeExpeditions(){
   onSnapshot(collection(db,"expeditions"), (snap)=>{
     const container = document.getElementById("expeditionContainer");
+    const y = window.scrollY;
     container.innerHTML = "";
     const docs = snap.docs.sort(
       (a,b)=> new Date(b.data().date) - new Date(a.data().date)
     );
+    // 初回ロード時だけ最新週を自動で開く。以降はユーザーの開閉状態を維持する。
+    if(expeditionFirstLoad){
+      if(docs[0]) openWeekIds.add(docs[0].id);
+      expeditionFirstLoad = false;
+    }
     docs.forEach((d,index)=>{
       const exp = d.data();
     const weekDiv = document.createElement("div");
@@ -674,22 +685,27 @@ header.innerHTML = `
     header.style.cursor = "pointer";
 
     const content = document.createElement("div");
-    // 最新週だけ開く
-    if(index !== 0){
+    const isOpen = openWeekIds.has(d.id);
+    if(!isOpen){
       content.style.display = "none";
     }
     // 閉じてる週はボタン非表示
-    if(index !== 0){
+    if(!isOpen){
       header.querySelectorAll("button").forEach(btn => {
         btn.style.display = "none";
       });
     }
     header.onclick = (e) => {
-      const isHidden = content.style.display === "none";
-      content.style.display = isHidden ? "block" : "none";
+      const willOpen = content.style.display === "none";
+      content.style.display = willOpen ? "block" : "none";
       header.querySelectorAll("button").forEach(btn => {
-        btn.style.display = isHidden ? "inline-block" : "none";
+        btn.style.display = willOpen ? "inline-block" : "none";
       });
+      if(willOpen){
+        openWeekIds.add(d.id);
+      }else{
+        openWeekIds.delete(d.id);
+      }
     };
     const table = document.createElement("table");
 
@@ -840,6 +856,23 @@ ${p ? `
     weekDiv.appendChild(content);
     container.appendChild(weekDiv);
     });
+
+    // 火力内訳を編集中だった場合はそのセルを再度開いた状態に戻す
+    if(openTagEditKey){
+      const target = Array.from(
+        container.querySelectorAll("td[data-doc-id]")
+      ).find(td =>
+        `${td.dataset.docId}|${td.dataset.matchNumber}|${td.dataset.playerName}` === openTagEditKey
+      );
+      if(target){
+        const view = target.querySelector(".tag-view");
+        if(view) window.enableEdit(view);
+      }else{
+        openTagEditKey = null;
+      }
+    }
+
+    window.scrollTo(0, y);
   });
 }
 window.enableEdit = function(el){
@@ -850,11 +883,16 @@ window.enableEdit = function(el){
   });
   parent.querySelector(".tag-view").style.display = "none";
   parent.querySelector(".tag-edit").style.display = "block";
+
+  const container = parent.closest("td");
+  if(container){
+    openTagEditKey = `${container.dataset.docId}|${container.dataset.matchNumber}|${container.dataset.playerName}`;
+  }
 };
 window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, checkbox){
   const ref = doc(db,"expeditions",docId);
-  const snap = await getDocs(collection(db,"expeditions"));
-  const docData = snap.docs.find(d=>d.id === docId).data();
+  const snap = await getDoc(ref);
+  const docData = snap.data();
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
   const player = match.players.find(p=>p.name === playerName);
 
@@ -902,8 +940,8 @@ window.closeTagEdit = async function(button){
 
   // Firestore 更新
   const ref = doc(db,"expeditions",docId);
-  const snap = await getDocs(collection(db,"expeditions"));
-  const docData = snap.docs.find(d=>d.id === docId).data();
+  const snap = await getDoc(ref);
+  const docData = snap.data();
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
   const player = match.players.find(p=>p.name === playerName);
 
@@ -912,6 +950,7 @@ window.closeTagEdit = async function(button){
 
   editDiv.style.display = "none";
   viewDiv.style.display = "block";
+  openTagEditKey = null;
 };
 
 // クリックで外側を閉じる処理はそのまま
@@ -922,6 +961,7 @@ document.addEventListener("click", function(e){
     const view = edit.previousElementSibling;
     if(view) view.style.display = "block";
   });
+  openTagEditKey = null;
 });
 
 // ===== レーン単位リセット（←追加）=====
@@ -960,8 +1000,8 @@ window.deleteMatchByWeek = async function(docId, matchNumber){
   if(!confirm("この回戦を削除しますか？")) return;
 
   const ref = doc(db,"expeditions",docId);
-  const snap = await getDocs(collection(db,"expeditions"));
-  const data = snap.docs.find(d=>d.id === docId).data();
+  const snap = await getDoc(ref);
+  const data = snap.data();
 
   data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
 
@@ -1058,9 +1098,11 @@ window.moveUp = async function(order){
   a.order = b.order;
   b.order = temp;
 
-  // Firestore更新
-  await updateDoc(doc(db,"players",a.id), { order: a.order });
-  await updateDoc(doc(db,"players",b.id), { order: b.order });
+  // Firestore更新（1回の書き込みにまとめて再描画のチラつきを防ぐ）
+  const batch = writeBatch(db);
+  batch.update(doc(db,"players",a.id), { order: a.order });
+  batch.update(doc(db,"players",b.id), { order: b.order });
+  await batch.commit();
 };
 // ===== 並び替え（下）=====
 window.moveDown = async function(order){
@@ -1081,8 +1123,10 @@ window.moveDown = async function(order){
   a.order = b.order;
   b.order = temp;
 
-  await updateDoc(doc(db,"players",a.id), { order: a.order });
-  await updateDoc(doc(db,"players",b.id), { order: b.order });
+  const batch = writeBatch(db);
+  batch.update(doc(db,"players",a.id), { order: a.order });
+  batch.update(doc(db,"players",b.id), { order: b.order });
+  await batch.commit();
 };
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
