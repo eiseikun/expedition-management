@@ -20,6 +20,7 @@ let clanoutOpen = false;           // クラン外の開閉状態
 let openWeekIds = new Set();       // 開いている週ブロックのdocId
 let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
 let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
+let selectedIds = new Set();       // まとめて移動用に選択中のプレイヤー（Firestoreドキュメントid）
 
 
 // ===== ページ切替 =====
@@ -35,6 +36,7 @@ window.showPage = async function(n){
   topButtons.style.display = (n === 1) ? "flex" : "none";
 
   if(n === 3) renderRuneSettings();
+  updateBulkSelectionBar();
 };
 
 // ===== モーダル =====
@@ -460,6 +462,13 @@ window.saveTableImage = async function(){
 function formatPower(v){return v.toFixed(2)+"M";}
 function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
 
+function strategyClass(range){
+  if(range === "近距離") return "strategy-close";
+  if(range === "中距離") return "strategy-mid";
+  if(range === "遠距離") return "strategy-long";
+  return "strategy-none"; // 未設定
+}
+
 const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"クラン外"};
 const laneOrderList = [1,2,3,0,-1];
 
@@ -491,7 +500,7 @@ function render(){
     // クラン外は前回の開閉状態を維持（毎回勝手に閉じないように）
     const hidden = (l === -1) && !clanoutOpen;
     tr.innerHTML = `
-    <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
+    <td colspan="12" class="${l === -1 ? 'toggle-clanout' : ''}">
     <div class="lane-header-row">
       <span class="lane-header-label">
       ${laneNames[l]} ${
@@ -528,6 +537,10 @@ function render(){
         row.classList.add("lane-3");
       }
       row.innerHTML=`
+      <td class="select-cell no-export">
+      <input type="checkbox" class="player-select" ${selectedIds.has(p.id) ? "checked" : ""}
+        onclick="event.stopPropagation()" onchange="toggleSelectPlayer('${p.id}', this)">
+      </td>
       <td class="name-cell">
       <div class="player-name">${p.name}</div>
       <div class="update-row">
@@ -537,12 +550,8 @@ function render(){
       </td>
         <td>${formatPower(p.power)}</td>
         <td>
-        <span class="strategy-label ${
-          p.range === "近距離" ? "strategy-close" :
-          p.range === "中距離" ? "strategy-mid" :
-          "strategy-long"
-        }">
-        ${p.range} / ${p.style}
+        <span class="strategy-label ${strategyClass(p.range)}">
+        ${p.range || "未設定"} / ${p.style || "未設定"}
         </span>
         </td>
         <td>${gearText(p.gearDetail)}</td>
@@ -562,7 +571,82 @@ function render(){
   });
   // 再描画でスクロール位置が飛ばないように復元
   window.scrollTo(0, y);
+  updateBulkSelectionBar();
 }
+// ===== 個別選択→まとめて移動 =====
+window.toggleSelectPlayer = function(id, checkbox){
+  if(checkbox.checked){
+    selectedIds.add(id);
+  }else{
+    selectedIds.delete(id);
+  }
+  updateBulkSelectionBar();
+};
+
+function updateBulkSelectionBar(){
+  const bar = document.getElementById("bulkSelectionBar");
+  const captureArea = document.getElementById("captureArea");
+  if(!bar || !captureArea) return;
+
+  const page1Visible = captureArea.style.display !== "none";
+
+  if(selectedIds.size === 0 || !page1Visible){
+    bar.style.display = "none";
+    return;
+  }
+
+  bar.style.display = "flex";
+  document.getElementById("bulkSelectionCount").textContent = `${selectedIds.size}人選択中`;
+
+  const targetSel = document.getElementById("bulkSelectionTarget");
+  const current = targetSel.value;
+  targetSel.innerHTML = laneOrderList.map(l=>`<option value="${l}">${laneNames[l]}</option>`).join("");
+  if(laneOrderList.some(l=>String(l)===current)) targetSel.value = current;
+}
+
+window.clearSelection = function(){
+  selectedIds.clear();
+  render();
+};
+
+window.moveSelectedPlayers = async function(){
+  const targetSel = document.getElementById("bulkSelectionTarget");
+  const toLane = Number(targetSel.value);
+
+  const targets = players
+    .filter(p => selectedIds.has(p.id))
+    .sort((a,b)=>a.order - b.order);
+
+  if(targets.length === 0){
+    showToast("選択されたプレイヤーがいません");
+    return;
+  }
+
+  const existingInTarget = players.filter(p => p.lane === toLane && !selectedIds.has(p.id));
+  let warning = "";
+  if((toLane===1 || toLane===2 || toLane===3) && existingInTarget.length + targets.length > 8){
+    warning = `\n※移動後は${existingInTarget.length + targets.length}人になり、8人を超えます`;
+  }
+
+  const names = targets.map(p=>p.name).join("、");
+  if(!confirm(`${names} を${laneNames[toLane]}へ移動しますか？${warning}`)) return;
+
+  const maxOrder = existingInTarget.length
+    ? Math.max(...existingInTarget.map(p=>p.order))
+    : Date.now();
+  let nextOrder = maxOrder + 1;
+
+  const batch = writeBatch(db);
+  targets.forEach(p=>{
+    batch.update(doc(db,"players",p.id), { lane: toLane, order: nextOrder });
+    nextOrder += 1;
+  });
+  await batch.commit();
+
+  selectedIds.clear();
+  showToast(`${targets.length}人を${laneNames[toLane]}へ移動しました`);
+};
+
 // ===== クラン外開閉処理 =====
 document.addEventListener("click", function(e){
 
@@ -924,12 +1008,8 @@ header.innerHTML = `
 
 <td data-match-number="${mn}">
 ${p ? `
-<span class="strategy-label ${
-  p.style === "近距離" ? "strategy-close" :
-  p.style === "中距離" ? "strategy-mid" :
-  "strategy-long"
-}">
-${p.style}
+<span class="strategy-label ${strategyClass(p.style)}">
+${p.style || "未設定"}
 </span>
 ` : ""}
 </td>
