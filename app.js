@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, setDoc, onSnapshot, writeBatch, query, where, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, setDoc, onSnapshot, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ===== Firebase =====
 const firebaseConfig = {
@@ -20,7 +20,6 @@ let clanoutOpen = false;           // クラン外の開閉状態
 let openWeekIds = new Set();       // 開いている週ブロックのdocId
 let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
 let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
-let customRuneEntries = [];        // 自由入力で一度でも使ったルーン名・効果の履歴
 
 
 // ===== ページ切替 =====
@@ -46,6 +45,7 @@ window.openEditor = function(){
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
+  document.getElementById("runeContainer").innerHTML = "";
   editIndex = null;
 };
 
@@ -66,9 +66,11 @@ function showToast(msg){
   toastTimer = setTimeout(()=> el.classList.remove("show"), 2200);
 }
 
-// ===== ルーン（種類と効果は設定画面で管理・Firestoreに保存）=====
-// 初回のみ、この内容でFirestoreに初期データを作成する
+// ===== ルーン(種類と効果は設定画面で管理・Firestoreに保存）=====
+// 初回のみ、この内容でFirestoreに初期データを作成する（鋭利・アロレも通常のルーンとして統合）
 const defaultRuneOptions = {
+  鋭利: ["跳ね返り","主武器up","メイン会心率up","クリダメUP"],
+  アロレ: ["固有","主武器UP","メイン会心ダメUP","クリダメ軽減"],
   炎毒の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
   氷雷の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
   ドラスト: ["キャノドラ"],
@@ -82,11 +84,19 @@ let runeOptions = {}; // 実データはsubscribeRuneOptions()でFirestoreから
 function subscribeRuneOptions(){
   onSnapshot(doc(db,"settings","runeOptions"), (snap)=>{
     if(snap.exists()){
-      runeOptions = snap.data().options || {};
+      const data = snap.data();
+      runeOptions = data.options || {};
+
+      // 旧仕様（鋭利・アロレが固定欄だった頃）からの移行：一度だけ自動で追加する
+      if(!data.migratedFixedRunes){
+        if(!runeOptions["鋭利"]) runeOptions["鋭利"] = [...defaultRuneOptions["鋭利"]];
+        if(!runeOptions["アロレ"]) runeOptions["アロレ"] = [...defaultRuneOptions["アロレ"]];
+        setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, migratedFixedRunes: true });
+      }
     }else{
       // 初回だけ、これまでの固定リストで初期化
       runeOptions = { ...defaultRuneOptions };
-      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions });
+      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, migratedFixedRunes: true });
     }
     refreshOpenRuneSelects();
     renderRuneSettings();
@@ -94,14 +104,13 @@ function subscribeRuneOptions(){
 }
 
 async function saveRuneOptions(){
-  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions });
+  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, migratedFixedRunes: true }, { merge: true });
 }
 
 // 編集モーダルが開いた状態でルーン種類が更新された場合に、
-// 表示中の「選択ルーン」プルダウンの中身を最新化する
+// 表示中の「ルーン」プルダウンの中身を最新化する
 function refreshOpenRuneSelects(){
   document.querySelectorAll("#runeContainer .rune-row .rune-name").forEach(sel=>{
-    if(sel.tagName !== "SELECT") return; // 自由入力（input）は対象外
     const current = sel.value;
     sel.innerHTML = Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("");
     if(Object.keys(runeOptions).includes(current)){
@@ -112,9 +121,14 @@ function refreshOpenRuneSelects(){
   });
 }
 
-function updateEnchant(nameSelect, enchantSelect){
+function updateEnchant(nameSelect, enchantSelect, currentEffect){
   const effects = runeOptions[nameSelect.value] || [];
-  enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
+  let list = effects;
+  if(currentEffect && !effects.includes(currentEffect)){
+    list = [currentEffect, ...effects]; // 設定から消えた過去の効果もデータ保護のため一時表示
+  }
+  enchantSelect.innerHTML = list.map(e=>`<option>${e}</option>`).join("");
+  if(currentEffect) enchantSelect.value = currentEffect;
 }
 
 // ===== 設定ページ：ルーン管理 =====
@@ -213,50 +227,25 @@ window.deleteRuneEffect = async function(name, effect){
   showToast(`効果「${effect}」を削除しました`);
 };
 
-// ===== 自由入力ルーンの履歴（一度使った名前・効果を選択肢として提案） =====
-function renderCustomRuneDatalists(){
-  const nameList = document.getElementById("customRuneNameList");
-  const effectList = document.getElementById("customRuneEffectList");
-  if(!nameList || !effectList) return;
-
-  const names = [...new Set(customRuneEntries.map(e=>e.name))];
-  const effects = [...new Set(customRuneEntries.map(e=>e.effect))];
-
-  nameList.innerHTML = names.map(n=>`<option value="${n}"></option>`).join("");
-  effectList.innerHTML = effects.map(e=>`<option value="${e}"></option>`).join("");
-}
-
-function subscribeCustomRunes(){
-  onSnapshot(doc(db,"customRunes","list"), (snap)=>{
-    customRuneEntries = snap.exists() ? (snap.data().entries || []) : [];
-    renderCustomRuneDatalists();
-  });
-}
-
-// 自由入力で新しいルーン名・効果が使われたら、次回から選択肢に出るよう記憶する
-async function registerCustomRune(name, effect){
-  if(!name || !effect) return;
-  const exists = customRuneEntries.some(e=>e.name===name && e.effect===effect);
-  if(exists) return;
-
-  await setDoc(doc(db,"customRunes","list"), {
-    entries: arrayUnion({ name, effect })
-  }, { merge: true });
-}
-
-window.addSelectRune = function(rune = null){
+window.addRune = function(rune = null){
   if(!rune){
-    rune = { name: Object.keys(runeOptions)[0] || "", q:"none", e:"" };
+    if(Object.keys(runeOptions).length === 0){
+      showToast("設定画面でルーンの種類を先に追加してください");
+      return;
+    }
+    rune = { name: Object.keys(runeOptions)[0], q:"none", e:"" };
   }
-  if(Object.keys(runeOptions).length === 0){
-    showToast("設定画面でルーンの種類を先に追加してください");
-    return;
-  }
+
+  // 設定から削除済みの過去データでも表示だけは維持する（データ保護）
+  const nameOptions = (rune.name && !Object.keys(runeOptions).includes(rune.name))
+    ? [rune.name, ...Object.keys(runeOptions)]
+    : Object.keys(runeOptions);
+
   const div = document.createElement("div");
   div.className = "rune-row";
   div.innerHTML = `
     <select class="rune-name">
-      ${Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("")}
+      ${nameOptions.map(n=>`<option>${n}</option>`).join("")}
     </select>
     <select class="rune-q">
       <option value="none">なし</option>
@@ -269,30 +258,10 @@ window.addSelectRune = function(rune = null){
   const nameSel = div.querySelector(".rune-name");
   const qSel = div.querySelector(".rune-q");
   const eSel = div.querySelector(".rune-e");
-  if(Object.keys(runeOptions).includes(rune.name)){
-    nameSel.value = rune.name;
-  }
-  qSel.value = rune.q;
-  updateEnchant(nameSel, eSel);
-  eSel.value = rune.e;
+  nameSel.value = rune.name || nameOptions[0];
+  qSel.value = rune.q || "none";
+  updateEnchant(nameSel, eSel, rune.e);
   nameSel.onchange = () => updateEnchant(nameSel, eSel);
-  document.getElementById("runeContainer").appendChild(div);
-};
-
-window.addFreeRune = function(rune = {name:"", q:"none", e:""}){
-  const div = document.createElement("div");
-  div.className = "rune-row";
-  div.innerHTML = `
-    <input class="rune-name" placeholder="ルーン名" value="${rune.name}" list="customRuneNameList">
-    <select class="rune-q">
-      <option value="none">なし</option>
-      <option value="legend">レジェンド</option>
-      <option value="mythic">ミシック</option>
-    </select>
-    <input class="rune-e" placeholder="効果" value="${rune.e}" list="customRuneEffectList">
-    <button onclick="this.parentNode.remove()">削除</button>
-  `;
-  div.querySelector(".rune-q").value = rune.q;
   document.getElementById("runeContainer").appendChild(div);
 };
 
@@ -336,31 +305,11 @@ function runeHTML(name,q,e){
 // ===== 保存 =====
 window.savePlayer = async function(){
   const runes = [];
-  if(document.getElementById("sharpQuality").value!=="none"){
-    runes.push({
-      name:"鋭利",
-      q:document.getElementById("sharpQuality").value,
-      e:document.getElementById("sharpEnchant").value
-    });
-  }
-  if(document.getElementById("arrowQuality").value!=="none"){
-    runes.push({
-      name:"アロレ",
-      q:document.getElementById("arrowQuality").value,
-      e:document.getElementById("arrowEnchant").value
-    });
-  }
   document.querySelectorAll("#runeContainer .rune-row").forEach(row=>{
     const name = row.querySelector(".rune-name").value;
     const q = row.querySelector(".rune-q").value;
     const e = row.querySelector(".rune-e").value;
     if(name && q!=="none") runes.push({name,q,e});
-
-    // 自由入力（input）のルーンだけ、選択肢の履歴に登録する
-    const isFreeInput = row.querySelector(".rune-name").tagName === "INPUT";
-    if(isFreeInput && name && e){
-      registerCustomRune(name, e);
-    }
   });
 
   const gearDetail = [];
@@ -434,22 +383,7 @@ window.editPlayer = function(order){
   });
 
   document.getElementById("runeContainer").innerHTML = "";
-  document.getElementById("sharpQuality").value = "none";
-  document.getElementById("arrowQuality").value = "none";
-
-  (p.runes || []).forEach(r=>{
-    if(r.name === "鋭利"){
-      document.getElementById("sharpQuality").value = r.q;
-      document.getElementById("sharpEnchant").value = r.e;
-    }else if(r.name === "アロレ"){
-      document.getElementById("arrowQuality").value = r.q;
-      document.getElementById("arrowEnchant").value = r.e;
-    }else if(runeOptions[r.name]){
-      addSelectRune(r);
-    }else{
-      addFreeRune(r);
-    }
-  });
+  (p.runes || []).forEach(r=> addRune(r));
 };
 
 // ===== 削除 =====
@@ -1412,5 +1346,4 @@ window.saveMatchImage = async function(btn, matchNumber){
 
 subscribePlayers();
 subscribeExpeditions();
-subscribeCustomRunes();
 subscribeRuneOptions();
