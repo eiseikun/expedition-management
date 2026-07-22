@@ -40,6 +40,43 @@ th{
   font-weight:bold;
   text-align:left;
 }
+.lane-header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.lane-header-label{
+  white-space:nowrap;
+}
+.lane-bulk-move{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-weight:normal;
+}
+.lane-bulk-move select{
+  background:#1a1a1a;
+  color:white;
+  border:1px solid #555;
+  border-radius:6px;
+  padding:3px 6px;
+  font-size:12px;
+}
+.lane-bulk-move button{
+  font-size:11px;
+  padding:4px 10px;
+  background:#2196f380;
+  border:none;
+  border-radius:6px;
+  color:white;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.lane-bulk-move button:hover{
+  background:#2196f3;
+}
 /* 行にマウス乗せたとき */
 tr:hover{
   background:#2c2c2c;
@@ -266,6 +303,9 @@ button:hover {
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
+  .lane-header-row { gap: 4px; }
+  .lane-bulk-move select { font-size: 11px; padding: 2px 4px; }
+  .lane-bulk-move button { font-size: 10px; padding: 3px 7px; }
   .rune-list {                                   /* スマホでは横4個まで、5個目から2段目へ */
     display: grid;
     grid-template-columns: repeat(4, 72px);
