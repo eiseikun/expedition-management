@@ -31,6 +31,7 @@
   <table id="playerTable">
     <thead>
       <tr>
+        <th class="no-export">選択</th>
         <th>名前</th><th>戦力</th><th>戦術</th><th>装備</th><th>主キャラ</th>
         <th>ルーン</th><th>編成</th><th>聖物%</th><th>並び替え</th><th>編集</th><th>削除</th>
       </tr>
@@ -65,6 +66,14 @@
   </div>
 </div>
 
+<!-- 選択したプレイヤーを一括移動するバー -->
+<div id="bulkSelectionBar" class="bulk-selection-bar" style="display:none;">
+  <span id="bulkSelectionCount">0人選択中</span>
+  <select id="bulkSelectionTarget"></select>
+  <button onclick="moveSelectedPlayers()">選択した人を移動</button>
+  <button class="btn-clear-selection" onclick="clearSelection()">選択解除</button>
+</div>
+
 <!-- トースト通知 -->
 <div id="toast" class="toast"></div>
 
@@ -74,11 +83,13 @@
   <input id="name" placeholder="名前">
   <input id="power" type="number" placeholder="戦力">
   <select id="range">
+    <option value="">未設定</option>
     <option>遠距離</option>
     <option>中距離</option>
     <option>近距離</option>
   </select>
   <select id="style">
+    <option value="">未設定</option>
     <option>バランス</option>
     <option>攻撃優先</option>
     <option>移動優先</option>
