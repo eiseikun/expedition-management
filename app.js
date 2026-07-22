@@ -144,7 +144,7 @@ function runeHTML(name,q,e){
   let cls = "rune ";
   if(q==="mythic") cls+="rune-mythic";
   else if(q==="legend") cls+="rune-legend";
-  return `<div class="${cls}">${name}<br>${e}</div>`;
+  return `<span class="${cls}" title="${name}：${e}">${name}：${e}</span>`;
 }
 
 // ===== 保存 =====
@@ -405,7 +405,7 @@ function render(){
         </td>
         <td>${gearText(p.gearDetail)}</td>
         <td>${p.hero}</td>
-        <td>${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</td>
+        <td><div class="rune-list">${(p.runes||[]).map(r=>runeHTML(r.name,r.q,r.e)).join("")}</div></td>
         <td>${p.formation}</td>
         <td>${relicBuff(p.mythic,p.legend)}</td>
         <td>
