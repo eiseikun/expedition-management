@@ -27,12 +27,15 @@ let customRuneEntries = [];        // 自由入力で一度でも使ったルー
 window.showPage = async function(n){
   const page1 = document.getElementById("captureArea");
   const page2 = document.getElementById("page2");
+  const page3 = document.getElementById("page3");
   const topButtons = document.getElementById("topButtons");
 
   page1.style.display = (n === 1) ? "block" : "none";
   page2.style.display = (n === 2) ? "block" : "none";
+  page3.style.display = (n === 3) ? "block" : "none";
   topButtons.style.display = (n === 1) ? "flex" : "none";
 
+  if(n === 3) renderRuneSettings();
 };
 
 // ===== モーダル =====
@@ -52,8 +55,20 @@ window.closeEditor = function(){
   document.getElementById("modeIndicator").innerText = "通常モード";
 };
 
-// ===== ルーン =====
-const runeOptions = {
+// ===== トースト通知 =====
+let toastTimer = null;
+function showToast(msg){
+  const el = document.getElementById("toast");
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove("show"), 2200);
+}
+
+// ===== ルーン（種類と効果は設定画面で管理・Firestoreに保存）=====
+// 初回のみ、この内容でFirestoreに初期データを作成する
+const defaultRuneOptions = {
   炎毒の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
   氷雷の印: ["エレダメup","エレ会心率up","固有","クリダメup"],
   ドラスト: ["キャノドラ"],
@@ -62,11 +77,141 @@ const runeOptions = {
   氷雷の触: ["エレダメup","エレ会心ダメup","固有","クリダメ軽減"],
   ストポショ: ["無敵効果"]
 };
+let runeOptions = {}; // 実データはsubscribeRuneOptions()でFirestoreから読み込む
+
+function subscribeRuneOptions(){
+  onSnapshot(doc(db,"settings","runeOptions"), (snap)=>{
+    if(snap.exists()){
+      runeOptions = snap.data().options || {};
+    }else{
+      // 初回だけ、これまでの固定リストで初期化
+      runeOptions = { ...defaultRuneOptions };
+      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions });
+    }
+    refreshOpenRuneSelects();
+    renderRuneSettings();
+  });
+}
+
+async function saveRuneOptions(){
+  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions });
+}
+
+// 編集モーダルが開いた状態でルーン種類が更新された場合に、
+// 表示中の「選択ルーン」プルダウンの中身を最新化する
+function refreshOpenRuneSelects(){
+  document.querySelectorAll("#runeContainer .rune-row .rune-name").forEach(sel=>{
+    if(sel.tagName !== "SELECT") return; // 自由入力（input）は対象外
+    const current = sel.value;
+    sel.innerHTML = Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("");
+    if(Object.keys(runeOptions).includes(current)){
+      sel.value = current;
+    }
+    const eSel = sel.closest(".rune-row").querySelector(".rune-e");
+    updateEnchant(sel, eSel);
+  });
+}
 
 function updateEnchant(nameSelect, enchantSelect){
   const effects = runeOptions[nameSelect.value] || [];
   enchantSelect.innerHTML = effects.map(e=>`<option>${e}</option>`).join("");
 }
+
+// ===== 設定ページ：ルーン管理 =====
+function renderRuneSettings(){
+  const container = document.getElementById("runeSettingsContainer");
+  if(!container) return;
+
+  const names = Object.keys(runeOptions);
+  if(names.length === 0){
+    container.innerHTML = `<p class="no-effect">まだルーン種類がありません。上のフォームから追加してください。</p>`;
+    return;
+  }
+
+  container.innerHTML = names.map(name=>{
+    const effects = runeOptions[name] || [];
+    return `
+    <div class="rune-type-card">
+      <div class="rune-type-card-header">
+        <h4>${name}</h4>
+        <button class="btn-delete-type" onclick="deleteRuneType('${escapeForAttr(name)}')">種類ごと削除</button>
+      </div>
+      <div class="rune-effect-chips">
+        ${
+          effects.length
+          ? effects.map(e=>`
+            <span class="rune-effect-chip">
+              ${e}
+              <button onclick="deleteRuneEffect('${escapeForAttr(name)}','${escapeForAttr(e)}')" title="削除">✕</button>
+            </span>
+          `).join("")
+          : `<span class="no-effect">効果が未登録です</span>`
+        }
+      </div>
+      <div class="add-effect-row">
+        <input placeholder="新しい効果を追加" id="effectInput-${cssKey(name)}">
+        <button onclick="addRuneEffect('${escapeForAttr(name)}')">追加</button>
+      </div>
+    </div>
+    `;
+  }).join("");
+}
+
+function escapeForAttr(str){
+  return String(str).replace(/'/g, "\\'");
+}
+function cssKey(str){
+  // id属性に使えるよう、日本語文字列を安全なキーに変換
+  return encodeURIComponent(str).replace(/[^a-zA-Z0-9]/g,"");
+}
+
+window.addRuneType = async function(){
+  const input = document.getElementById("newRuneTypeName");
+  const name = input.value.trim();
+  if(!name){
+    showToast("ルーン名を入力してください");
+    return;
+  }
+  if(runeOptions[name]){
+    showToast("すでに同じ名前のルーンがあります");
+    return;
+  }
+  runeOptions[name] = [];
+  await saveRuneOptions();
+  input.value = "";
+  showToast(`「${name}」を追加しました`);
+};
+
+window.deleteRuneType = async function(name){
+  if(!confirm(`「${name}」を削除しますか？（このルーンを使っているプレイヤーの表示名は残ります）`)) return;
+  delete runeOptions[name];
+  await saveRuneOptions();
+  showToast(`「${name}」を削除しました`);
+};
+
+window.addRuneEffect = async function(name){
+  const input = document.getElementById(`effectInput-${cssKey(name)}`);
+  const effect = input.value.trim();
+  if(!effect){
+    showToast("効果を入力してください");
+    return;
+  }
+  if(!runeOptions[name]) runeOptions[name] = [];
+  if(runeOptions[name].includes(effect)){
+    showToast("すでに同じ効果があります");
+    return;
+  }
+  runeOptions[name].push(effect);
+  await saveRuneOptions();
+  showToast(`効果「${effect}」を追加しました`);
+};
+
+window.deleteRuneEffect = async function(name, effect){
+  if(!runeOptions[name]) return;
+  runeOptions[name] = runeOptions[name].filter(e=>e!==effect);
+  await saveRuneOptions();
+  showToast(`効果「${effect}」を削除しました`);
+};
 
 // ===== 自由入力ルーンの履歴（一度使った名前・効果を選択肢として提案） =====
 function renderCustomRuneDatalists(){
@@ -99,7 +244,14 @@ async function registerCustomRune(name, effect){
   }, { merge: true });
 }
 
-window.addSelectRune = function(rune = {name:"炎毒の印", q:"none", e:""}){
+window.addSelectRune = function(rune = null){
+  if(!rune){
+    rune = { name: Object.keys(runeOptions)[0] || "", q:"none", e:"" };
+  }
+  if(Object.keys(runeOptions).length === 0){
+    showToast("設定画面でルーンの種類を先に追加してください");
+    return;
+  }
   const div = document.createElement("div");
   div.className = "rune-row";
   div.innerHTML = `
@@ -117,7 +269,9 @@ window.addSelectRune = function(rune = {name:"炎毒の印", q:"none", e:""}){
   const nameSel = div.querySelector(".rune-name");
   const qSel = div.querySelector(".rune-q");
   const eSel = div.querySelector(".rune-e");
-  nameSel.value = rune.name;
+  if(Object.keys(runeOptions).includes(rune.name)){
+    nameSel.value = rune.name;
+  }
   qSel.value = rune.q;
   updateEnchant(nameSel, eSel);
   eSel.value = rune.e;
@@ -236,7 +390,7 @@ window.savePlayer = async function(){
   };
 
   if(!p.name || isNaN(p.power)){
-    alert("名前と戦力必須");
+    showToast("名前と戦力必須");
     return;
   }
   
@@ -250,6 +404,7 @@ window.savePlayer = async function(){
 
   closeEditor();
   render();
+  showToast("保存しました");
 };
 
 // ===== 編集 =====
@@ -309,6 +464,7 @@ window.deletePlayer = async function(order){
   playerDocs.splice(i,1);
 
   render(); // ← ついでにこれも追加
+  showToast("削除しました");
 };
   
 
@@ -538,11 +694,11 @@ const damageShortNames = {
 
 window.addMatch = async function(matchNumber){
   if(players.length === 0){
-  alert("プレイヤーが読み込まれていません。ページ1を開いてください");
+  showToast("プレイヤーが読み込まれていません。ページ1を開いてください");
   return;
 }
   const date = document.getElementById("weekDate").value;
-  if(!date) return alert("日付を選択して");
+  if(!date) return showToast("日付を選択して");
   const matchPlayers = players
   .filter(p => p.lane >= 1 && p.lane <= 3)
   .sort((a,b)=>a.order - b.order)
@@ -620,15 +776,16 @@ window.addMatchToWeek = async function(docId, matchNumber){
   });
 }
   await updateDoc(ref, data);
+  showToast(`${matchNumber}回戦を追加しました`);
 };
 // ===== 週保存（1回戦のみ作成）=====
 window.saveWeek = async function(){
   if(players.length === 0){
-    alert("プレイヤーが読み込まれていません。ページ1を開いてください");
+    showToast("プレイヤーが読み込まれていません。ページ1を開いてください");
     return;
   }
   const date = document.getElementById("weekDate").value;
-  if(!date) return alert("日付を選択して");
+  if(!date) return showToast("日付を選択して");
   
   // プレイヤーデータ作成
   const matchPlayers = players
@@ -660,16 +817,17 @@ window.saveWeek = async function(){
       matches: [{ matchNumber: 1, players: matchPlayers }]
     });
   }
+  showToast("週を保存しました");
 };
 
   // 2ページ目データ削除
 window.deleteMatch = async function(matchNumber){
   const date = document.getElementById("weekDate").value;
-if(!date) return alert("日付を選択して");
+if(!date) return showToast("日付を選択して");
   const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
   const docSnap = snap.docs[0];
   if(!docSnap){
-    alert("この週のデータがありません");
+    showToast("この週のデータがありません");
     return;
   }
   const data = docSnap.data();
@@ -1078,7 +1236,7 @@ document.getElementById("weekDate").addEventListener("input", function(){
   const date = new Date(this.value);
   const day = date.getDay(); // 0=日〜6=土
   if(day !== 5){
-    alert("金曜日を選択してください");
+    showToast("金曜日を選択してください");
     this.value = "";
   }
 });
@@ -1255,3 +1413,4 @@ window.saveMatchImage = async function(btn, matchNumber){
 subscribePlayers();
 subscribeExpeditions();
 subscribeCustomRunes();
+subscribeRuneOptions();
