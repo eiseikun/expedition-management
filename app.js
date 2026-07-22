@@ -17,7 +17,7 @@ let editIndex = null;
 
 // ===== UI状態（再描画されても消えないように保持）=====
 let clanoutOpen = false;           // クラン外の開閉状態
-let openWeekIds = new Set();       // 開いている週ブロックのdocId
+let openWeekIds = new Set();       // 開いてい週ブロックのdocId
 let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
 let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
 
