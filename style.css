@@ -104,12 +104,14 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
 .rune-legend { background: #db9000; color: #000; }
 .rune-mythic { background: #c11333; color: #fff; }
-/* ルーン一覧：まず横に並べていき、幅が足りなくなったら折り返す（スクロールなし） */
+/* ルーン一覧：折り返さず常に1行で横に並べる。幅が足りない分はテーブル全体の横スクロールに任せる */
 .rune-list {
   display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
+  flex-wrap: nowrap;
   gap: 2px;
+}
+.rune-list .rune {
+  flex: none;   /* 幅に押しつぶされて折り返さないように */
 }
 /* ルーン追加欄の区切り線 */
 #runeContainer {
