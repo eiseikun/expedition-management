@@ -406,7 +406,7 @@ window.deletePlayer = async function(order){
 window.saveTableImage = async function(){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
-  clone.querySelectorAll(".update-btn, .update-time").forEach(el => el.remove());
+  clone.querySelectorAll(".update-btn, .update-time, .no-export").forEach(el => el.remove());
   const rows = clone.querySelectorAll("tr");
   let hide = false;
   rows.forEach(row=>{
@@ -460,14 +460,23 @@ window.saveTableImage = async function(){
 function formatPower(v){return v.toFixed(2)+"M";}
 function relicBuff(m,l){return Number((m*0.25 + l*0.025).toFixed(3));}
 
+const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"クラン外"};
+const laneOrderList = [1,2,3,0,-1];
+
+function laneSelectOptions(currentLane){
+  return laneOrderList
+    .filter(l=>l!==currentLane)
+    .map(l=>`<option value="${l}">${laneNames[l]}</option>`)
+    .join("");
+}
+
 function render(){
   const y = window.scrollY;
   const body=document.getElementById("playerBody");
   body.innerHTML="";
   const total = 8;
-  const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"クラン外"};
 
-  [1,2,3,0,-1].forEach(l=>{
+  laneOrderList.forEach(l=>{
     const list=players.filter(p=>p.lane===l);
     if(!list.length)return;
     
@@ -476,24 +485,29 @@ function render(){
     if(l === -1){
       tr.classList.add("clanout-header");
     }
-    if(l === 0 || l === -1){
-      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length})</td>`;
-    }else{
-      tr.innerHTML = `<td colspan="11">${laneNames[l]} (${list.length} / ${total})</td>`;
-    }
-    
+
     body.appendChild(tr);
     list.sort((a,b)=>a.order - b.order);
     // クラン外は前回の開閉状態を維持（毎回勝手に閉じないように）
     const hidden = (l === -1) && !clanoutOpen;
     tr.innerHTML = `
     <td colspan="11" class="${l === -1 ? 'toggle-clanout' : ''}">
-    ${laneNames[l]} ${
-      (l === 0 || l === -1)
-      ? `(${list.length})`
-      : `(${list.length} / ${total})`
-    }
-    ${l === -1 ? (clanoutOpen ? ' ▲' : ' ▼') : ''}
+    <div class="lane-header-row">
+      <span class="lane-header-label">
+      ${laneNames[l]} ${
+        (l === 0 || l === -1)
+        ? `(${list.length})`
+        : `(${list.length} / ${total})`
+      }
+      ${l === -1 ? (clanoutOpen ? ' ▲' : ' ▼') : ''}
+      </span>
+      <span class="lane-bulk-move no-export">
+        <select class="bulk-move-target" data-lane="${l}" onclick="event.stopPropagation()">
+          ${laneSelectOptions(l)}
+        </select>
+        <button onclick="event.stopPropagation(); bulkMoveLane(${l})">まとめて移動</button>
+      </span>
+    </div>
     </td>
     `;
     
@@ -1257,6 +1271,45 @@ window.moveDown = async function(order){
   batch.update(doc(db,"players",a.id), { order: a.order });
   batch.update(doc(db,"players",b.id), { order: b.order });
   await batch.commit();
+};
+
+// ===== レーンごと一括移動 =====
+window.bulkMoveLane = async function(fromLane){
+  const select = document.querySelector(`.bulk-move-target[data-lane="${fromLane}"]`);
+  if(!select) return;
+  const toLane = Number(select.value);
+
+  const targets = players
+    .filter(p => p.lane === fromLane)
+    .sort((a,b)=>a.order - b.order);
+
+  if(targets.length === 0){
+    showToast("移動対象がいません");
+    return;
+  }
+
+  const existingInTarget = players.filter(p => p.lane === toLane);
+  let warning = "";
+  if((toLane === 1 || toLane === 2 || toLane === 3) && existingInTarget.length + targets.length > 8){
+    warning = `\n※移動後は${existingInTarget.length + targets.length}人になり、8人を超えます`;
+  }
+
+  if(!confirm(`${laneNames[fromLane]}の${targets.length}人を${laneNames[toLane]}へ移動しますか？${warning}`)) return;
+
+  // 移動先の既存メンバーの後ろに追加されるよう、orderを振り直す
+  const maxOrder = existingInTarget.length
+    ? Math.max(...existingInTarget.map(p=>p.order))
+    : Date.now();
+  let nextOrder = maxOrder + 1;
+
+  const batch = writeBatch(db);
+  targets.forEach(p=>{
+    batch.update(doc(db,"players",p.id), { lane: toLane, order: nextOrder });
+    nextOrder += 1;
+  });
+  await batch.commit();
+
+  showToast(`${targets.length}人を${laneNames[toLane]}へ移動しました`);
 };
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
