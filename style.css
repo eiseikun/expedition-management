@@ -266,7 +266,14 @@ button:hover {
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
-  .rune-list { min-width: 110px; }               /* スマホの小さいチップに合わせて調整 */
+  .rune-list {                                   /* スマホでは横4個まで、5個目から2段目へ */
+    display: grid;
+    grid-template-columns: repeat(4, 72px);
+    min-width: 0;
+  }
+  .rune-list .rune {
+    white-space: normal;   /* 固定幅セルからはみ出さないよう長い文字は折り返す */
+  }
   .editor {top: 5px; bottom: 5px; max-width: none; border-radius: 12px; }
   .editor-footer { flex-direction: column; }
 }
