@@ -180,6 +180,31 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   cursor: pointer;
 }
 
+/* メモ欄 */
+.note-cell {
+  white-space: normal;
+}
+.note-input {
+  width: 140px;
+  min-height: 40px;
+  resize: vertical;
+  background: #1a1a1a;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.note-input:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+.note-input::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
 /* 選択したプレイヤーをまとめて移動するバー */
 .bulk-selection-bar {
   position: fixed;
@@ -373,6 +398,7 @@ button:hover {
   .lane-header-row { gap: 4px; }
   .lane-select-all { font-size: 11px; }
   .btn-sort-power { font-size: 10px; padding: 3px 7px; }
+  .note-input { width: 100px; min-height: 34px; font-size: 11px; }
   .bulk-selection-bar { bottom: 12px; padding: 6px 12px; font-size: 12px; gap: 6px; }
   .bulk-selection-bar button { font-size: 11px; padding: 5px 10px; }
   .rune-list {                                   /* スマホでは横4個まで、5個目から2段目へ */
