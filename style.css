@@ -549,6 +549,60 @@ td { position: relative; }
   background: #1a1a1a;
   color: white;
 }
+.rune-group {
+  margin-bottom: 16px;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.rune-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #202020;
+  cursor: pointer;
+  user-select: none;
+}
+.rune-group-header:hover {
+  background: #262626;
+}
+.rune-group-toggle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  width: 12px;
+}
+.rune-group-title {
+  font-weight: bold;
+  font-size: 14px;
+}
+.rune-group-count {
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+}
+.rune-group-body {
+  padding: 12px 14px 2px;
+}
+.rune-group-assign {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+}
+.rune-group-assign label {
+  white-space: nowrap;
+}
+.rune-group-assign input {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: white;
+  font-size: 12px;
+}
 .rune-type-card {
   background: #1b1b1b;
   border: 1px solid #333;
