@@ -285,6 +285,13 @@ window.setRuneGroup = async function(name, group){
   showToast(trimmed ? `「${name}」を「${trimmed}」グループに設定しました` : `「${name}」のグループ設定を解除しました`);
 };
 
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
 function escapeForAttr(str){
   return String(str).replace(/'/g, "\\'");
 }
@@ -493,7 +500,7 @@ window.savePlayer = async function(){
     await addDoc(collection(db,"players"), p);
   }else{
     await updateDoc(doc(db,"players",playerDocs[editIndex]), p);
-    players[editIndex]=p;
+    players[editIndex] = { ...p, note: players[editIndex].note || "" };
     editIndex=null;
   }
 
@@ -545,6 +552,16 @@ window.deletePlayer = async function(order){
 
   render(); // ← ついでにこれも追加
   showToast("削除しました");
+};
+
+// ===== メモ保存（編集/削除ボタン付近の簡易コメント欄） =====
+window.saveNote = async function(id, value){
+  try{
+    await updateDoc(doc(db,"players",id), { note: value });
+  }catch(e){
+    console.error(e);
+    showToast("メモの保存に失敗しました");
+  }
 };
   
 
@@ -638,7 +655,7 @@ function render(){
     const hidden = (l === -1) && !clanoutOpen;
     const allSelected = list.every(p=>selectedIds.has(p.id));
     tr.innerHTML = `
-    <td colspan="12" class="${l === -1 ? 'toggle-clanout' : ''}">
+    <td colspan="13" class="${l === -1 ? 'toggle-clanout' : ''}">
     <div class="lane-header-row">
       <span class="lane-header-label">
       ${laneNames[l]} ${
@@ -704,6 +721,9 @@ function render(){
         </td>
         <td><button onclick="editPlayer(${p.order})">編集</button></td>
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
+        <td class="note-cell no-export">
+        <textarea class="note-input" placeholder="メモ" onchange="saveNote('${p.id}', this.value)">${escapeHtml(p.note || "")}</textarea>
+        </td>
       `;
       body.appendChild(row);
     });
