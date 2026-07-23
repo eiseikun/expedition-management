@@ -555,10 +555,13 @@ function render(){
       }
       ${l === -1 ? (clanoutOpen ? ' ▲' : ' ▼') : ''}
       </span>
-      <label class="lane-select-all no-export" onclick="event.stopPropagation()">
-        <input type="checkbox" ${allSelected ? "checked" : ""} onchange="toggleSelectLane(${l}, this)">
-        全員選択
-      </label>
+      <span class="lane-header-actions no-export">
+        <button class="btn-sort-power" onclick="event.stopPropagation(); sortLaneByPower(${l})" ${list.length < 2 ? "disabled" : ""}>戦力順</button>
+        <label class="lane-select-all" onclick="event.stopPropagation()">
+          <input type="checkbox" ${allSelected ? "checked" : ""} onchange="toggleSelectLane(${l}, this)">
+          全員選択
+        </label>
+      </span>
     </div>
     </td>
     `;
@@ -1407,6 +1410,27 @@ window.moveDown = async function(order){
   batch.update(doc(db,"players",a.id), { order: a.order });
   batch.update(doc(db,"players",b.id), { order: b.order });
   await batch.commit();
+};
+
+// ===== レーン内を戦力順（降順）に並び替え =====
+window.sortLaneByPower = async function(lane){
+  const list = players.filter(p => p.lane === lane);
+  if(list.length < 2){
+    showToast("並び替える対象がありません");
+    return;
+  }
+
+  list.sort((a,b) => b.power - a.power);
+
+  // order値はプレイヤー全体で一意である必要があるため、現在時刻を基準に振り直す
+  const baseOrder = Date.now();
+  const batch2 = writeBatch(db);
+  list.forEach((p, idx)=>{
+    batch2.update(doc(db,"players",p.id), { order: baseOrder + idx });
+  });
+  await batch2.commit();
+
+  showToast(`${laneNames[lane]}を戦力順に並び替えました`);
 };
 
 // ===== 週ごと画像保存 =====
