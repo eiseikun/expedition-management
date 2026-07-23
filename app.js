@@ -292,6 +292,10 @@ function escapeHtml(str){
     .replace(/>/g,"&gt;");
 }
 
+function escapeAttr(str){
+  return escapeHtml(str).replace(/"/g,"&quot;");
+}
+
 function escapeForAttr(str){
   return String(str).replace(/'/g, "\\'");
 }
@@ -416,6 +420,102 @@ window.addRune = function(rune = null){
   updateEnchant(nameSel, eSel, rune.e);
   nameSel.onchange = () => updateEnchant(nameSel, eSel);
   document.getElementById("runeContainer").appendChild(div);
+};
+
+// ===== 設定ページ：火力内訳タグ管理（ページ2用） =====
+function renderDamageTypeSettings(){
+  const container = document.getElementById("damageTypeSettingsContainer");
+  if(!container) return;
+
+  if(damageTypes.length === 0){
+    container.innerHTML = `<p class="no-effect">まだ火力内訳タグがありません。上のフォームから追加してください。</p>`;
+    return;
+  }
+
+  container.innerHTML = damageTypes.map((t, idx)=>`
+    <div class="damage-type-card">
+      <div class="rune-type-order-buttons">
+        <button class="btn-order" onclick="moveDamageTypeUp(${idx})" ${idx===0 ? "disabled" : ""} title="上へ">▲</button>
+        <button class="btn-order" onclick="moveDamageTypeDown(${idx})" ${idx===damageTypes.length-1 ? "disabled" : ""} title="下へ">▼</button>
+      </div>
+      <input type="color" class="damage-type-color" value="${t.color || '#888888'}" onchange="updateDamageTypeField(${idx},'color',this.value)">
+      <input class="damage-type-name" value="${escapeAttr(t.name)}" onchange="updateDamageTypeField(${idx},'name',this.value)">
+      <input class="damage-type-shortname" placeholder="略称（任意）" value="${escapeAttr(t.shortName || '')}" onchange="updateDamageTypeField(${idx},'shortName',this.value)">
+      <span class="damage-type-preview" style="background:${t.color || '#888888'}">${damageShortName(t.name)}</span>
+      <button class="btn-delete-type" onclick="deleteDamageType(${idx})">削除</button>
+    </div>
+  `).join("");
+}
+
+window.addDamageType = async function(){
+  const nameInput = document.getElementById("newDamageTypeName");
+  const shortInput = document.getElementById("newDamageTypeShort");
+  const colorInput = document.getElementById("newDamageTypeColor");
+  const name = nameInput.value.trim();
+  if(!name){
+    showToast("タグ名を入力してください");
+    return;
+  }
+  if(damageTypes.some(t=>t.name === name)){
+    showToast("すでに同じ名前のタグがあります");
+    return;
+  }
+  damageTypes.push({
+    name,
+    shortName: shortInput ? shortInput.value.trim() : "",
+    color: (colorInput && colorInput.value) || "#8c8c8c"
+  });
+  await saveDamageTypes();
+  nameInput.value = "";
+  if(shortInput) shortInput.value = "";
+  if(colorInput) colorInput.value = "#8c8c8c";
+  showToast(`「${name}」を追加しました`);
+};
+
+window.deleteDamageType = async function(index){
+  const t = damageTypes[index];
+  if(!t) return;
+  if(!confirm(`「${t.name}」を削除しますか？（このタグを使っている過去の記録の表示名は残ります）`)) return;
+  damageTypes.splice(index, 1);
+  await saveDamageTypes();
+  showToast(`「${t.name}」を削除しました`);
+};
+
+window.updateDamageTypeField = async function(index, field, value){
+  const t = damageTypes[index];
+  if(!t) return;
+
+  if(field === "name"){
+    const trimmed = value.trim();
+    if(!trimmed){
+      showToast("名前は空にできません");
+      renderDamageTypeSettings();
+      return;
+    }
+    if(damageTypes.some((o,i)=> i!==index && o.name===trimmed)){
+      showToast("すでに同じ名前のタグがあります");
+      renderDamageTypeSettings();
+      return;
+    }
+    t.name = trimmed;
+  }else if(field === "shortName"){
+    t.shortName = value.trim();
+  }else if(field === "color"){
+    t.color = value;
+  }
+  await saveDamageTypes();
+};
+
+window.moveDamageTypeUp = async function(index){
+  if(index <= 0) return;
+  [damageTypes[index-1], damageTypes[index]] = [damageTypes[index], damageTypes[index-1]];
+  await saveDamageTypes();
+};
+
+window.moveDamageTypeDown = async function(index){
+  if(index === -1 || index >= damageTypes.length - 1) return;
+  [damageTypes[index+1], damageTypes[index]] = [damageTypes[index], damageTypes[index+1]];
+  await saveDamageTypes();
 };
 
 // ===== 装備 =====
@@ -877,24 +977,49 @@ function subscribePlayers(){
 // ============================
 // ===== ここから2ページ目 =====
 // ============================
-// タグ・火力色設定（ページ2用）
-const damageColors = {
-  "メイン武器": "#ff4d4f",
-  "エレメント": "#4096ff",
-  "爆発": "#ff7a45",
-  "ストライク": "#69c0ff",
-  "メテオ": "#ad4e00",
-  "サークル": "#b37feb",
-  "精霊": "#ff85c0",
-  "植物の守り手": "#389e0d",
-  "その他": "#8c8c8c"
-};
-const damageShortNames = {
-  "メイン武器": "メイン",
-  "エレメント": "エレ",
-  "ストライク": "スト",
-  "植物の守り手": "植物"
-};
+// タグ・火力色設定（ページ2用・設定画面で管理）
+const defaultDamageTypes = [
+  { name: "メイン武器", shortName: "メイン", color: "#ff4d4f" },
+  { name: "エレメント", shortName: "エレ",   color: "#4096ff" },
+  { name: "爆発",       shortName: "",       color: "#ff7a45" },
+  { name: "ストライク", shortName: "スト",   color: "#69c0ff" },
+  { name: "メテオ",     shortName: "",       color: "#ad4e00" },
+  { name: "サークル",   shortName: "",       color: "#b37feb" },
+  { name: "精霊",       shortName: "",       color: "#ff85c0" },
+  { name: "植物の守り手", shortName: "植物", color: "#389e0d" },
+  { name: "その他",     shortName: "",       color: "#8c8c8c" }
+];
+let damageTypes = []; // 実データはsubscribeDamageTypes()でFirestoreから読み込む
+
+function damageTypeNames(){
+  return damageTypes.map(t=>t.name);
+}
+function damageColor(name){
+  const t = damageTypes.find(t=>t.name===name);
+  return (t && t.color) || "gray";
+}
+function damageShortName(name){
+  const t = damageTypes.find(t=>t.name===name);
+  return (t && t.shortName) ? t.shortName : name;
+}
+
+function subscribeDamageTypes(){
+  onSnapshot(doc(db,"settings","damageTypes"), (snap)=>{
+    if(snap.exists() && Array.isArray(snap.data().types)){
+      damageTypes = snap.data().types;
+    }else{
+      // 初回だけ、これまでの固定リストで初期化
+      damageTypes = defaultDamageTypes.map(t=>({...t}));
+      setDoc(doc(db,"settings","damageTypes"), { types: damageTypes });
+    }
+    renderDamageTypeSettings();
+    if(lastExpeditionDocs) renderExpeditions(lastExpeditionDocs); // 色・名前の変更をページ2に即反映
+  });
+}
+
+async function saveDamageTypes(){
+  await setDoc(doc(db,"settings","damageTypes"), { types: damageTypes });
+}
 
 window.addMatch = async function(matchNumber){
   if(players.length === 0){
@@ -1043,12 +1168,20 @@ if(!date) return showToast("日付を選択して");
 // ===== 2ページ目表示032121更新 =====
 
 // 表示（横テーブル＋レーン区切り）
+let lastExpeditionDocs = null; // 火力内訳タグの設定変更時に再描画するため、直近のスナップショットを保持
+
 function subscribeExpeditions(){
   onSnapshot(collection(db,"expeditions"), (snap)=>{
+    lastExpeditionDocs = snap.docs;
+    renderExpeditions(snap.docs);
+  });
+}
+
+function renderExpeditions(rawDocs){
     const container = document.getElementById("expeditionContainer");
     const y = window.scrollY;
     container.innerHTML = "";
-    const docs = snap.docs.sort(
+    const docs = [...rawDocs].sort(
       (a,b)=> new Date(b.data().date) - new Date(a.data().date)
     );
     // 初回ロード時だけ最新週を自動で開く。以降はユーザーの開閉状態を維持する。
@@ -1174,7 +1307,7 @@ header.innerHTML = `
           const p = lanePlayers[i];
           row.setAttribute("data-match-number", mn);
           
-          const damageList = ["メイン武器","エレメント","爆発","ストライク","メテオ","サークル","精霊","植物の守り手","その他"];
+          const damageList = damageTypeNames();
           row.innerHTML += `
 <td data-match-number="${mn}">${p?.name || ""}</td>
 
@@ -1202,8 +1335,8 @@ ${p ? `
 
         return `
           <span class="tag active tag-${size}" 
-            style="background:${damageColors[type] || 'gray'}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
-            ${damageShortNames[type] || type}
+            style="background:${damageColor(type)}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
+            ${damageShortName(type)}
           </span>
         `;
       }).join("")
@@ -1269,7 +1402,6 @@ ${p ? `
     }
 
     window.scrollTo(0, y);
-  });
 }
 window.enableEdit = function(el){
   const parent = el.parentNode;
@@ -1328,8 +1460,8 @@ window.closeTagEdit = async function(button){
   viewDiv.innerHTML = active.length > 0
   ? active.map(t => `
       <span class="tag active tag-${t.size}" 
-        style="background:${damageColors[t.type] || 'gray'};">
-        ${damageShortNames[t.type] || t.type}
+        style="background:${damageColor(t.type)};">
+        ${damageShortName(t.type)}
       </span>
     `).join("")
   : '<span class="no-tag">未設定</span>';
@@ -1635,3 +1767,4 @@ window.saveMatchImage = async function(btn, matchNumber){
 subscribePlayers();
 subscribeExpeditions();
 subscribeRuneOptions();
+subscribeDamageTypes();
