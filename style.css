@@ -50,6 +50,30 @@ th{
 .lane-header-label{
   white-space:nowrap;
 }
+.lane-header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.btn-sort-power{
+  font-size:11px;
+  padding:4px 10px;
+  background:#4caf5080;
+  border:none;
+  border-radius:6px;
+  color:white;
+  cursor:pointer;
+  white-space:nowrap;
+  font-weight:bold;
+}
+.btn-sort-power:hover:not(:disabled){
+  background:#4caf50;
+}
+.btn-sort-power:disabled{
+  opacity:0.3;
+  cursor:default;
+}
 .lane-select-all{
   display:flex;
   align-items:center;
@@ -348,6 +372,7 @@ button:hover {
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
   .lane-header-row { gap: 4px; }
   .lane-select-all { font-size: 11px; }
+  .btn-sort-power { font-size: 10px; padding: 3px 7px; }
   .bulk-selection-bar { bottom: 12px; padding: 6px 12px; font-size: 12px; gap: 6px; }
   .bulk-selection-bar button { font-size: 11px; padding: 5px 10px; }
   .rune-list {                                   /* スマホでは横4個まで、5個目から2段目へ */
