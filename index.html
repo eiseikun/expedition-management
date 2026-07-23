@@ -64,6 +64,18 @@
     </div>
     <div id="runeSettingsContainer"></div>
   </div>
+
+  <div class="settings-section">
+    <h3>火力内訳タグ設定（ページ2）</h3>
+    <p class="settings-hint">ここで追加・編集したタグが、遠征記録ページの火力内訳で選べるようになります。色や略称の変更はすぐに全ての記録の表示に反映されますが、タグ名そのものを変更した場合、すでに保存済みの記録は元の名前のまま残ります（新しい名前は今後の記録から使われます）。</p>
+    <div class="add-damage-type-row">
+      <input id="newDamageTypeName" placeholder="タグ名（例：メイン武器）">
+      <input id="newDamageTypeShort" placeholder="短縮表示（省略可）">
+      <input id="newDamageTypeColor" type="color" value="#8c8c8c">
+      <button onclick="addDamageType()">タグを追加</button>
+    </div>
+    <div id="damageTypeSettingsContainer"></div>
+  </div>
 </div>
 
 <!-- 選択したプレイヤーを一括移動するバー -->
