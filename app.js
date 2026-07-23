@@ -21,7 +21,7 @@ let openWeekIds = new Set();       // 開いている週ブロックのdocId
 let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
 let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
 let selectedIds = new Set();       // まとめて移動用に選択中のプレイヤー（Firestoreドキュメントid）
-let closedRuneGroups = new Set();  // 設定画面で折り畳んでいるルーングループ名
+let openRuneGroups = new Set();    // 設定画面で開いているルーングループ名（デフォルトは全て閉じた状態）
 
 
 // ===== ページ切替 =====
@@ -208,7 +208,7 @@ function renderRuneSettings(){
     ${groupOrder.map(g=>{
       const groupNames = groupedNames[g];
       const key = g || "__none__";
-      const isOpen = !closedRuneGroups.has(key);
+      const isOpen = openRuneGroups.has(key);
       const label = g || "未分類";
       return `
       <div class="rune-group">
@@ -266,10 +266,10 @@ function renderRuneTypeCard(name, groupNames){
 }
 
 window.toggleRuneGroup = function(key){
-  if(closedRuneGroups.has(key)){
-    closedRuneGroups.delete(key);
+  if(openRuneGroups.has(key)){
+    openRuneGroups.delete(key);
   }else{
-    closedRuneGroups.add(key);
+    openRuneGroups.add(key);
   }
   renderRuneSettings();
 };
