@@ -82,31 +82,57 @@ const defaultRuneOptions = {
   ストポショ: ["無敵効果"]
 };
 let runeOptions = {}; // 実データはsubscribeRuneOptions()でFirestoreから読み込む
+let runeOrder = [];   // ルーン種類の表示順（名前の配列）
+
+// runeOptionsに実在するキーだけを、runeOrderの並び順で返す（順序未登録の新規キーは末尾に補完）
+function orderedRuneNames(){
+  const known = Object.keys(runeOptions);
+  const knownSet = new Set(known);
+  const ordered = runeOrder.filter(n=>knownSet.has(n));
+  known.forEach(n=>{
+    if(!ordered.includes(n)) ordered.push(n);
+  });
+  return ordered;
+}
 
 function subscribeRuneOptions(){
   onSnapshot(doc(db,"settings","runeOptions"), (snap)=>{
+    let needsSave = false;
+
     if(snap.exists()){
       const data = snap.data();
       runeOptions = data.options || {};
+      runeOrder = Array.isArray(data.order) ? data.order : [];
 
       // 旧仕様（鋭利・アロレが固定欄だった頃）からの移行：一度だけ自動で追加する
       if(!data.migratedFixedRunes){
         if(!runeOptions["鋭利"]) runeOptions["鋭利"] = [...defaultRuneOptions["鋭利"]];
         if(!runeOptions["アロレ"]) runeOptions["アロレ"] = [...defaultRuneOptions["アロレ"]];
-        setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, migratedFixedRunes: true });
+        needsSave = true;
       }
+      // 並び順（order）が保存されていない古いデータの場合は、今のキー順で初期化して保存する
+      if(!Array.isArray(data.order)) needsSave = true;
     }else{
       // 初回だけ、これまでの固定リストで初期化
       runeOptions = { ...defaultRuneOptions };
-      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, migratedFixedRunes: true });
+      runeOrder = Object.keys(defaultRuneOptions);
+      needsSave = true;
     }
+
+    runeOrder = orderedRuneNames(); // 正規化（実在しないキーの除去／未登録キーの補完）
+
+    if(needsSave){
+      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, migratedFixedRunes: true });
+    }
+
     refreshOpenRuneSelects();
     renderRuneSettings();
   });
 }
 
 async function saveRuneOptions(){
-  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, migratedFixedRunes: true }, { merge: true });
+  runeOrder = orderedRuneNames();
+  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, migratedFixedRunes: true }, { merge: true });
 }
 
 // 編集モーダルが開いた状態でルーン種類が更新された場合に、
@@ -114,8 +140,8 @@ async function saveRuneOptions(){
 function refreshOpenRuneSelects(){
   document.querySelectorAll("#runeContainer .rune-row .rune-name").forEach(sel=>{
     const current = sel.value;
-    sel.innerHTML = Object.keys(runeOptions).map(n=>`<option>${n}</option>`).join("");
-    if(Object.keys(runeOptions).includes(current)){
+    sel.innerHTML = orderedRuneNames().map(n=>`<option>${n}</option>`).join("");
+    if(orderedRuneNames().includes(current)){
       sel.value = current;
     }
     const eSel = sel.closest(".rune-row").querySelector(".rune-e");
@@ -138,17 +164,21 @@ function renderRuneSettings(){
   const container = document.getElementById("runeSettingsContainer");
   if(!container) return;
 
-  const names = Object.keys(runeOptions);
+  const names = orderedRuneNames();
   if(names.length === 0){
     container.innerHTML = `<p class="no-effect">まだルーン種類がありません。上のフォームから追加してください。</p>`;
     return;
   }
 
-  container.innerHTML = names.map(name=>{
+  container.innerHTML = names.map((name,idx)=>{
     const effects = runeOptions[name] || [];
     return `
     <div class="rune-type-card">
       <div class="rune-type-card-header">
+        <div class="rune-type-order-buttons">
+          <button class="btn-order" onclick="moveRuneTypeUp('${escapeForAttr(name)}')" ${idx===0 ? "disabled" : ""} title="上へ">▲</button>
+          <button class="btn-order" onclick="moveRuneTypeDown('${escapeForAttr(name)}')" ${idx===names.length-1 ? "disabled" : ""} title="下へ">▼</button>
+        </div>
         <h4>${name}</h4>
         <button class="btn-delete-type" onclick="deleteRuneType('${escapeForAttr(name)}')">種類ごと削除</button>
       </div>
@@ -193,6 +223,7 @@ window.addRuneType = async function(){
     return;
   }
   runeOptions[name] = [];
+  runeOrder.push(name);
   await saveRuneOptions();
   input.value = "";
   showToast(`「${name}」を追加しました`);
@@ -201,8 +232,27 @@ window.addRuneType = async function(){
 window.deleteRuneType = async function(name){
   if(!confirm(`「${name}」を削除しますか？（このルーンを使っているプレイヤーの表示名は残ります）`)) return;
   delete runeOptions[name];
+  runeOrder = runeOrder.filter(n=>n!==name);
   await saveRuneOptions();
   showToast(`「${name}」を削除しました`);
+};
+
+window.moveRuneTypeUp = async function(name){
+  const order = orderedRuneNames();
+  const idx = order.indexOf(name);
+  if(idx <= 0) return;
+  [order[idx-1], order[idx]] = [order[idx], order[idx-1]];
+  runeOrder = order;
+  await saveRuneOptions();
+};
+
+window.moveRuneTypeDown = async function(name){
+  const order = orderedRuneNames();
+  const idx = order.indexOf(name);
+  if(idx === -1 || idx >= order.length - 1) return;
+  [order[idx+1], order[idx]] = [order[idx], order[idx+1]];
+  runeOrder = order;
+  await saveRuneOptions();
 };
 
 window.addRuneEffect = async function(name){
@@ -231,17 +281,18 @@ window.deleteRuneEffect = async function(name, effect){
 
 window.addRune = function(rune = null){
   if(!rune){
-    if(Object.keys(runeOptions).length === 0){
+    if(orderedRuneNames().length === 0){
       showToast("設定画面でルーンの種類を先に追加してください");
       return;
     }
-    rune = { name: Object.keys(runeOptions)[0], q:"none", e:"" };
+    rune = { name: orderedRuneNames()[0], q:"none", e:"" };
   }
 
   // 設定から削除済みの過去データでも表示だけは維持する（データ保護）
-  const nameOptions = (rune.name && !Object.keys(runeOptions).includes(rune.name))
-    ? [rune.name, ...Object.keys(runeOptions)]
-    : Object.keys(runeOptions);
+  const names = orderedRuneNames();
+  const nameOptions = (rune.name && !names.includes(rune.name))
+    ? [rune.name, ...names]
+    : names;
 
   const div = document.createElement("div");
   div.className = "rune-row";
