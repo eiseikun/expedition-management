@@ -472,13 +472,6 @@ function strategyClass(range){
 const laneNames={1:"レーン1",2:"レーン2",3:"レーン3",0:"控え","-1":"クラン外"};
 const laneOrderList = [1,2,3,0,-1];
 
-function laneSelectOptions(currentLane){
-  return laneOrderList
-    .filter(l=>l!==currentLane)
-    .map(l=>`<option value="${l}">${laneNames[l]}</option>`)
-    .join("");
-}
-
 function render(){
   const y = window.scrollY;
   const body=document.getElementById("playerBody");
@@ -499,6 +492,7 @@ function render(){
     list.sort((a,b)=>a.order - b.order);
     // クラン外は前回の開閉状態を維持（毎回勝手に閉じないように）
     const hidden = (l === -1) && !clanoutOpen;
+    const allSelected = list.every(p=>selectedIds.has(p.id));
     tr.innerHTML = `
     <td colspan="12" class="${l === -1 ? 'toggle-clanout' : ''}">
     <div class="lane-header-row">
@@ -510,12 +504,10 @@ function render(){
       }
       ${l === -1 ? (clanoutOpen ? ' ▲' : ' ▼') : ''}
       </span>
-      <span class="lane-bulk-move no-export">
-        <select class="bulk-move-target" data-lane="${l}" onclick="event.stopPropagation()">
-          ${laneSelectOptions(l)}
-        </select>
-        <button onclick="event.stopPropagation(); bulkMoveLane(${l})">まとめて移動</button>
-      </span>
+      <label class="lane-select-all no-export" onclick="event.stopPropagation()">
+        <input type="checkbox" ${allSelected ? "checked" : ""} onchange="toggleSelectLane(${l}, this)">
+        全員選択
+      </label>
     </div>
     </td>
     `;
@@ -583,6 +575,17 @@ window.toggleSelectPlayer = function(id, checkbox){
   updateBulkSelectionBar();
 };
 
+// レーンの「全員選択」チェックボックス：そのレーン全員を選択 / 解除する
+window.toggleSelectLane = function(lane, checkbox){
+  const lanePlayers = players.filter(p=>p.lane === lane);
+  if(checkbox.checked){
+    lanePlayers.forEach(p=>selectedIds.add(p.id));
+  }else{
+    lanePlayers.forEach(p=>selectedIds.delete(p.id));
+  }
+  render(); // 各行のチェックボックス表示を更新
+};
+
 function updateBulkSelectionBar(){
   const bar = document.getElementById("bulkSelectionBar");
   const captureArea = document.getElementById("captureArea");
@@ -628,8 +631,10 @@ window.moveSelectedPlayers = async function(){
     warning = `\n※移動後は${existingInTarget.length + targets.length}人になり、8人を超えます`;
   }
 
-  const names = targets.map(p=>p.name).join("、");
-  if(!confirm(`${names} を${laneNames[toLane]}へ移動しますか？${warning}`)) return;
+  const confirmMsg = targets.length > 6
+    ? `選択した${targets.length}人を${laneNames[toLane]}へ移動しますか？${warning}`
+    : `${targets.map(p=>p.name).join("、")} を${laneNames[toLane]}へ移動しますか？${warning}`;
+  if(!confirm(confirmMsg)) return;
 
   const maxOrder = existingInTarget.length
     ? Math.max(...existingInTarget.map(p=>p.order))
@@ -1353,44 +1358,6 @@ window.moveDown = async function(order){
   await batch.commit();
 };
 
-// ===== レーンごと一括移動 =====
-window.bulkMoveLane = async function(fromLane){
-  const select = document.querySelector(`.bulk-move-target[data-lane="${fromLane}"]`);
-  if(!select) return;
-  const toLane = Number(select.value);
-
-  const targets = players
-    .filter(p => p.lane === fromLane)
-    .sort((a,b)=>a.order - b.order);
-
-  if(targets.length === 0){
-    showToast("移動対象がいません");
-    return;
-  }
-
-  const existingInTarget = players.filter(p => p.lane === toLane);
-  let warning = "";
-  if((toLane === 1 || toLane === 2 || toLane === 3) && existingInTarget.length + targets.length > 8){
-    warning = `\n※移動後は${existingInTarget.length + targets.length}人になり、8人を超えます`;
-  }
-
-  if(!confirm(`${laneNames[fromLane]}の${targets.length}人を${laneNames[toLane]}へ移動しますか？${warning}`)) return;
-
-  // 移動先の既存メンバーの後ろに追加されるよう、orderを振り直す
-  const maxOrder = existingInTarget.length
-    ? Math.max(...existingInTarget.map(p=>p.order))
-    : Date.now();
-  let nextOrder = maxOrder + 1;
-
-  const batch = writeBatch(db);
-  targets.forEach(p=>{
-    batch.update(doc(db,"players",p.id), { lane: toLane, order: nextOrder });
-    nextOrder += 1;
-  });
-  await batch.commit();
-
-  showToast(`${targets.length}人を${laneNames[toLane]}へ移動しました`);
-};
 // ===== 週ごと画像保存 =====
 window.saveWeekImage = async function(btn){
   // 対象の週ブロック取得
