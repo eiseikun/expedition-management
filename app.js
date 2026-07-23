@@ -21,6 +21,7 @@ let openWeekIds = new Set();       // 開いている週ブロックのdocId
 let expeditionFirstLoad = true;    // 初回ロードかどうか（最新週を自動で開くため）
 let openTagEditKey = null;         // 編集中の火力内訳セル（docId|matchNumber|playerName）
 let selectedIds = new Set();       // まとめて移動用に選択中のプレイヤー（Firestoreドキュメントid）
+let closedRuneGroups = new Set();  // 設定画面で折り畳んでいるルーングループ名
 
 
 // ===== ページ切替 =====
@@ -83,6 +84,15 @@ const defaultRuneOptions = {
 };
 let runeOptions = {}; // 実データはsubscribeRuneOptions()でFirestoreから読み込む
 let runeOrder = [];   // ルーン種類の表示順（名前の配列）
+let runeGroups = {};  // ルーン種類 → グループ名（未設定は "" ＝未分類）
+
+// 初回のみ、例としてエレメント系をグループ化しておく（以降は設定画面で自由に変更可）
+const defaultRuneGroups = {
+  炎毒の印: "エレメント系",
+  氷雷の印: "エレメント系",
+  炎毒の触: "エレメント系",
+  氷雷の触: "エレメント系"
+};
 
 // runeOptionsに実在するキーだけを、runeOrderの並び順で返す（順序未登録の新規キーは末尾に補完）
 function orderedRuneNames(){
@@ -103,6 +113,7 @@ function subscribeRuneOptions(){
       const data = snap.data();
       runeOptions = data.options || {};
       runeOrder = Array.isArray(data.order) ? data.order : [];
+      runeGroups = data.groups || {};
 
       // 旧仕様（鋭利・アロレが固定欄だった頃）からの移行：一度だけ自動で追加する
       if(!data.migratedFixedRunes){
@@ -116,13 +127,14 @@ function subscribeRuneOptions(){
       // 初回だけ、これまでの固定リストで初期化
       runeOptions = { ...defaultRuneOptions };
       runeOrder = Object.keys(defaultRuneOptions);
+      runeGroups = { ...defaultRuneGroups };
       needsSave = true;
     }
 
     runeOrder = orderedRuneNames(); // 正規化（実在しないキーの除去／未登録キーの補完）
 
     if(needsSave){
-      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, migratedFixedRunes: true });
+      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, migratedFixedRunes: true });
     }
 
     refreshOpenRuneSelects();
@@ -132,7 +144,7 @@ function subscribeRuneOptions(){
 
 async function saveRuneOptions(){
   runeOrder = orderedRuneNames();
-  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, migratedFixedRunes: true }, { merge: true });
+  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, migratedFixedRunes: true }, { merge: true });
 }
 
 // 編集モーダルが開いた状態でルーン種類が更新された場合に、
@@ -159,7 +171,7 @@ function updateEnchant(nameSelect, enchantSelect, currentEffect){
   if(currentEffect) enchantSelect.value = currentEffect;
 }
 
-// ===== 設定ページ：ルーン管理 =====
+// ===== 設定ページ：ルーン管理（グループ折り畳み対応） =====
 function renderRuneSettings(){
   const container = document.getElementById("runeSettingsContainer");
   if(!container) return;
@@ -170,17 +182,68 @@ function renderRuneSettings(){
     return;
   }
 
-  container.innerHTML = names.map((name,idx)=>{
-    const effects = runeOptions[name] || [];
-    return `
+  // グループごとにまとめる（未分類は最後にまとめて表示）
+  const groupOrder = [];
+  const groupedNames = {};
+  names.forEach(name=>{
+    const g = runeGroups[name] || "";
+    if(!(g in groupedNames)){
+      groupedNames[g] = [];
+      groupOrder.push(g);
+    }
+    groupedNames[g].push(name);
+  });
+  groupOrder.sort((a,b)=>{
+    if(a === "" && b !== "") return 1;
+    if(b === "" && a !== "") return -1;
+    return 0;
+  });
+
+  const existingGroupNames = [...new Set(names.map(n=>runeGroups[n]).filter(Boolean))];
+
+  container.innerHTML = `
+    <datalist id="runeGroupList">
+      ${existingGroupNames.map(g=>`<option value="${g}"></option>`).join("")}
+    </datalist>
+    ${groupOrder.map(g=>{
+      const groupNames = groupedNames[g];
+      const key = g || "__none__";
+      const isOpen = !closedRuneGroups.has(key);
+      const label = g || "未分類";
+      return `
+      <div class="rune-group">
+        <div class="rune-group-header" onclick="toggleRuneGroup('${escapeForAttr(key)}')">
+          <span class="rune-group-toggle">${isOpen ? "▼" : "▶"}</span>
+          <span class="rune-group-title">${label}</span>
+          <span class="rune-group-count">(${groupNames.length})</span>
+        </div>
+        <div class="rune-group-body" ${isOpen ? "" : 'style="display:none;"'}>
+          ${groupNames.map(name=>renderRuneTypeCard(name, groupNames)).join("")}
+        </div>
+      </div>
+      `;
+    }).join("")}
+  `;
+}
+
+function renderRuneTypeCard(name, groupNames){
+  const effects = runeOptions[name] || [];
+  const idx = groupNames.indexOf(name);
+  return `
     <div class="rune-type-card">
       <div class="rune-type-card-header">
         <div class="rune-type-order-buttons">
           <button class="btn-order" onclick="moveRuneTypeUp('${escapeForAttr(name)}')" ${idx===0 ? "disabled" : ""} title="上へ">▲</button>
-          <button class="btn-order" onclick="moveRuneTypeDown('${escapeForAttr(name)}')" ${idx===names.length-1 ? "disabled" : ""} title="下へ">▼</button>
+          <button class="btn-order" onclick="moveRuneTypeDown('${escapeForAttr(name)}')" ${idx===groupNames.length-1 ? "disabled" : ""} title="下へ">▼</button>
         </div>
         <h4>${name}</h4>
         <button class="btn-delete-type" onclick="deleteRuneType('${escapeForAttr(name)}')">種類ごと削除</button>
+      </div>
+      <div class="rune-group-assign">
+        <label for="groupInput-${cssKey(name)}">グループ</label>
+        <input id="groupInput-${cssKey(name)}" class="rune-group-input" list="runeGroupList"
+          value="${runeGroups[name] || ""}" placeholder="未分類のまま"
+          onchange="setRuneGroup('${escapeForAttr(name)}', this.value)">
       </div>
       <div class="rune-effect-chips">
         ${
@@ -199,9 +262,28 @@ function renderRuneSettings(){
         <button onclick="addRuneEffect('${escapeForAttr(name)}')">追加</button>
       </div>
     </div>
-    `;
-  }).join("");
+  `;
 }
+
+window.toggleRuneGroup = function(key){
+  if(closedRuneGroups.has(key)){
+    closedRuneGroups.delete(key);
+  }else{
+    closedRuneGroups.add(key);
+  }
+  renderRuneSettings();
+};
+
+window.setRuneGroup = async function(name, group){
+  const trimmed = group.trim();
+  if(trimmed){
+    runeGroups[name] = trimmed;
+  }else{
+    delete runeGroups[name];
+  }
+  await saveRuneOptions();
+  showToast(trimmed ? `「${name}」を「${trimmed}」グループに設定しました` : `「${name}」のグループ設定を解除しました`);
+};
 
 function escapeForAttr(str){
   return String(str).replace(/'/g, "\\'");
@@ -233,25 +315,36 @@ window.deleteRuneType = async function(name){
   if(!confirm(`「${name}」を削除しますか？（このルーンを使っているプレイヤーの表示名は残ります）`)) return;
   delete runeOptions[name];
   runeOrder = runeOrder.filter(n=>n!==name);
+  delete runeGroups[name];
   await saveRuneOptions();
   showToast(`「${name}」を削除しました`);
 };
 
-window.moveRuneTypeUp = async function(name){
+// 同じグループ内での前後入れ替え（グループをまたいだ移動はしない）
+function swapRuneOrderPositions(nameA, nameB){
   const order = orderedRuneNames();
-  const idx = order.indexOf(name);
-  if(idx <= 0) return;
-  [order[idx-1], order[idx]] = [order[idx], order[idx-1]];
+  const idxA = order.indexOf(nameA);
+  const idxB = order.indexOf(nameB);
+  if(idxA === -1 || idxB === -1) return;
+  [order[idxA], order[idxB]] = [order[idxB], order[idxA]];
   runeOrder = order;
+}
+
+window.moveRuneTypeUp = async function(name){
+  const group = runeGroups[name] || "";
+  const namesInGroup = orderedRuneNames().filter(n => (runeGroups[n] || "") === group);
+  const idx = namesInGroup.indexOf(name);
+  if(idx <= 0) return;
+  swapRuneOrderPositions(namesInGroup[idx-1], name);
   await saveRuneOptions();
 };
 
 window.moveRuneTypeDown = async function(name){
-  const order = orderedRuneNames();
-  const idx = order.indexOf(name);
-  if(idx === -1 || idx >= order.length - 1) return;
-  [order[idx+1], order[idx]] = [order[idx], order[idx+1]];
-  runeOrder = order;
+  const group = runeGroups[name] || "";
+  const namesInGroup = orderedRuneNames().filter(n => (runeGroups[n] || "") === group);
+  const idx = namesInGroup.indexOf(name);
+  if(idx === -1 || idx >= namesInGroup.length - 1) return;
+  swapRuneOrderPositions(name, namesInGroup[idx+1]);
   await saveRuneOptions();
 };
 
