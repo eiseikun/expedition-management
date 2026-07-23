@@ -533,13 +533,38 @@ td { position: relative; }
 }
 .rune-type-card-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
   margin-bottom: 8px;
+}
+.rune-type-order-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rune-type-order-buttons .btn-order {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: white;
+  border-radius: 4px;
+  width: 22px;
+  height: 18px;
+  font-size: 9px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+.rune-type-order-buttons .btn-order:hover:not(:disabled) {
+  background: #3a3a3a;
+}
+.rune-type-order-buttons .btn-order:disabled {
+  opacity: 0.25;
+  cursor: default;
 }
 .rune-type-card-header h4 {
   margin: 0;
   font-size: 15px;
+  flex: 1;
 }
 .rune-type-card .btn-delete-type {
   background: #f4433680;
