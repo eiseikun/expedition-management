@@ -666,10 +666,13 @@ window.saveNote = async function(id, value){
   
 
 // ===== 画像保存 =====
-window.saveTableImage = async function(){
+window.saveTableImage = async function(includeNotes = false){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
   clone.querySelectorAll(".update-btn, .update-time, .no-export").forEach(el => el.remove());
+  if(!includeNotes){
+    clone.querySelectorAll(".note-cell").forEach(el => el.remove());
+  }
   const rows = clone.querySelectorAll("tr");
   let hide = false;
   rows.forEach(row=>{
@@ -706,14 +709,16 @@ window.saveTableImage = async function(){
   const canvas = await html2canvas(clone,{scale:3, backgroundColor:"#111", width:clone.scrollWidth});
   document.body.removeChild(clone);
 
+  const filename = includeNotes ? "expedition_memo.png" : "expedition.png";
+
   canvas.toBlob(async blob=>{
-    const file=new File([blob],"expedition.png",{type:"image/png"});
+    const file=new File([blob],filename,{type:"image/png"});
     if(navigator.share && navigator.canShare({files:[file]})){
       await navigator.share({files:[file]});
     }else{
       const link=document.createElement("a");
       link.href=URL.createObjectURL(blob);
-      link.download="expedition.png";
+      link.download=filename;
       link.click();
     }
   });
@@ -821,7 +826,7 @@ function render(){
         </td>
         <td><button onclick="editPlayer(${p.order})">編集</button></td>
         <td><button onclick="deletePlayer(${p.order})">削除</button></td>
-        <td class="note-cell no-export">
+        <td class="note-cell">
         <textarea class="note-input" placeholder="メモ" onchange="saveNote('${p.id}', this.value)">${escapeHtml(p.note || "")}</textarea>
         </td>
       `;
