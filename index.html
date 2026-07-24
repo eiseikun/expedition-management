@@ -17,7 +17,8 @@
 
 <div class="top-buttons" id="topButtons">
   <button onclick="openEditor()">プレイヤー追加</button>
-  <button onclick="saveTableImage()">画像保存</button>
+  <button onclick="saveTableImage(false)">画像保存</button>
+  <button onclick="saveTableImage(true)">メモ付き画像保存</button>
 </div>
 
 <div class="page-buttons">
@@ -33,7 +34,7 @@
       <tr>
         <th class="no-export">選択</th>
         <th>名前</th><th>戦力</th><th>戦術</th><th>装備</th><th>主キャラ</th>
-        <th>ルーン</th><th>編成</th><th>聖物%</th><th>並び替え</th><th>編集</th><th>削除</th><th class="no-export">メモ</th>
+        <th>ルーン</th><th>編成</th><th>聖物%</th><th>並び替え</th><th>編集</th><th>削除</th><th class="note-cell">メモ</th>
       </tr>
     </thead>
     <tbody id="playerBody"></tbody>
