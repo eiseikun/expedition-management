@@ -672,6 +672,14 @@ window.saveTableImage = async function(includeNotes = false){
   clone.querySelectorAll(".update-btn, .update-time, .no-export").forEach(el => el.remove());
   if(!includeNotes){
     clone.querySelectorAll(".note-cell").forEach(el => el.remove());
+  }else{
+    // メモは折り返して全文が見えるよう、テキストエリアを可変高さの文章に置き換える
+    clone.querySelectorAll(".note-input").forEach(textarea=>{
+      const div = document.createElement("div");
+      div.className = "note-export-text";
+      div.textContent = textarea.value;
+      textarea.replaceWith(div);
+    });
   }
   const rows = clone.querySelectorAll("tr");
   let hide = false;
@@ -698,7 +706,12 @@ window.saveTableImage = async function(includeNotes = false){
     }
   });
 
-  clone.style.width = original.scrollWidth + "px";
+  // 幅は削除後の中身に合わせる（テーブル本来の min-width が余白の原因になるため解除）
+  clone.querySelectorAll("table").forEach(table=>{
+    table.style.minWidth = "0";
+    table.style.width = "auto";
+  });
+  clone.style.width = "max-content";
   clone.style.background = "#111";
   clone.style.color = "white";
   clone.style.position = "absolute";
@@ -706,7 +719,8 @@ window.saveTableImage = async function(includeNotes = false){
 
   document.body.appendChild(clone);
 
-  const canvas = await html2canvas(clone,{scale:3, backgroundColor:"#111", width:clone.scrollWidth});
+  const captureWidth = clone.scrollWidth;
+  const canvas = await html2canvas(clone,{scale:3, backgroundColor:"#111", width:captureWidth});
   document.body.removeChild(clone);
 
   const filename = includeNotes ? "expedition_memo.png" : "expedition.png";
