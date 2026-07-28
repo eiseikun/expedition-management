@@ -204,6 +204,21 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 .note-input::placeholder {
   color: rgba(255,255,255,0.35);
 }
+.note-export-text {
+  width: 140px;
+  max-width: 200px;
+  min-height: 40px;
+  background: #1a1a1a;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-sizing: border-box;
+}
 
 /* 選択したプレイヤーをまとめて移動するバー */
 .bulk-selection-bar {
