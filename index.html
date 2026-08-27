@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ねこ海賊団 遠征管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;800&family=Cinzel:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -12,11 +14,15 @@
 </head>
 <body>
 
-<h1>ねこ海賊団 遠征管理</h1>
+<div class="app-header">
+  <div class="app-eyebrow">CAT PIRATES CLAN</div>
+  <div class="app-banner"><h1>ねこ海賊団 遠征管理</h1></div>
+  <div class="app-sub">EXPEDITION MANAGEMENT BOARD</div>
+</div>
 <div class="mode-indicator" id="modeIndicator">通常モード</div>
 
 <div class="top-buttons" id="topButtons">
-  <button onclick="openEditor()">プレイヤー追加</button>
+  <button class="btn-primary" onclick="openEditor()">プレイヤー追加</button>
   <button onclick="saveTableImage(false)">画像保存</button>
   <button onclick="saveTableImage(true)">メモ付き画像保存</button>
 </div>
