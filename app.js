@@ -40,6 +40,8 @@ window.showPage = async function(n){
   document.querySelectorAll(".page-buttons button").forEach((btn, i)=>{
     btn.classList.toggle("active", i === n - 1);
   });
+  const gearBtn = document.getElementById("settingsGearBtn");
+  if(gearBtn) gearBtn.classList.toggle("active", n === 3);
 
   if(n === 3) renderRuneSettings();
   updateBulkSelectionBar();
@@ -49,8 +51,6 @@ window.showPage = async function(n){
 window.openEditor = function(){
   document.body.classList.add("modal-open");
   document.getElementById("editor").style.display = "block";
-  document.getElementById("modeIndicator").innerText = "追加モード";
-  document.getElementById("modeIndicator").classList.add("editing");
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
@@ -61,8 +61,6 @@ window.openEditor = function(){
 window.closeEditor = function(){
   document.body.classList.remove("modal-open");
   document.getElementById("editor").style.display = "none";
-  document.getElementById("modeIndicator").innerText = "通常モード";
-  document.getElementById("modeIndicator").classList.remove("editing");
 };
 
 // ===== トースト通知 =====
