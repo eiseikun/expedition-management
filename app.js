@@ -942,6 +942,7 @@ window.moveSelectedPlayers = async function(){
   await batch.commit();
 
   selectedIds.clear();
+  render();
   showToast(`${targets.length}人を${laneNames[toLane]}へ移動しました`);
 };
 
