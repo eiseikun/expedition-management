@@ -804,6 +804,15 @@ td { position: relative; }
   color: var(--text-faint);
   margin-top:2px;
 }
+/* レーン1〜3は行の背景が明るいパステル色になるため、
+   text-faint（暗めグレー）だと背景に埋もれて見えなくなる。
+   その3レーンだけ濃い色に切り替えてコントラストを確保する。 */
+.lane-1 .update-time,
+.lane-2 .update-time,
+.lane-3 .update-time{
+  color: rgba(20,22,30,0.72);
+  font-weight: 600;
+}
 .update-btn{
   font-size: 9px;     /* 文字小さく */
   padding: 1px 4px;    /* 余白縮小 */
