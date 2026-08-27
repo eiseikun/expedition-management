@@ -1,8 +1,14 @@
 /* ==============================
    ページ全体設定
 ============================== */
+*, *::before, *::after {
+  box-sizing: border-box;      /* 幅計算をわかりやすく統一 */
+}
 html, body {
   height: 100%;
+}
+html {
+  -webkit-text-size-adjust: 100%; /* スマホ回転時の文字自動拡大を防止 */
 }
 body {
   font-family: sans-serif;     /* フォント */
@@ -10,7 +16,23 @@ body {
   color: white;                /* 文字色 */
   text-align: center;          /* 中央寄せ */
   margin: 0;                   /* 余白なし */
+  padding: 0 10px;             /* 画面端の余白（PC・スマホ共通） */
   overflow-x: hidden;          /* 横スクロール防止 */
+  -webkit-tap-highlight-color: transparent; /* スマホタップ時の灰色ハイライト消去 */
+}
+h1 {
+  font-size: 22px;
+  margin: 16px 0 10px;
+}
+#modeIndicator {
+  display: inline-block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  background: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 999px;
+  padding: 3px 12px;
+  margin-bottom: 14px;
 }
 /* モーダル開いてる時は背景スクロール禁止 */
 body.modal-open {
@@ -33,6 +55,9 @@ th,td{
 /* ヘッダー（タイトル行） */
 th{
   background:#222;            /* 少し明るい黒 */
+  position: sticky;           /* 縦スクロールしてもヘッダーが見えるように */
+  top: 0;
+  z-index: 6;
 }
 /* レーン見出し（レーン1とか） */
 .lane-header{
@@ -97,6 +122,7 @@ tr:hover{
 /* 横スクロール用の外枠 */
 .table-container{
   overflow-x:auto;
+  -webkit-overflow-scrolling: touch; /* スマホでの横スクロールを滑らかに */
 }
 
 /* ==============================
@@ -275,7 +301,7 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   transform: translateX(-50%); /* ← 中央寄せ */
   
   width: calc(100% - 20px); /* ← スマホ対応 */
-  max-width: 500px;         /* ← PCで広がらない */
+  max-width: 540px;         /* ← PCで広がりすぎない */
 
   bottom: 20px;
 
@@ -302,10 +328,39 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
 /* 入力系まとめて余白 */
 .editor input,
-.editor select {
+.editor select,
+.editor textarea {
+  width: 100%;           /* ← 幅いっぱいに揃える（PC/スマホ共通） */
   margin-bottom: 14px;   /* ← ここが重要 */
   padding: 10px;
   border-radius: 8px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: white;
+  font-size: 16px;       /* ← iOSでフォーカス時に自動ズームさせない */
+}
+.editor input:focus,
+.editor select:focus,
+.editor textarea:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+
+/* 2項目を横並びにする行（PC/タブレット）。狭い画面では縦積みに切替 */
+.field-row {
+  display: flex;
+  gap: 10px;
+}
+.field-row > * {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 14px;
+}
+@media (max-width: 420px) {
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
 }
 
 /* 装備セクション */
@@ -335,6 +390,8 @@ button {
   padding: 8px 14px;
   font-weight: bold;
   cursor: pointer;
+  min-height: 38px;      /* ← 指でも押しやすい最低の高さ */
+  touch-action: manipulation; /* ← タップ時の遅延・二重ズームを防止 */
 }
 
 button:hover {
@@ -344,11 +401,16 @@ button:hover {
 .top-buttons {
   margin-bottom: 15px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
 }
 .page-buttons {
   margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 /* 2ページ目ボタン */
 .buttons {
@@ -403,11 +465,16 @@ button:hover {
 /* ==============================
    スマホ用レイアウト（600px以下）
 ============================== */
+/* 入力系はスマホでも16px未満にしない（iOSの自動ズーム防止） */
 @media (max-width: 600px) {
-  body { font-size: 14px; }
+  input, select, textarea { font-size: 16px; }
+}
+
+@media (max-width: 600px) {
+  body { font-size: 14px; padding: 0 6px; }
   th, td { font-size: 11px; padding: 6px; }  /* 📊 テーブル調整 */
-  button { padding: 6px 10px; font-size: 12px; border-radius: 6px; }  /* ボタン小さく */
-  .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
+  button { padding: 8px 10px; font-size: 12px; border-radius: 6px; min-height: 40px; }  /* ボタン小さく・押しやすく */
+  .top-buttons, .page-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 5px; }  /* 🔮 ルーン少し小さく */
   .lane-header-row { gap: 4px; }
