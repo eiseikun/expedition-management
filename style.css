@@ -115,8 +115,7 @@ body.modal-open {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 8px;
-  margin: 0 auto 16px;
-  max-width: 1120px;
+  margin: 0 auto 16px;   /* ← 元と同じく画面幅いっぱいに使う（最大幅の制限なし） */
 }
 /* テーブル本体 */
 table{
@@ -261,15 +260,18 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 
 .rune-legend { background: var(--gold); color: #241d05; }
 .rune-mythic { background: var(--blood-bright); color: #fff; }
-/* ルーン一覧：横に並べていき、確保した幅に収まりきらなくなったら次の段へ折り返す */
+/* ルーン一覧：基本は1段で横に並べる（画面より長くなったら表ごと横スクロール）。
+   8個を超える場合だけ2段目に折り返す。3段目は作らない。 */
 .rune-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  min-width: 150px;   /* 早すぎる折り返しを防ぐための最低幅 */
+  display: grid;
+  grid-template-columns: repeat(8, max-content);
+  grid-auto-flow: row;
+  gap: 3px 6px;
+  justify-content: start;
+  min-width: 0;
 }
 .rune-list .rune {
-  white-space: nowrap;   /* 1個ずつは途中で割れずに次の段へ */
+  white-space: nowrap;   /* 途中で折り返さず、そのまま横に伸ばす */
 }
 /* ルーン追加欄の区切り線 */
 #runeContainer {
@@ -644,28 +646,16 @@ button:hover {
   .note-input { width: 100px; min-height: 34px; font-size: 11px; }
   .bulk-selection-bar { bottom: 12px; padding: 6px 12px; font-size: 12px; gap: 6px; }
   .bulk-selection-bar button { font-size: 11px; padding: 5px 10px; }
-  .rune-list {
-    /* スマホでは常に2段までに収め、増えた分は横に伸ばす（3段目を作らない） */
-    display: grid;
-    grid-template-rows: repeat(2, auto);
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    gap: 3px 5px;
-    justify-content: start;
-    min-width: 0;
-  }
-  .rune-list .rune {
-    white-space: nowrap;   /* 横に伸ばす前提なので折り返さない */
-  }
+  .rune-list { grid-template-columns: repeat(6, max-content); }  /* スマホは少し早めに2段目へ */
   .editor {top: 5px; bottom: 5px; max-width: none; border-radius: 14px; }
   .editor-footer { flex-direction: column; }
 }
 /* ==============================
    レーン戦術別カラー
 ============================== */
-.lane-1 td { background: rgba(180,210,255,0.12); }/* レーン1（青） */
-.lane-2 td { background: rgba(170,230,180,0.12); }/* レーン2（緑） */
-.lane-3 td { background: rgba(240,180,150,0.12); }/* レーン3（赤） */
+.lane-1 td { background: rgba(180,210,255,0.4); }/* レーン1（青） */
+.lane-2 td { background: rgba(170,230,180,0.4); }/* レーン2（緑） */
+.lane-3 td { background: rgba(240,180,150,0.4); }/* レーン3（赤） */
 
 .strategy-label {
   display: inline-block;
