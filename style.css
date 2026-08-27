@@ -51,6 +51,7 @@ body {
 
 /* ヘッダー（タイトル部分） */
 .app-header{
+  position: relative;
   padding: 22px 0 8px;
   text-align: center;
 }
@@ -81,19 +82,30 @@ h1{
   font-family: 'Cinzel', serif;
 }
 
-#modeIndicator {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .02em;
+/* 右上：設定ボタン（歯車） */
+.settings-gear-btn{
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  width: 34px;
+  height: 34px;
+  min-height: auto;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
   color: var(--text-dim);
   background: var(--bg-panel2);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 4px 14px;
-  margin: 10px 0 16px;
+  border-radius: 50%;
 }
-#modeIndicator.editing{
+.settings-gear-btn:hover{
+  color: var(--gold-soft);
+  border-color: var(--gold);
+}
+.settings-gear-btn.active{
   border-color: var(--gold);
   color: var(--gold-soft);
   background: rgba(212,175,55,0.12);
@@ -527,7 +539,7 @@ button:hover {
 
 /* ページ切替タブ */
 .page-buttons {
-  margin: 0 auto 18px;
+  margin: 10px auto 18px;
   display: inline-flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -638,6 +650,7 @@ button:hover {
   .top-buttons, .expedition-controls { flex-wrap: wrap; gap:6px; }  /* ボタン折り返し */
   .page-buttons { padding: 4px; gap: 3px; }
   .page-buttons button { padding: 8px 12px; font-size: 12px; }
+  .settings-gear-btn { width: 30px; height: 30px; min-height: auto; padding: 0; border-radius: 50%; }
   .gear-box { transform: scale(0.9); }  /* 装備表示少し縮小 */
   .rune { font-size: 10px; padding: 3px 6px; }  /* 🔮 ルーン少し小さく */
   .lane-header-row { gap: 4px; }
