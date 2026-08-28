@@ -723,6 +723,274 @@ button:hover {
 #weekDate:focus{ outline: none; border-color: var(--gold); }
 
 /* ==============================
+   取り込みパネル
+============================== */
+.import-panel {
+  max-width: 420px;
+  margin: 0 auto 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--gold);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+.import-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+.import-row label {
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.import-row select {
+  flex: 1;
+  background: var(--bg-panel2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.import-lanes {
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.import-lanes label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text);
+  cursor: pointer;
+}
+.import-lanes input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--gold);
+}
+.import-actions {
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ==============================
+   対戦相手（格上／同格／格下）
+============================== */
+.opponent-row {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.opponent-label {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.opponent-select {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel3);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.opponent-select.opponent-格上 { background: rgba(224,85,90,0.18); border-color: var(--blood-bright); color: #f3a3a3; }
+.opponent-select.opponent-同格 { background: rgba(69,196,176,0.16);  border-color: var(--cyan);         color: var(--cyan); }
+.opponent-select.opponent-格下 { background: rgba(79,191,106,0.16);  border-color: var(--up);           color: #8fe3a5; }
+
+/* ==============================
+   編集ボタン・行編集コントロール
+============================== */
+.btn-edit {
+  background: rgba(212,175,55,0.10);
+  border-color: var(--gold);
+  color: var(--gold-soft);
+}
+.btn-edit.active {
+  background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+  color: #241d05;
+}
+.row-edit-controls {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 4px;
+  justify-content: center;
+}
+.btn-mini {
+  min-height: auto;
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  font-size: 10px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.btn-mini.btn-del {
+  border-color: var(--blood-bright);
+  color: #f3a3a3;
+}
+.cell-input {
+  width: 100%;
+  min-width: 70px;
+  background: var(--bg-panel3);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
+}
+.cell-input:focus,
+.cell-select:focus { outline: none; border-color: var(--gold); }
+.cell-select {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.strategy-select.strategy-close { background: rgba(251,226,213,0.9); color:#5a2a1f; }
+.strategy-select.strategy-mid   { background: rgba(202,237,251,0.9); color:#1f3f5a; }
+.strategy-select.strategy-long  { background: rgba(218,242,208,0.9); color:#2d5a1f; }
+.strategy-select.strategy-none  { background: rgba(255,255,255,0.12); color:var(--text-dim); }
+
+.survival-select { background: rgba(255,255,255,0.10); color: var(--text-dim); }
+.survival-select.survival-秒殺   { background: rgba(224,85,90,0.18);  color: #f3a3a3; }
+.survival-select.survival-普通   { background: rgba(202,237,251,0.5); color: #1f3f5a; }
+.survival-select.survival-長生き { background: rgba(79,191,106,0.20); color: #8fe3a5; }
+
+.btn-add-row {
+  width: 100%;
+  font-size: 11px;
+  padding: 5px 8px;
+  min-height: 30px;
+  border-style: dashed;
+  color: var(--text-dim);
+}
+.btn-add-row:hover {
+  color: var(--gold-soft);
+  border-color: var(--gold);
+}
+.add-player-row td { background: transparent !important; }
+
+/* ==============================
+   火力内訳：横向き積み上げ棒グラフ
+============================== */
+.damage-bar {
+  display: flex;
+  width: 100%;
+  min-width: 90px;
+  height: 18px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--bg-panel3);
+  border: 1px solid var(--border-soft);
+}
+.damage-bar-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0,0,0,.5);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ==============================
+   火力内訳の編集：スライダー
+============================== */
+.slider-box {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 10px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  min-width: 200px;
+}
+.slider-row {
+  display: grid;
+  grid-template-columns: 62px 1fr 24px;
+  align-items: center;
+  gap: 6px;
+}
+.slider-label {
+  font-size: 11px;
+  font-weight: bold;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slider-value {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+}
+/* PCのポインタサイズ変更UIのようなレンジスライダー */
+.damage-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--bg-panel3);
+  cursor: pointer;
+}
+.damage-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid #241d05;
+  cursor: pointer;
+  margin-top: -1px;
+}
+.damage-slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid #241d05;
+  cursor: pointer;
+}
+.slider-preview-bar {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+.slider-box button {
+  margin-top: 8px;
+  width: 100%;
+  font-size: 12px;
+  min-height: 32px;
+}
+
+/* ==============================
    スマホ用レイアウト（600px以下）
 ============================== */
 /* 入力系はスマホでも16px未満にしない（iOSの自動ズーム防止） */
@@ -750,6 +1018,18 @@ button:hover {
   .rune-list { grid-template-columns: repeat(6, max-content); }  /* スマホは少し早めに2段目へ */
   .editor {top: 5px; bottom: 5px; max-width: none; border-radius: 14px; }
   .editor-footer { flex-direction: column; }
+  .import-panel { max-width: 100%; padding: 12px; }
+  .import-row { flex-wrap: wrap; }
+  .import-lanes { gap: 10px; }
+  .slider-box { min-width: 170px; max-height: 220px; }
+  .slider-row { grid-template-columns: 48px 1fr 20px; }
+  .slider-label { font-size: 10px; }
+  .cell-input { font-size: 11px; min-width: 56px; }
+  .cell-select { font-size: 10px; padding: 3px 6px; }
+  .opponent-select { font-size: 10px; }
+  .damage-bar { height: 15px; min-width: 60px; }
+  .damage-bar-seg { font-size: 8px; }
+  .btn-mini { width: 20px; height: 18px; }
 }
 /* ==============================
    レーン戦術別カラー
