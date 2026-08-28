@@ -161,6 +161,25 @@ function runeNamesInCategory(category){
   return orderedRuneNames().filter(n => runeGroups[n] === category);
 }
 
+// プレイヤー編集画面のルーン行の背景色を、分類ごとに分かりやすくするためのクラス対応表
+const RUNE_CATEGORY_ROW_CLASS = {
+  "強化ルーン": "rune-row-enhance",
+  "能力ルーン": "rune-row-ability",
+  "祝福ルーン": "rune-row-blessing"
+};
+function updateRuneRowCategoryClass(row, category){
+  row.classList.remove("rune-row-enhance", "rune-row-ability", "rune-row-blessing");
+  const cls = RUNE_CATEGORY_ROW_CLASS[category];
+  if(cls) row.classList.add(cls);
+}
+
+// レジェンド／ミシックが一目でわかるよう、品質セレクトの文字色を切り替える
+function updateRuneQualityClass(qSel){
+  qSel.classList.remove("quality-legend", "quality-mythic");
+  if(qSel.value === "legend") qSel.classList.add("quality-legend");
+  if(qSel.value === "mythic") qSel.classList.add("quality-mythic");
+}
+
 // 編集モーダルが開いた状態でルーン種類が更新された場合に、
 // 表示中の「ルーン」プルダウンの中身を最新化する（各行で選ばれている分類の範囲内で絞り込む）
 function refreshOpenRuneSelects(){
@@ -428,12 +447,16 @@ window.addRune = function(rune = null){
   populateNameOptions(rune.name);
   qSel.value = rune.q || "none";
   updateEnchant(nameSel, eSel, rune.e);
+  updateRuneRowCategoryClass(div, catSel.value);
+  updateRuneQualityClass(qSel);
 
   catSel.onchange = () => {
     populateNameOptions(null); // 分類を変えたら先頭のルーンを選び直す
     updateEnchant(nameSel, eSel);
+    updateRuneRowCategoryClass(div, catSel.value);
   };
   nameSel.onchange = () => updateEnchant(nameSel, eSel);
+  qSel.onchange = () => updateRuneQualityClass(qSel);
 
   document.getElementById("runeContainer").appendChild(div);
 };
