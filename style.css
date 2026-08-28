@@ -231,6 +231,21 @@ tr:hover{
 .gear-grid select {
   width: 100%;
 }
+.shinchu-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.shinchu-check input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #e6e6ff;
+}
 /* 表示用装備マス */
 .gear-box {
   display: grid;
@@ -240,6 +255,7 @@ tr:hover{
 }
 /* 各マスの基本 */
 .cell {
+  position: relative;
   width: 12px;
   height: 12px;
   display: flex;
@@ -255,6 +271,23 @@ tr:hover{
 .cell.chaos  { background: #75004f; }
 .cell.mythic { background: var(--blood-bright); }
 .cell.legend { background: var(--gold); color:#241d05; }
+
+/* 神鋳効果が発動中の部位：銀白色の縁取り+きらめきで一目でわかるようにする */
+.cell.shinchu {
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: 0 0 3px 1px rgba(230,230,255,0.85), inset 0 0 2px rgba(255,255,255,0.6);
+}
+.cell.shinchu::before,
+.cell.shinchu::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0) 70%);
+  pointer-events: none;
+}
+.cell.shinchu::before { top: -2px; right: -2px; }   /* 右上のきらめき */
+.cell.shinchu::after  { bottom: -2px; left: -2px; } /* 左下のきらめき */
 
 /* ==============================
    ルーン表示
