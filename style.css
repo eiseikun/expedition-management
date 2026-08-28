@@ -460,6 +460,14 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
 /* ==============================
    モーダル（編集画面）
 ============================== */
+/* モーダルの外側タップで閉じるための背景 */
+.editor-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9998;
+}
+
 /* モーダル本体 */
 .editor {
   position: fixed;
