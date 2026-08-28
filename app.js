@@ -89,15 +89,10 @@ const defaultRuneOptions = {
 };
 let runeOptions = {}; // 実データはsubscribeRuneOptions()でFirestoreから読み込む
 let runeOrder = [];   // ルーン種類の表示順（名前の配列）
-let runeGroups = {};  // ルーン種類 → グループ名（未設定は "" ＝未分類）
+let runeGroups = {};  // ルーン種類 → 分類（"強化ルーン"/"能力ルーン"/"祝福ルーン" のいずれか。必ずどれかに属する）
 
-// 初回のみ、例としてエレメント系をグループ化しておく（以降は設定画面で自由に変更可）
-const defaultRuneGroups = {
-  炎毒の印: "エレメント系",
-  氷雷の印: "エレメント系",
-  炎毒の触: "エレメント系",
-  氷雷の触: "エレメント系"
-};
+// ルーンは必ずこの3分類のいずれかに属する（プレイヤー編集画面でのルーン選択の絞り込みに使う）
+const RUNE_CATEGORIES = ["強化ルーン", "能力ルーン", "祝福ルーン"];
 
 // runeOptionsに実在するキーだけを、runeOrderの並び順で返す（順序未登録の新規キーは末尾に補完）
 function orderedRuneNames(){
@@ -132,9 +127,18 @@ function subscribeRuneOptions(){
       // 初回だけ、これまでの固定リストで初期化
       runeOptions = { ...defaultRuneOptions };
       runeOrder = Object.keys(defaultRuneOptions);
-      runeGroups = { ...defaultRuneGroups };
+      runeGroups = {};
       needsSave = true;
     }
+
+    // 分類（強化ルーン／能力ルーン／祝福ルーン）が未設定・不正な値のルーンは
+    // 「強化ルーン」を仮の分類として補完する（設定画面で後から正しい分類に付け替え可能）
+    Object.keys(runeOptions).forEach(n=>{
+      if(!RUNE_CATEGORIES.includes(runeGroups[n])){
+        runeGroups[n] = RUNE_CATEGORIES[0];
+        needsSave = true;
+      }
+    });
 
     runeOrder = orderedRuneNames(); // 正規化（実在しないキーの除去／未登録キーの補完）
 
@@ -149,20 +153,28 @@ function subscribeRuneOptions(){
 
 async function saveRuneOptions(){
   runeOrder = orderedRuneNames();
-  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, migratedFixedRunes: true }, { merge: true });
+  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, migratedFixedRunes: true });
+}
+
+// 指定した分類（強化ルーン／能力ルーン／祝福ルーン）に属するルーン名の一覧を、表示順で返す
+function runeNamesInCategory(category){
+  return orderedRuneNames().filter(n => runeGroups[n] === category);
 }
 
 // 編集モーダルが開いた状態でルーン種類が更新された場合に、
-// 表示中の「ルーン」プルダウンの中身を最新化する
+// 表示中の「ルーン」プルダウンの中身を最新化する（各行で選ばれている分類の範囲内で絞り込む）
 function refreshOpenRuneSelects(){
-  document.querySelectorAll("#runeContainer .rune-row .rune-name").forEach(sel=>{
-    const current = sel.value;
-    sel.innerHTML = orderedRuneNames().map(n=>`<option>${n}</option>`).join("");
-    if(orderedRuneNames().includes(current)){
-      sel.value = current;
-    }
-    const eSel = sel.closest(".rune-row").querySelector(".rune-e");
-    updateEnchant(sel, eSel);
+  document.querySelectorAll("#runeContainer .rune-row").forEach(row=>{
+    const catSel = row.querySelector(".rune-cat");
+    const nameSel = row.querySelector(".rune-name");
+    const eSel = row.querySelector(".rune-e");
+    const current = nameSel.value;
+    const names = runeNamesInCategory(catSel.value);
+    // 設定から削除済みの過去データでも表示だけは維持する（データ保護）
+    const nameOptions = (current && !names.includes(current)) ? [current, ...names] : names;
+    nameSel.innerHTML = nameOptions.map(n=>`<option>${n}</option>`).join("");
+    if(nameOptions.includes(current)) nameSel.value = current;
+    updateEnchant(nameSel, eSel);
   });
 }
 
@@ -176,7 +188,7 @@ function updateEnchant(nameSelect, enchantSelect, currentEffect){
   if(currentEffect) enchantSelect.value = currentEffect;
 }
 
-// ===== 設定ページ：ルーン管理（グループ折り畳み対応） =====
+// ===== 設定ページ：ルーン管理（分類ごとの折り畳み対応） =====
 function renderRuneSettings(){
   const container = document.getElementById("runeSettingsContainer");
   if(!container) return;
@@ -187,43 +199,26 @@ function renderRuneSettings(){
     return;
   }
 
-  // グループごとにまとめる（未分類は最後にまとめて表示）
-  const groupOrder = [];
+  // 強化ルーン／能力ルーン／祝福ルーンの固定3分類ごとにまとめる（分類が空でも見出しは常に表示）
   const groupedNames = {};
-  names.forEach(name=>{
-    const g = runeGroups[name] || "";
-    if(!(g in groupedNames)){
-      groupedNames[g] = [];
-      groupOrder.push(g);
-    }
-    groupedNames[g].push(name);
-  });
-  groupOrder.sort((a,b)=>{
-    if(a === "" && b !== "") return 1;
-    if(b === "" && a !== "") return -1;
-    return 0;
-  });
-
-  const existingGroupNames = [...new Set(names.map(n=>runeGroups[n]).filter(Boolean))];
+  RUNE_CATEGORIES.forEach(cat=>{ groupedNames[cat] = names.filter(n => runeGroups[n] === cat); });
 
   container.innerHTML = `
-    <datalist id="runeGroupList">
-      ${existingGroupNames.map(g=>`<option value="${g}"></option>`).join("")}
-    </datalist>
-    ${groupOrder.map(g=>{
+    ${RUNE_CATEGORIES.map(g=>{
       const groupNames = groupedNames[g];
-      const key = g || "__none__";
-      const isOpen = openRuneGroups.has(key);
-      const label = g || "未分類";
+      const isOpen = openRuneGroups.has(g);
       return `
       <div class="rune-group">
-        <div class="rune-group-header" onclick="toggleRuneGroup('${escapeForAttr(key)}')">
+        <div class="rune-group-header" onclick="toggleRuneGroup('${escapeForAttr(g)}')">
           <span class="rune-group-toggle">${isOpen ? "▼" : "▶"}</span>
-          <span class="rune-group-title">${label}</span>
+          <span class="rune-group-title">${g}</span>
           <span class="rune-group-count">(${groupNames.length})</span>
         </div>
         <div class="rune-group-body" ${isOpen ? "" : 'style="display:none;"'}>
-          ${groupNames.map(name=>renderRuneTypeCard(name, groupNames)).join("")}
+          ${groupNames.length
+            ? groupNames.map(name=>renderRuneTypeCard(name, groupNames)).join("")
+            : `<p class="no-effect">この分類のルーンはまだありません。</p>`
+          }
         </div>
       </div>
       `;
@@ -245,10 +240,11 @@ function renderRuneTypeCard(name, groupNames){
         <button class="btn-delete-type" onclick="deleteRuneType('${escapeForAttr(name)}')">種類ごと削除</button>
       </div>
       <div class="rune-group-assign">
-        <label for="groupInput-${cssKey(name)}">グループ</label>
-        <input id="groupInput-${cssKey(name)}" class="rune-group-input" list="runeGroupList"
-          value="${runeGroups[name] || ""}" placeholder="未分類のまま"
+        <label for="catSelect-${cssKey(name)}">分類</label>
+        <select id="catSelect-${cssKey(name)}" class="rune-category-select"
           onchange="setRuneGroup('${escapeForAttr(name)}', this.value)">
+          ${RUNE_CATEGORIES.map(c=>`<option value="${escapeAttr(c)}" ${runeGroups[name]===c ? "selected" : ""}>${c}</option>`).join("")}
+        </select>
       </div>
       <div class="rune-effect-chips">
         ${
@@ -279,15 +275,11 @@ window.toggleRuneGroup = function(key){
   renderRuneSettings();
 };
 
-window.setRuneGroup = async function(name, group){
-  const trimmed = group.trim();
-  if(trimmed){
-    runeGroups[name] = trimmed;
-  }else{
-    delete runeGroups[name];
-  }
+window.setRuneGroup = async function(name, category){
+  if(!RUNE_CATEGORIES.includes(category)) return; // 不正な値は無視（fixed 3択のみ許可）
+  runeGroups[name] = category;
   await saveRuneOptions();
-  showToast(trimmed ? `「${name}」を「${trimmed}」グループに設定しました` : `「${name}」のグループ設定を解除しました`);
+  showToast(`「${name}」を「${category}」に分類しました`);
 };
 
 function escapeHtml(str){
@@ -312,6 +304,8 @@ function cssKey(str){
 window.addRuneType = async function(){
   const input = document.getElementById("newRuneTypeName");
   const name = input.value.trim();
+  const catSel = document.getElementById("newRuneTypeCategory");
+  const category = RUNE_CATEGORIES.includes(catSel?.value) ? catSel.value : RUNE_CATEGORIES[0];
   if(!name){
     showToast("ルーン名を入力してください");
     return;
@@ -322,9 +316,10 @@ window.addRuneType = async function(){
   }
   runeOptions[name] = [];
   runeOrder.push(name);
+  runeGroups[name] = category;
   await saveRuneOptions();
   input.value = "";
-  showToast(`「${name}」を追加しました`);
+  showToast(`「${name}」を「${category}」として追加しました`);
 };
 
 window.deleteRuneType = async function(name){
@@ -397,18 +392,16 @@ window.addRune = function(rune = null){
     rune = { name: orderedRuneNames()[0], q:"none", e:"" };
   }
 
-  // 設定から削除済みの過去データでも表示だけは維持する（データ保護）
-  const names = orderedRuneNames();
-  const nameOptions = (rune.name && !names.includes(rune.name))
-    ? [rune.name, ...names]
-    : names;
+  // 保存済みのルーン名から現在の分類を逆引き（設定で削除済みの場合は先頭の分類を仮に使う）
+  const initialCategory = RUNE_CATEGORIES.includes(runeGroups[rune.name]) ? runeGroups[rune.name] : RUNE_CATEGORIES[0];
 
   const div = document.createElement("div");
   div.className = "rune-row";
   div.innerHTML = `
-    <select class="rune-name">
-      ${nameOptions.map(n=>`<option>${n}</option>`).join("")}
+    <select class="rune-cat">
+      ${RUNE_CATEGORIES.map(c=>`<option value="${escapeAttr(c)}">${c}</option>`).join("")}
     </select>
+    <select class="rune-name"></select>
     <select class="rune-q">
       <option value="none">なし</option>
       <option value="legend">レジェンド</option>
@@ -417,13 +410,31 @@ window.addRune = function(rune = null){
     <select class="rune-e"></select>
     <button onclick="this.parentNode.remove()">削除</button>
   `;
+  const catSel = div.querySelector(".rune-cat");
   const nameSel = div.querySelector(".rune-name");
   const qSel = div.querySelector(".rune-q");
   const eSel = div.querySelector(".rune-e");
-  nameSel.value = rune.name || nameOptions[0];
+
+  // 選ばれている分類の範囲内で「ルーン名」の選択肢を作り直す
+  function populateNameOptions(selectedName){
+    const names = runeNamesInCategory(catSel.value);
+    // 設定から削除済みの過去データでも表示だけは維持する（データ保護）
+    const nameOptions = (selectedName && !names.includes(selectedName)) ? [selectedName, ...names] : names;
+    nameSel.innerHTML = nameOptions.map(n=>`<option>${n}</option>`).join("");
+    nameSel.value = (selectedName && nameOptions.includes(selectedName)) ? selectedName : nameOptions[0];
+  }
+
+  catSel.value = initialCategory;
+  populateNameOptions(rune.name);
   qSel.value = rune.q || "none";
   updateEnchant(nameSel, eSel, rune.e);
+
+  catSel.onchange = () => {
+    populateNameOptions(null); // 分類を変えたら先頭のルーンを選び直す
+    updateEnchant(nameSel, eSel);
+  };
   nameSel.onchange = () => updateEnchant(nameSel, eSel);
+
   document.getElementById("runeContainer").appendChild(div);
 };
 
