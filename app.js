@@ -51,6 +51,7 @@ window.showPage = async function(n){
 window.openEditor = function(){
   document.body.classList.add("modal-open");
   document.getElementById("editor").style.display = "block";
+  document.getElementById("editorBackdrop").style.display = "block";
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
   document.querySelectorAll("#editor input[type='checkbox']").forEach(c=>c.checked=false);
@@ -62,6 +63,7 @@ window.openEditor = function(){
 window.closeEditor = function(){
   document.body.classList.remove("modal-open");
   document.getElementById("editor").style.display = "none";
+  document.getElementById("editorBackdrop").style.display = "none";
 };
 
 // ===== トースト通知 =====
