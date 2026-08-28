@@ -231,14 +231,20 @@ tr:hover{
 .gear-grid select {
   width: 100%;
 }
+.part-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 .shinchu-check {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 4px;
   font-size: 11px;
   color: var(--text-dim);
   cursor: pointer;
+  white-space: nowrap;
 }
 .shinchu-check input[type="checkbox"] {
   width: 14px;
@@ -272,22 +278,31 @@ tr:hover{
 .cell.mythic { background: var(--blood-bright); }
 .cell.legend { background: var(--gold); color:#241d05; }
 
-/* 神鋳効果が発動中の部位：銀白色の縁取り+きらめきで一目でわかるようにする */
+/* 神鋳効果が発動中の部位：右上と左下だけ鍵かっこ状に銀白色で縁取り、きらめきで一目でわかるようにする */
 .cell.shinchu {
-  border: 1px solid rgba(255,255,255,0.9);
-  box-shadow: 0 0 3px 1px rgba(230,230,255,0.85), inset 0 0 2px rgba(255,255,255,0.6);
+  /* 枠全体は囲まない */
 }
 .cell.shinchu::before,
 .cell.shinchu::after {
   content: "";
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0) 70%);
   pointer-events: none;
 }
-.cell.shinchu::before { top: -2px; right: -2px; }   /* 右上のきらめき */
-.cell.shinchu::after  { bottom: -2px; left: -2px; } /* 左下のきらめき */
+.cell.shinchu::before {
+  top: -1px;
+  right: -1px;
+  border-top: 1.5px solid rgba(255,255,255,0.9);
+  border-right: 1.5px solid rgba(255,255,255,0.9);
+}   /* 右上のかぎかっこ＋きらめき */
+.cell.shinchu::after {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1.5px solid rgba(255,255,255,0.9);
+  border-left: 1.5px solid rgba(255,255,255,0.9);
+}  /* 左下のかぎかっこ＋きらめき */
 
 /* ==============================
    ルーン表示
