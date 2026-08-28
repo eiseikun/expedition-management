@@ -291,6 +291,38 @@ td:nth-child(6) { white-space: normal; } /* ルーン列のみ改行OK */
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
+/* プレイヤー編集画面のルーン行：分類ごとに薄い背景で境界をわかりやすくする */
+.rune-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+.rune-row-enhance {  /* 強化ルーン：紫系 */
+  background: rgba(147, 112, 219, 0.16);
+  border-color: rgba(147, 112, 219, 0.4);
+}
+.rune-row-ability {  /* 能力ルーン：黄緑系 */
+  background: rgba(163, 209, 54, 0.16);
+  border-color: rgba(163, 209, 54, 0.4);
+}
+.rune-row-blessing {  /* 祝福ルーン：ピンク系 */
+  background: rgba(255, 143, 184, 0.16);
+  border-color: rgba(255, 143, 184, 0.4);
+}
+/* レジェンド／ミシックを一目でわかるように、品質セレクトの文字色を変える（ルーン選択欄のみ） */
+#runeContainer .rune-q.quality-legend {
+  color: #ffb300;
+  font-weight: 700;
+}
+#runeContainer .rune-q.quality-mythic {
+  color: #ff4d6d;
+  font-weight: 700;
+}
 /* 選択チェックボックス列 */
 .select-cell {
   text-align: center;
