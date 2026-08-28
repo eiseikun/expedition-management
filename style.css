@@ -857,7 +857,8 @@ td { position: relative; }
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
-.add-rune-type-row input {
+.add-rune-type-row input,
+.add-rune-type-row select {
   flex: 1;
   min-width: 160px;
   padding: 10px 12px;
@@ -995,7 +996,8 @@ td { position: relative; }
 .rune-group-assign label {
   white-space: nowrap;
 }
-.rune-group-assign input {
+.rune-group-assign input,
+.rune-group-assign select {
   flex: 1;
   padding: 6px 10px;
   border-radius: 8px;
