@@ -53,6 +53,7 @@ window.openEditor = function(){
   document.getElementById("editor").style.display = "block";
 
   document.querySelectorAll("#editor input").forEach(i=>i.value="");
+  document.querySelectorAll("#editor input[type='checkbox']").forEach(c=>c.checked=false);
   document.querySelectorAll("#editor select").forEach(s=>s.selectedIndex=0);
   document.getElementById("runeContainer").innerHTML = "";
   editIndex = null;
@@ -574,6 +575,10 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
     <option value="mythic">ミシック</option>
     <option value="legend">レジェンド</option>
   </select>
+  <label class="shinchu-check">
+    <input type="checkbox" data-part="${p}" data-type="shinchu">
+    神鋳
+  </label>
 </div>
 `).join("");
 
@@ -582,7 +587,8 @@ function gearText(gearDetail){
   const mark = {神託:"神",ドラグーン:"ド",グリフォン:"グ"};
   return `<div class="gear-box">${parts.map(p=>{
     const g = gearDetail?.find(x=>x.part===p);
-    return `<div class="cell ${g?.type||"empty"}">${g?mark[g.set]:""}</div>`;
+    const shinchuClass = g?.shinchu ? " shinchu" : "";
+    return `<div class="cell ${g?.type||"empty"}${shinchuClass}">${g?mark[g.set]:""}</div>`;
   }).join("")}</div>`;
 }
 
@@ -609,7 +615,8 @@ window.savePlayer = async function(){
     const set = div.querySelector("[data-type='set']").value;
     const type = div.querySelector("[data-type='quality']").value;
     const part = div.querySelector("[data-type='set']").dataset.part;
-    if(set && type) gearDetail.push({part,set,type});
+    const shinchu = div.querySelector("[data-type='shinchu']").checked;
+    if(set && type) gearDetail.push({part,set,type,shinchu});
   });
 
   const p = {
@@ -672,6 +679,7 @@ window.editPlayer = function(order){
     const g = p.gearDetail?.find(x=>x.part===part);
     div.querySelector("[data-type='set']").value = g?.set || "";
     div.querySelector("[data-type='quality']").value = g?.type || "";
+    div.querySelector("[data-type='shinchu']").checked = !!g?.shinchu;
   });
 
   document.getElementById("runeContainer").innerHTML = "";
