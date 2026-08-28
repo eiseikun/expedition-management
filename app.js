@@ -564,7 +564,13 @@ window.moveDamageTypeDown = async function(index){
 const parts = ["武器","兜","お守り","鎧","指輪","靴"];
 document.getElementById("chaos").innerHTML = parts.map(p=>`
 <div>
-  <label>${p}</label>
+  <div class="part-name-row">
+    <label>${p}</label>
+    <label class="shinchu-check">
+      <input type="checkbox" data-part="${p}" data-type="shinchu">
+      神鋳
+    </label>
+  </div>
   <select data-part="${p}" data-type="set">
     <option value="">なし</option>
     <option>神託</option>
@@ -577,10 +583,6 @@ document.getElementById("chaos").innerHTML = parts.map(p=>`
     <option value="mythic">ミシック</option>
     <option value="legend">レジェンド</option>
   </select>
-  <label class="shinchu-check">
-    <input type="checkbox" data-part="${p}" data-type="shinchu">
-    神鋳
-  </label>
 </div>
 `).join("");
 
