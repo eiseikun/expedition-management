@@ -1092,147 +1092,81 @@ async function saveDamageTypes(){
   await setDoc(doc(db,"settings","damageTypes"), { types: damageTypes });
 }
 
-window.addMatch = async function(matchNumber){
-  if(players.length === 0){
-  showToast("プレイヤーが読み込まれていません。ページ1を開いてください");
-  return;
-}
+// ===== 取り込みパネル（ページ1のレーン1〜3からプレイヤーを取り込む）=====
+window.openImportPanel = function(){
   const date = document.getElementById("weekDate").value;
   if(!date) return showToast("日付を選択して");
-  const matchPlayers = players
-  .filter(p => p.lane >= 1 && p.lane <= 3)
-  .sort((a,b)=>a.order - b.order)
-  .map(p=>({
-      name: p.name,
-      lane: p.lane,
-      style: p.range, // ←画像に合わせて戦術じゃなく距離に変更OK
-      damageTypes: []
-    }));
-  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
-  const existing = snap.docs[0];
-
-  if(existing){
-    const data = existing.data();
-
-    // 同じ回戦あれば上書き
-    const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
-    if(idx >= 0){
-      data.matches[idx] = { matchNumber, players: matchPlayers };
-    }else{
-      data.matches.push({ matchNumber, players: matchPlayers });
-    }
-
-    await updateDoc(doc(db,"expeditions",existing.id), data);
-
-  }else{
-    await addDoc(collection(db,"expeditions"), {
-      date,
-      matches: [{ matchNumber, players: matchPlayers }]
-    });
-  }
-
-};
-// ===== 指定週に回戦追加（強化版）=====
-window.addMatchToWeek = async function(docId, matchNumber){
-
-  const ref = doc(db, "expeditions", docId);
-  const target = await getDoc(ref);
-
-  if(!target.exists()) return;
-
-  const data = {
-  ...target.data(),
-  matches: [...target.data().matches]
+  document.getElementById("importPanel").style.display = "flex";
 };
 
-  // 既存チェック
-  const existsIndex = data.matches.findIndex(m => m.matchNumber === matchNumber);
-  const matchPlayers = players
-    .filter(p => p.lane >= 1 && p.lane <= 3)
-    .sort((a,b)=>a.order - b.order)
-    .map(p=>({
-      name: p.name,
-      lane: p.lane,
-      style: p.range,
-      damageTypes: []
-    }));
- if(existsIndex >= 0){
-  const oldMatch = data.matches[existsIndex];
-  const newPlayers = matchPlayers.map(p=>{
-    const old = oldMatch.players.find(op => op.name === p.name);
-    return {
-      ...p,
-      damageTypes: old?.damageTypes || []
-    };
-  });
-  data.matches[existsIndex] = {
-    matchNumber,
-    players: newPlayers
-  };
-}else{
-  data.matches.push({
-    matchNumber,
-    players: matchPlayers
-  });
-}
-  await updateDoc(ref, data);
-  showToast(`${matchNumber}回戦を追加しました`);
+window.closeImportPanel = function(){
+  document.getElementById("importPanel").style.display = "none";
 };
-// ===== 週保存（1回戦のみ作成）=====
-window.saveWeek = async function(){
+
+// 週ブロック側の「取り込み」ボタンから開く場合：その週の日付をセットしてからパネルを開く
+window.openImportPanelForWeek = function(dateStr, matchNumber){
+  document.getElementById("weekDate").value = dateStr;
+  if(weekDateFP) weekDateFP.setDate(dateStr, true);
+  if(matchNumber) document.getElementById("importMatchNumber").value = String(matchNumber);
+  openImportPanel();
+};
+
+window.confirmImport = async function(){
   if(players.length === 0){
     showToast("プレイヤーが読み込まれていません。ページ1を開いてください");
     return;
   }
-  const date = document.getElementById("weekDate").value;
-  if(!date) return showToast("日付を選択して");
-  
-  // プレイヤーデータ作成
+  const dateInput = document.getElementById("weekDate").value;
+  if(!dateInput) return showToast("日付を選択して");
+  const weekKey = weekKeyFromDate(dateInput);
+
+  const matchNumber = Number(document.getElementById("importMatchNumber").value);
+  const opponent = document.getElementById("importOpponent").value;
+  const allowedLanes = [1,2,3].filter(l => document.getElementById(`importLane${l}`).checked);
+
+  if(allowedLanes.length === 0){
+    showToast("レーンを1つ以上選択してください");
+    return;
+  }
+
   const matchPlayers = players
-    .filter(p => p.lane >= 1 && p.lane <= 3)
+    .filter(p => allowedLanes.includes(p.lane))
     .sort((a,b)=>a.order - b.order)
     .map(p=>({
       name: p.name,
       lane: p.lane,
       style: p.range,
+      survival: "",
       damageTypes: []
     }));
-  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
+
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",weekKey)));
   const existing = snap.docs[0];
+
   if(existing){
     const data = existing.data();
-
-    // 1回戦があれば上書き、なければ追加
-    const idx = data.matches.findIndex(m=>m.matchNumber === 1);
+    const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
     if(idx >= 0){
-      data.matches[idx] = { matchNumber: 1, players: matchPlayers };
+      // 同名プレイヤーの生存時間・火力内訳などの記録済みデータは引き継ぐ
+      const oldMatch = data.matches[idx];
+      const mergedPlayers = matchPlayers.map(p=>{
+        const old = oldMatch.players.find(op => op.name === p.name);
+        return old ? { ...p, survival: old.survival || "", damageTypes: old.damageTypes || [] } : p;
+      });
+      data.matches[idx] = { matchNumber, opponent: opponent || oldMatch.opponent || "", players: mergedPlayers };
     }else{
-      data.matches.push({ matchNumber: 1, players: matchPlayers });
+      data.matches.push({ matchNumber, opponent, players: matchPlayers });
     }
     await updateDoc(doc(db,"expeditions",existing.id), data);
   }else{
-    // 新規作成（1回戦だけ）
     await addDoc(collection(db,"expeditions"), {
-      date,
-      matches: [{ matchNumber: 1, players: matchPlayers }]
+      date: weekKey,
+      matches: [{ matchNumber, opponent, players: matchPlayers }]
     });
   }
-  showToast("週を保存しました");
-};
 
-  // 2ページ目データ削除
-window.deleteMatch = async function(matchNumber){
-  const date = document.getElementById("weekDate").value;
-if(!date) return showToast("日付を選択して");
-  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",date)));
-  const docSnap = snap.docs[0];
-  if(!docSnap){
-    showToast("この週のデータがありません");
-    return;
-  }
-  const data = docSnap.data();
-  data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
-  await updateDoc(doc(db,"expeditions",docSnap.id), data);
+  closeImportPanel();
+  showToast(`${matchNumber}回戦を取り込みました`);
 };
 
 
@@ -1266,6 +1200,7 @@ function renderExpeditions(rawDocs){
     weekDiv.className = "week-block";
     const header = document.createElement("div");
 
+    const isEditing = editWeekIds.has(d.id);
 header.innerHTML = `
   <div class="week-header-row date-row">
     <h3>${formatRange(exp.date)}</h3>
@@ -1275,9 +1210,10 @@ header.innerHTML = `
     <button class="btn-save" onclick="saveMatchImage(this,3)">3回戦保存📷</button>
   </div>
   <div class="week-header-row add-row">
-    <button class="btn-add" onclick="addMatchToWeek('${d.id}',1)">1回戦追加🖋</button>
-    <button class="btn-add" onclick="addMatchToWeek('${d.id}',2)">2回戦追加🖋</button>
-    <button class="btn-add" onclick="addMatchToWeek('${d.id}',3)">3回戦追加🖋</button>
+    <button class="btn-add" onclick="openImportPanelForWeek('${exp.date}',1)">1回戦取り込み</button>
+    <button class="btn-add" onclick="openImportPanelForWeek('${exp.date}',2)">2回戦取り込み</button>
+    <button class="btn-add" onclick="openImportPanelForWeek('${exp.date}',3)">3回戦取り込み</button>
+    <button class="btn-edit ${isEditing ? "active" : ""}" onclick="toggleWeekEdit('${d.id}')">${isEditing ? "編集終了" : "編集✎"}</button>
   </div>
   <div class="week-header-row delete-row">
     <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
@@ -1321,9 +1257,22 @@ header.innerHTML = `
     let header1 = `<tr><th>レーン</th>`;
     let header2 = `<tr><th></th>`;
     matchNumbers.forEach(mn=>{
+      const match = exp.matches.find(m=>m.matchNumber === mn);
+      const opponent = match?.opponent || "";
       header1 += `
-      <th colspan="3">
-      ${mn}回戦<br>
+      <th colspan="4">
+      ${mn}回戦
+      <div class="opponent-row">
+        <span class="opponent-label no-export">対戦相手</span>
+        <select class="opponent-select opponent-${opponent || "none"}"
+          onclick="event.stopPropagation()"
+          onchange="event.stopPropagation(); updateOpponent('${d.id}',${mn}, this.value)">
+          <option value="" ${!opponent ? "selected" : ""}>未設定</option>
+          <option value="格上" ${opponent==="格上" ? "selected" : ""}>格上</option>
+          <option value="同格" ${opponent==="同格" ? "selected" : ""}>同格</option>
+          <option value="格下" ${opponent==="格下" ? "selected" : ""}>格下</option>
+        </select>
+      </div>
       <div class="lane-grid">
       <span class="row-title no-export">更新</span>
       <button class="lane-btn lane1" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
@@ -1335,6 +1284,7 @@ header.innerHTML = `
       header2 += `
       <th>名前</th>
       <th>戦術</th>
+      <th>生存時間</th>
       <th>火力内訳</th>
       `;
     });
@@ -1354,21 +1304,20 @@ header.innerHTML = `
         if(count > max) max = count;
       });
 
+      if(max === 0 && !isEditing) return; // このレーンは記録なし・編集中でもない→何も表示しない
+
+      const bodyRows = Math.max(max, 1); // 編集中に「＋行を追加」を出す枠を最低1行確保
+      const totalRows = bodyRows + (isEditing ? 1 : 0);
+
       // ★人数分ループ（縦に増やす）
-      for(let i=0;i<max;i++){
+      for(let i=0;i<bodyRows;i++){
         const row = document.createElement("tr");
-        if(lane === 1){
-          row.classList.add("lane-1");
-        }else if(lane === 2){
-          row.classList.add("lane-2");
-        }else if(lane === 3){
-          row.classList.add("lane-3");
-        }
+        row.classList.add(`lane-${lane}`);
         // レーン表示（最初の行だけ）
         if(i === 0){
-          row.innerHTML += `<td rowspan="${max}">${lane}</td>`;
+          row.innerHTML += `<td rowspan="${totalRows}">${lane}</td>`;
         }
-        
+
         matchNumbers.forEach(mn=>{
           const match = exp.matches.find(m=>m.matchNumber === mn);
           const lanePlayers = match
@@ -1377,78 +1326,18 @@ header.innerHTML = `
 
           const p = lanePlayers[i];
           row.setAttribute("data-match-number", mn);
-          
-          const damageList = damageTypeNames();
-          row.innerHTML += `
-<td data-match-number="${mn}">${p?.name || ""}</td>
-
-<td data-match-number="${mn}">
-${p ? `
-<span class="strategy-label ${strategyClass(p.style)}">
-${p.style || "未設定"}
-</span>
-` : ""}
-</td>
-
-<td 
-  data-doc-id="${d.id}" 
-  data-match-number="${mn}" 
-  data-player-name="${p?.name || ""}"
->
-          
-${p ? `
-<div class="tag-view" onclick="enableEdit(this)">
-  ${
-    p.damageTypes && p.damageTypes.length > 0
-    ? p.damageTypes.map(t => {
-        const type = typeof t === "string" ? t : t.type;
-        const size = typeof t === "string" ? "medium" : t.size;
-
-        return `
-          <span class="tag active tag-${size}" 
-            style="background:${damageColor(type)}; color:white; padding:2px 6px; border-radius:4px; margin-right:2px;">
-            ${damageShortName(type)}
-          </span>
-        `;
-      }).join("")
-    : '<span class="no-tag">未設定</span>'
-  }
-</div>
-
-<div class="tag-edit" style="display:none;">
-  <div class="dropdown-box">
-   ${damageList.map(type => {
-  const found = p.damageTypes?.find(t => 
-    (typeof t === "string" ? t : t.type) === type
-  );
-  const size = found
-    ? (typeof found === "string" ? "medium" : found.size)
-    : "medium";
-  return `
-    <label class="dropdown-item" onclick="event.stopPropagation()">
-      <input type="checkbox"
-        value="${type}"
-        ${found ? "checked" : ""}
-        onclick="event.stopPropagation()"
-      />
-      ${type}
-      <select class="size-select">
-        <option value="small" ${size==="small"?"selected":""}>小</option>
-        <option value="medium" ${size==="medium"?"selected":""}>中</option>
-        <option value="large" ${size==="large"?"selected":""}>大</option>
-      </select>
-    </label>
-  `;
-}).join("")}
-  </div>
-  <button onclick="event.stopPropagation(); closeTagEdit(this)">OK</button>
-</div>
-
-` : ""}
-</td>
-`;
+          row.innerHTML += renderMatchPlayerCells(d.id, mn, lane, i, p, lanePlayers.length, isEditing);
         });
         table.appendChild(row);
+      }
+
+      if(isEditing){
+        const addRow = document.createElement("tr");
+        addRow.classList.add(`lane-${lane}`, "add-player-row", "no-export");
+        matchNumbers.forEach(mn=>{
+          addRow.innerHTML += `<td colspan="4"><button class="btn-add-row" onclick="addMatchPlayerRow('${d.id}',${mn},${lane})">＋ 行を追加</button></td>`;
+        });
+        table.appendChild(addRow);
       }
     });
     content.appendChild(table);
@@ -1488,28 +1377,118 @@ window.enableEdit = function(el){
     openTagEditKey = `${container.dataset.docId}|${container.dataset.matchNumber}|${container.dataset.playerName}`;
   }
 };
-window.toggleDamageCheckbox = async function(docId, matchNumber, playerName, checkbox){
-  const ref = doc(db,"expeditions",docId);
-  const snap = await getDoc(ref);
-  const docData = snap.data();
-  const match = docData.matches.find(m=>m.matchNumber === matchNumber);
-  const player = match.players.find(p=>p.name === playerName);
 
-  if(!player.damageTypes) player.damageTypes = [];
+// 火力内訳の1件を{type, value(0〜10)}に正規化する（旧・大/中/小データも変換して引き継ぐ）
+function normalizeDamageEntry(t){
+  if(typeof t === "string") return { type: t, value: 5 };
+  if(typeof t.value === "number") return { type: t.type, value: t.value };
+  const sizeMap = { small: 2, medium: 5, large: 8 };
+  return { type: t.type, value: sizeMap[t.size] ?? 5 };
+}
 
-  if(checkbox.checked){
-    if(!player.damageTypes.some(t=>t.type===checkbox.value)){
-      player.damageTypes.push({ type: checkbox.value, size: "medium" });
-    }
-  }else{
-    player.damageTypes = player.damageTypes.filter(v=>v.type !== checkbox.value);
+// 火力内訳を横向き積み上げ棒グラフ（HTML/CSS）で描画。画像保存にもそのまま含まれる。
+function renderDamageBar(damageTypes){
+  const entries = (damageTypes || []).map(normalizeDamageEntry).filter(e => e.value > 0);
+  if(entries.length === 0) return '<span class="no-tag">未設定</span>';
+  const total = entries.reduce((s,e)=>s+e.value, 0);
+  return `<div class="damage-bar">${entries.map(e=>{
+    const pct = Math.round((e.value / total) * 1000) / 10;
+    return `<div class="damage-bar-seg" style="width:${pct}%; background:${damageColor(e.type)};" title="${escapeAttr(damageShortName(e.type))} ${pct}%">${pct >= 12 ? pct+"%" : ""}</div>`;
+  }).join("")}</div>`;
+}
+
+// 回戦テーブル：プレイヤー1人分の4セル（名前・戦術・生存時間・火力内訳）を生成
+function renderMatchPlayerCells(docId, mn, lane, pos, p, laneCount, isEditing){
+  if(!p){
+    return `<td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td>`;
   }
 
-  await updateDoc(ref, docData);
+  // ----- 名前（編集モード時のみ並び替え／削除／テキスト編集）-----
+  const nameCell = isEditing ? `
+    <td data-match-number="${mn}">
+      <div class="row-edit-controls no-export">
+        <button class="btn-mini" onclick="moveMatchPlayer('${docId}',${mn},${lane},${pos},-1)" ${pos===0 ? "disabled" : ""} title="上へ">▲</button>
+        <button class="btn-mini" onclick="moveMatchPlayer('${docId}',${mn},${lane},${pos},1)" ${pos===laneCount-1 ? "disabled" : ""} title="下へ">▼</button>
+        <button class="btn-mini btn-del" onclick="deleteMatchPlayerRow('${docId}',${mn},${lane},${pos})" title="削除">✕</button>
+      </div>
+      <input class="cell-input" type="text" value="${escapeAttr(p.name || "")}" placeholder="名前"
+        onchange="updateMatchPlayerField('${docId}',${mn},${lane},${pos},'name',this.value)">
+    </td>
+  ` : `<td data-match-number="${mn}">${escapeHtml(p.name || "")}</td>`;
+
+  // ----- 戦術（距離）-----
+  const styleOptions = ["", "遠距離", "中距離", "近距離"].map(v =>
+    `<option value="${v}" ${p.style===v ? "selected" : ""}>${v || "未設定"}</option>`
+  ).join("");
+  const styleCell = `
+    <td data-match-number="${mn}">
+      <select class="cell-select strategy-select ${strategyClass(p.style)}"
+        onchange="updateMatchPlayerField('${docId}',${mn},${lane},${pos},'style',this.value)">
+        ${styleOptions}
+      </select>
+    </td>
+  `;
+
+  // ----- 生存時間 -----
+  const survivalOptions = ["", "秒殺", "普通", "長生き"].map(v =>
+    `<option value="${v}" ${p.survival===v ? "selected" : ""}>${v || "未登録"}</option>`
+  ).join("");
+  const survivalCell = `
+    <td data-match-number="${mn}">
+      <select class="cell-select survival-select survival-${p.survival || "none"}"
+        onchange="updateMatchPlayerField('${docId}',${mn},${lane},${pos},'survival',this.value)">
+        ${survivalOptions}
+      </select>
+    </td>
+  `;
+
+  // ----- 火力内訳（クリックでスライダー編集）-----
+  const damageList = damageTypeNames();
+  const damageCell = `
+    <td data-doc-id="${docId}" data-match-number="${mn}" data-player-name="${escapeAttr(p.name || "")}">
+      <div class="tag-view" onclick="enableEdit(this)">${renderDamageBar(p.damageTypes)}</div>
+      <div class="tag-edit" style="display:none;">
+        <div class="slider-box" onclick="event.stopPropagation()">
+          ${damageList.map(type=>{
+            const found = (p.damageTypes || []).map(normalizeDamageEntry).find(e => e.type === type);
+            const val = found ? found.value : 0;
+            return `
+            <div class="slider-row">
+              <span class="slider-label" style="color:${damageColor(type)}">${damageShortName(type)}</span>
+              <input type="range" min="0" max="10" step="1" value="${val}"
+                class="damage-slider" data-type="${escapeAttr(type)}"
+                oninput="updateSliderPreview(this)">
+              <span class="slider-value">${val}</span>
+            </div>`;
+          }).join("")}
+          <div class="slider-preview-bar">${renderDamageBar(p.damageTypes)}</div>
+          <button onclick="closeTagEdit(this)">OK</button>
+        </div>
+      </div>
+    </td>
+  `;
+
+  return nameCell + styleCell + survivalCell + damageCell;
+}
+
+// スライダー操作中：数値表示とプレビューの積み上げ棒グラフをリアルタイム更新
+window.updateSliderPreview = function(sliderEl){
+  const box = sliderEl.closest(".tag-edit");
+  if(!box) return;
+  const valueSpan = sliderEl.nextElementSibling;
+  if(valueSpan) valueSpan.textContent = sliderEl.value;
+
+  const entries = [];
+  box.querySelectorAll(".damage-slider").forEach(s=>{
+    const v = Number(s.value);
+    if(v > 0) entries.push({ type: s.dataset.type, value: v });
+  });
+  const preview = box.querySelector(".slider-preview-bar");
+  if(preview) preview.innerHTML = renderDamageBar(entries);
 };
 
 window.closeTagEdit = async function(button){
-  const editDiv = button.parentNode;
+  const editDiv = button.closest(".tag-edit");
   const viewDiv = editDiv.previousElementSibling;
 
   const container = viewDiv.closest("td");
@@ -1517,25 +1496,14 @@ window.closeTagEdit = async function(button){
   const matchNumber = parseInt(container.dataset.matchNumber);
   const playerName = container.dataset.playerName;
 
-  const tags = editDiv.querySelectorAll("input[type=checkbox]");
   const active = [];
-  tags.forEach(cb => {
-    if(cb.checked){
-      const sizeSel = cb.closest("label").querySelector("select.size-select");
-      const size = sizeSel ? sizeSel.value : "medium";
-      active.push({ type: cb.value, size });
-    }
+  editDiv.querySelectorAll(".damage-slider").forEach(s=>{
+    const v = Number(s.value);
+    if(v > 0) active.push({ type: s.dataset.type, value: v });
   });
 
   // 表示更新
-  viewDiv.innerHTML = active.length > 0
-  ? active.map(t => `
-      <span class="tag active tag-${t.size}" 
-        style="background:${damageColor(t.type)};">
-        ${damageShortName(t.type)}
-      </span>
-    `).join("")
-  : '<span class="no-tag">未設定</span>';
+  viewDiv.innerHTML = renderDamageBar(active);
 
   // Firestore 更新
   const ref = doc(db,"expeditions",docId);
@@ -1544,7 +1512,7 @@ window.closeTagEdit = async function(button){
   const match = docData.matches.find(m=>m.matchNumber === matchNumber);
   const player = match.players.find(p=>p.name === playerName);
 
-  player.damageTypes = active; // ここでサイズ反映
+  player.damageTypes = active;
   await updateDoc(ref, docData);
 
   editDiv.style.display = "none";
@@ -1584,6 +1552,7 @@ window.resetLane = async function(docId, matchNumber, lane){
       name: p.name,
       lane: p.lane,
       style: p.range,
+      survival: "",
       damageTypes: []
     }));
 
@@ -1591,6 +1560,88 @@ window.resetLane = async function(docId, matchNumber, lane){
 
   await updateDoc(ref, data);
 
+};
+
+// ===== 対戦相手（格上／同格／格下）の更新 =====
+window.updateOpponent = async function(docId, matchNumber, value){
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+  match.opponent = value;
+  await updateDoc(ref, data);
+};
+
+// 指定レーン内でのプレイヤーの並び位置（配列全体でのindex）一覧を返す
+function laneIndices(playersArr, lane){
+  return playersArr
+    .map((p,i)=>({p,i}))
+    .filter(x => x.p.lane === lane)
+    .map(x => x.i);
+}
+
+// ===== 回戦内のプレイヤー1件の項目を編集（名前・戦術・生存時間）してFirestoreに即時反映 =====
+window.updateMatchPlayerField = async function(docId, matchNumber, lane, pos, field, value){
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+  const idxs = laneIndices(match.players, lane);
+  const target = idxs[pos];
+  if(target === undefined) return;
+  match.players[target][field] = value;
+  await updateDoc(ref, data);
+};
+
+// ===== 回戦内でのプレイヤーの並び替え（同じレーン内のみ）=====
+window.moveMatchPlayer = async function(docId, matchNumber, lane, pos, direction){
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+  const idxs = laneIndices(match.players, lane);
+  const to = pos + direction;
+  if(to < 0 || to >= idxs.length) return;
+  const a = idxs[pos], b = idxs[to];
+  [match.players[a], match.players[b]] = [match.players[b], match.players[a]];
+  await updateDoc(ref, data);
+};
+
+// ===== 回戦内に手動でプレイヤー行を追加 =====
+window.addMatchPlayerRow = async function(docId, matchNumber, lane){
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+  match.players.push({ name: "", lane, style: "", survival: "", damageTypes: [] });
+  await updateDoc(ref, data);
+};
+
+// ===== 回戦内のプレイヤー行を削除 =====
+window.deleteMatchPlayerRow = async function(docId, matchNumber, lane, pos){
+  if(!confirm("この行を削除しますか？")) return;
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+  const idxs = laneIndices(match.players, lane);
+  const target = idxs[pos];
+  if(target === undefined) return;
+  match.players.splice(target, 1);
+  await updateDoc(ref, data);
+};
+
+// ===== 週ブロックの編集モード切り替え（並び替え・追加・削除ボタンの表示切替）=====
+let editWeekIds = new Set();
+window.toggleWeekEdit = function(docId){
+  if(editWeekIds.has(docId)) editWeekIds.delete(docId);
+  else editWeekIds.add(docId);
+  if(lastExpeditionDocs) renderExpeditions(lastExpeditionDocs);
 };
 
 // 回戦削除（週指定）
@@ -1633,33 +1684,48 @@ function formatRange(dateStr){
     return `${y}/${m1}/${d1}〜${m2}/${d2}`;
   }
 }
-// 金曜だけ選択可能
+// 金・土・日だけ選択可能
 document.getElementById("weekDate").addEventListener("input", function(){
   if(!this.value) return;
   const date = new Date(this.value);
-  const day = date.getDay(); // 0=日〜6=土
-  if(day !== 5){
-    showToast("金曜日を選択してください");
+  const day = date.getDay(); // 0=日, 5=金, 6=土
+  if(day !== 5 && day !== 6 && day !== 0){
+    showToast("金曜・土曜・日曜のいずれかを選択してください");
     this.value = "";
   }
 });
-flatpickr("#weekDate", {
+const weekDateFP = flatpickr("#weekDate", {
   locale: "ja",
   dateFormat: "Y-m-d",
   enable: [
     function(date){
-      return date.getDay() === 5;
+      const day = date.getDay();
+      return day === 5 || day === 6 || day === 0;
     }
   ],
   onDayCreate: function(dObj, dStr, fp, dayElem){
     const date = dayElem.dateObj;
-    if(date.getDay() === 5){
+    const day = date.getDay();
+    if(day === 5 || day === 6 || day === 0){
       dayElem.style.background = "#4caf50";
       dayElem.style.color = "white";
       dayElem.style.borderRadius = "50%";
     }
   }
 });
+
+// 金・土・日のどれを選んでも、その週の金曜日の日付にまとめる（週の識別キー）
+function weekKeyFromDate(dateStr){
+  const d = new Date(dateStr);
+  const day = d.getDay(); // 0=日, 5=金, 6=土
+  const offset = day === 0 ? 2 : (day === 6 ? 1 : 0); // 日曜なら-2日、土曜なら-1日で金曜に揃える
+  const friday = new Date(d);
+  friday.setDate(d.getDate() - offset);
+  const y = friday.getFullYear();
+  const m = String(friday.getMonth() + 1).padStart(2, "0");
+  const dd = String(friday.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
 window.updatePlayer = async function(order){
   const i = players.findIndex(p => p.order === order);
   if(i === -1) return;
