@@ -1163,46 +1163,6 @@ window.confirmImport = async function(){
   showToast(`${matchNumber}回戦を取り込みました`);
 };
 
-// ===== 既存の全記録の「戦術（距離／タクティクス）」をページ1の最新内容で一括更新 =====
-// ※ 戦術フィールドを追加する前に取り込んだ記録は、名前が一致するプレイヤーの
-//    戦術（距離／タクティクス）が空のままになっているため、この一括更新で反映する。
-window.refreshAllTactics = async function(){
-  if(players.length === 0){
-    showToast("プレイヤーが読み込まれていません。ページ1を開いてください");
-    return;
-  }
-  if(!confirm("全ての遠征記録の戦術（距離／タクティクス）を、現在のページ1の内容で更新します。よろしいですか？")) return;
-
-  const snap = await getDocs(collection(db,"expeditions"));
-  let updatedWeeks = 0;
-
-  for(const docSnap of snap.docs){
-    const data = docSnap.data();
-    let changed = false;
-
-    (data.matches || []).forEach(match=>{
-      (match.players || []).forEach(mp=>{
-        const src = players.find(pl => pl.name === mp.name);
-        if(!src) return;
-        const newRange = src.range || "";
-        const newTactic = src.style || "";
-        if(mp.range !== newRange || mp.tactic !== newTactic){
-          mp.range = newRange;
-          mp.tactic = newTactic;
-          changed = true;
-        }
-      });
-    });
-
-    if(changed){
-      await updateDoc(doc(db,"expeditions",docSnap.id), data);
-      updatedWeeks++;
-    }
-  }
-
-  showToast(updatedWeeks > 0 ? `${updatedWeeks}件の週の戦術を更新しました` : "更新が必要な記録はありませんでした");
-};
-
 // ===== 削除パネル（回戦とレーンを指定して、そのプレイヤーだけをまとめて削除）=====
 window.openDeletePanel = function(){
   const date = document.getElementById("weekDate").value;
