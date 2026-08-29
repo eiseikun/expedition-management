@@ -53,6 +53,7 @@
   日付：
   <input id="weekDate" placeholder="金・土・日を選択">
   <button class="btn-primary" onclick="openImportPanel()">取り込み</button>
+  <button class="btn-delete" onclick="openDeletePanel()">削除</button>
 </div>
 
 <div id="importPanel" class="import-panel" style="display:none;">
@@ -81,6 +82,26 @@
   <div class="import-row import-actions">
     <button class="btn-primary" onclick="confirmImport()">取り込む</button>
     <button onclick="closeImportPanel()">キャンセル</button>
+  </div>
+</div>
+
+<div id="deletePanel" class="import-panel" style="display:none;">
+  <div class="import-row">
+    <label>回戦</label>
+    <select id="deleteMatchNumber">
+      <option value="1">1回戦</option>
+      <option value="2">2回戦</option>
+      <option value="3">3回戦</option>
+    </select>
+  </div>
+  <div class="import-row import-lanes">
+    <label><input type="checkbox" id="deleteLane1" checked> レーン1</label>
+    <label><input type="checkbox" id="deleteLane2" checked> レーン2</label>
+    <label><input type="checkbox" id="deleteLane3" checked> レーン3</label>
+  </div>
+  <div class="import-row import-actions">
+    <button class="btn-delete" onclick="confirmDelete()">削除する</button>
+    <button onclick="closeDeletePanel()">キャンセル</button>
   </div>
 </div>
 
