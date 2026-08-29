@@ -1423,12 +1423,6 @@ function renderDamageBar(damageTypes){
   }).join("")}</div>`;
 }
 
-// 回戦テーブル：プレイヤー1人分の4セル（名前・戦術・生存時間・火力内訳）を生成
-function renderMatchPlayerCells(docId, mn, lane, pos, p, laneCount, isEditing){
-  if(!p){
-    return `<td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td>`;
-  }
-
 // 戦術ラベル（距離／タクティクス）を「中距離/取得優先」のような形式にまとめる。
 // 旧データ（distanceのみを style フィールドに保存していたもの）にも対応。
 function tacticLabel(p){
