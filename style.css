@@ -840,18 +840,6 @@ button:hover {
   border-color: var(--blood-bright);
   color: #f3a3a3;
 }
-.cell-input {
-  width: 100%;
-  min-width: 70px;
-  background: var(--bg-panel3);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 6px;
-  font-size: 12px;
-  text-align: center;
-}
-.cell-input:focus,
 .cell-select:focus { outline: none; border-color: var(--gold); }
 .cell-select {
   border: none;
@@ -861,29 +849,15 @@ button:hover {
   font-weight: bold;
   cursor: pointer;
 }
-.strategy-select.strategy-close { background: rgba(251,226,213,0.9); color:#5a2a1f; }
-.strategy-select.strategy-mid   { background: rgba(202,237,251,0.9); color:#1f3f5a; }
-.strategy-select.strategy-long  { background: rgba(218,242,208,0.9); color:#2d5a1f; }
-.strategy-select.strategy-none  { background: rgba(255,255,255,0.12); color:var(--text-dim); }
+
+.static-name {
+  font-size: 13px;
+}
 
 .survival-select { background: rgba(255,255,255,0.10); color: var(--text-dim); }
 .survival-select.survival-秒殺   { background: rgba(224,85,90,0.18);  color: #f3a3a3; }
 .survival-select.survival-普通   { background: rgba(202,237,251,0.5); color: #1f3f5a; }
 .survival-select.survival-長生き { background: rgba(79,191,106,0.20); color: #8fe3a5; }
-
-.btn-add-row {
-  width: 100%;
-  font-size: 11px;
-  padding: 5px 8px;
-  min-height: 30px;
-  border-style: dashed;
-  color: var(--text-dim);
-}
-.btn-add-row:hover {
-  color: var(--gold-soft);
-  border-color: var(--gold);
-}
-.add-player-row td { background: transparent !important; }
 
 /* ==============================
    火力内訳：横向き積み上げ棒グラフ
