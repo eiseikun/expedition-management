@@ -615,7 +615,7 @@ window.savePlayer = async function(){
   });
 
   const gearDetail = [];
-  document.querySelectorAll("#chaos div").forEach(div=>{
+  document.querySelectorAll("#chaos > div").forEach(div=>{
     const set = div.querySelector("[data-type='set']").value;
     const type = div.querySelector("[data-type='quality']").value;
     const part = div.querySelector("[data-type='set']").dataset.part;
@@ -678,7 +678,7 @@ window.editPlayer = function(order){
   document.getElementById("legend").value = p.legend;
   document.getElementById("lane").value = p.lane;
 
-  document.querySelectorAll("#chaos div").forEach(div=>{
+  document.querySelectorAll("#chaos > div").forEach(div=>{
     const part = div.querySelector("[data-type='set']").dataset.part;
     const g = p.gearDetail?.find(x=>x.part===part);
     div.querySelector("[data-type='set']").value = g?.set || "";
@@ -1103,14 +1103,6 @@ window.closeImportPanel = function(){
   document.getElementById("importPanel").style.display = "none";
 };
 
-// 週ブロック側の「取り込み」ボタンから開く場合：その週の日付をセットしてからパネルを開く
-window.openImportPanelForWeek = function(dateStr, matchNumber){
-  document.getElementById("weekDate").value = dateStr;
-  if(weekDateFP) weekDateFP.setDate(dateStr, true);
-  if(matchNumber) document.getElementById("importMatchNumber").value = String(matchNumber);
-  openImportPanel();
-};
-
 window.confirmImport = async function(){
   if(players.length === 0){
     showToast("プレイヤーが読み込まれていません。ページ1を開いてください");
@@ -1129,13 +1121,15 @@ window.confirmImport = async function(){
     return;
   }
 
+  // 名前・レーン・戦術（距離／タクティクス）はページ1の内容をそのまま取り込む（ページ2では編集不可）
   const matchPlayers = players
     .filter(p => allowedLanes.includes(p.lane))
     .sort((a,b)=>a.order - b.order)
     .map(p=>({
       name: p.name,
       lane: p.lane,
-      style: p.range,
+      range: p.range || "",
+      tactic: p.style || "",
       survival: "",
       damageTypes: []
     }));
@@ -1147,7 +1141,7 @@ window.confirmImport = async function(){
     const data = existing.data();
     const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
     if(idx >= 0){
-      // 同名プレイヤーの生存時間・火力内訳などの記録済みデータは引き継ぐ
+      // 生存時間・火力内訳などページ2で入力した記録は、同名プレイヤーであれば引き継ぐ
       const oldMatch = data.matches[idx];
       const mergedPlayers = matchPlayers.map(p=>{
         const old = oldMatch.players.find(op => op.name === p.name);
@@ -1169,6 +1163,60 @@ window.confirmImport = async function(){
   showToast(`${matchNumber}回戦を取り込みました`);
 };
 
+// ===== 削除パネル（回戦とレーンを指定して、そのプレイヤーだけをまとめて削除）=====
+window.openDeletePanel = function(){
+  const date = document.getElementById("weekDate").value;
+  if(!date) return showToast("日付を選択して");
+  document.getElementById("deletePanel").style.display = "flex";
+};
+
+window.closeDeletePanel = function(){
+  document.getElementById("deletePanel").style.display = "none";
+};
+
+window.confirmDelete = async function(){
+  const dateInput = document.getElementById("weekDate").value;
+  if(!dateInput) return showToast("日付を選択して");
+  const weekKey = weekKeyFromDate(dateInput);
+
+  const matchNumber = Number(document.getElementById("deleteMatchNumber").value);
+  const targetLanes = [1,2,3].filter(l => document.getElementById(`deleteLane${l}`).checked);
+
+  if(targetLanes.length === 0){
+    showToast("レーンを1つ以上選択してください");
+    return;
+  }
+
+  const snap = await getDocs(query(collection(db,"expeditions"), where("date","==",weekKey)));
+  const existing = snap.docs[0];
+  if(!existing){
+    showToast("この週のデータがありません");
+    return;
+  }
+
+  const data = existing.data();
+  const idx = data.matches.findIndex(m=>m.matchNumber === matchNumber);
+  if(idx === -1){
+    showToast(`${matchNumber}回戦のデータがありません`);
+    closeDeletePanel();
+    return;
+  }
+
+  if(!confirm(`${matchNumber}回戦の ${targetLanes.map(l=>"レーン"+l).join("・")} を削除します。よろしいですか？`)){
+    return;
+  }
+
+  data.matches[idx].players = data.matches[idx].players.filter(p=>!targetLanes.includes(p.lane));
+
+  // その回戦の全レーンが空になったら回戦自体も削除
+  if(data.matches[idx].players.length === 0){
+    data.matches.splice(idx, 1);
+  }
+
+  await updateDoc(doc(db,"expeditions",existing.id), data);
+  closeDeletePanel();
+  showToast("削除しました");
+};
 
 // ===== 2ページ目表示032121更新 =====
 
@@ -1210,15 +1258,9 @@ header.innerHTML = `
     <button class="btn-save" onclick="saveMatchImage(this,3)">3回戦保存📷</button>
   </div>
   <div class="week-header-row add-row">
-    <button class="btn-add" onclick="openImportPanelForWeek('${exp.date}',1)">1回戦取り込み</button>
-    <button class="btn-add" onclick="openImportPanelForWeek('${exp.date}',2)">2回戦取り込み</button>
-    <button class="btn-add" onclick="openImportPanelForWeek('${exp.date}',3)">3回戦取り込み</button>
     <button class="btn-edit ${isEditing ? "active" : ""}" onclick="toggleWeekEdit('${d.id}')">${isEditing ? "編集終了" : "編集✎"}</button>
   </div>
   <div class="week-header-row delete-row">
-    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',1)">1回戦削除</button>
-    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',2)">2回戦削除</button>
-    <button class="btn-delete" onclick="deleteMatchByWeek('${d.id}',3)">3回戦削除</button>
     <button class="btn-delete" onclick="deleteWeek('${d.id}')">週ごと削除</button>
   </div>
 `;
@@ -1273,12 +1315,6 @@ header.innerHTML = `
           <option value="格下" ${opponent==="格下" ? "selected" : ""}>格下</option>
         </select>
       </div>
-      <div class="lane-grid">
-      <span class="row-title no-export">更新</span>
-      <button class="lane-btn lane1" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},1)">レーン1</button>
-      <button class="lane-btn lane2" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},2)">レーン2</button>
-      <button class="lane-btn lane3" onclick="event.stopPropagation(); resetLane('${d.id}',${mn},3)">レーン3</button>
-      </div>
       </th>
       `;
       header2 += `
@@ -1304,13 +1340,12 @@ header.innerHTML = `
         if(count > max) max = count;
       });
 
-      if(max === 0 && !isEditing) return; // このレーンは記録なし・編集中でもない→何も表示しない
+      if(max === 0) return; // このレーンの記録が無ければ表示しない
 
-      const bodyRows = Math.max(max, 1); // 編集中に「＋行を追加」を出す枠を最低1行確保
-      const totalRows = bodyRows + (isEditing ? 1 : 0);
+      const totalRows = max;
 
       // ★人数分ループ（縦に増やす）
-      for(let i=0;i<bodyRows;i++){
+      for(let i=0;i<totalRows;i++){
         const row = document.createElement("tr");
         row.classList.add(`lane-${lane}`);
         // レーン表示（最初の行だけ）
@@ -1329,15 +1364,6 @@ header.innerHTML = `
           row.innerHTML += renderMatchPlayerCells(d.id, mn, lane, i, p, lanePlayers.length, isEditing);
         });
         table.appendChild(row);
-      }
-
-      if(isEditing){
-        const addRow = document.createElement("tr");
-        addRow.classList.add(`lane-${lane}`, "add-player-row", "no-export");
-        matchNumbers.forEach(mn=>{
-          addRow.innerHTML += `<td colspan="4"><button class="btn-add-row" onclick="addMatchPlayerRow('${d.id}',${mn},${lane})">＋ 行を追加</button></td>`;
-        });
-        table.appendChild(addRow);
       }
     });
     content.appendChild(table);
@@ -1403,7 +1429,22 @@ function renderMatchPlayerCells(docId, mn, lane, pos, p, laneCount, isEditing){
     return `<td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td>`;
   }
 
-  // ----- 名前（編集モード時のみ並び替え／削除／テキスト編集）-----
+// 戦術ラベル（距離／タクティクス）を「中距離/取得優先」のような形式にまとめる。
+// 旧データ（distanceのみを style フィールドに保存していたもの）にも対応。
+function tacticLabel(p){
+  const range = (p.range !== undefined && p.range !== null && p.range !== "") ? p.range : (p.style || "");
+  const tactic = p.tactic || "";
+  return `${range || "未設定"}/${tactic || "未設定"}`;
+}
+
+// 回戦テーブル：プレイヤー1人分の4セル（名前・戦術・生存時間・火力内訳）を生成
+// 名前・戦術はページ1で管理する情報のため、ページ2では表示のみ（編集不可）
+function renderMatchPlayerCells(docId, mn, lane, pos, p, laneCount, isEditing){
+  if(!p){
+    return `<td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td><td data-match-number="${mn}"></td>`;
+  }
+
+  // ----- 名前（編集モード時は並び替え／削除のみ可能。名前自体はページ1で編集）-----
   const nameCell = isEditing ? `
     <td data-match-number="${mn}">
       <div class="row-edit-controls no-export">
@@ -1411,21 +1452,15 @@ function renderMatchPlayerCells(docId, mn, lane, pos, p, laneCount, isEditing){
         <button class="btn-mini" onclick="moveMatchPlayer('${docId}',${mn},${lane},${pos},1)" ${pos===laneCount-1 ? "disabled" : ""} title="下へ">▼</button>
         <button class="btn-mini btn-del" onclick="deleteMatchPlayerRow('${docId}',${mn},${lane},${pos})" title="削除">✕</button>
       </div>
-      <input class="cell-input" type="text" value="${escapeAttr(p.name || "")}" placeholder="名前"
-        onchange="updateMatchPlayerField('${docId}',${mn},${lane},${pos},'name',this.value)">
+      <div class="static-name">${escapeHtml(p.name || "")}</div>
     </td>
   ` : `<td data-match-number="${mn}">${escapeHtml(p.name || "")}</td>`;
 
-  // ----- 戦術（距離）-----
-  const styleOptions = ["", "遠距離", "中距離", "近距離"].map(v =>
-    `<option value="${v}" ${p.style===v ? "selected" : ""}>${v || "未設定"}</option>`
-  ).join("");
+  // ----- 戦術（距離／タクティクス、表示のみ）-----
+  const range = (p.range !== undefined && p.range !== null && p.range !== "") ? p.range : p.style;
   const styleCell = `
     <td data-match-number="${mn}">
-      <select class="cell-select strategy-select ${strategyClass(p.style)}"
-        onchange="updateMatchPlayerField('${docId}',${mn},${lane},${pos},'style',this.value)">
-        ${styleOptions}
-      </select>
+      <span class="strategy-label ${strategyClass(range)}">${tacticLabel(p)}</span>
     </td>
   `;
 
@@ -1531,37 +1566,6 @@ document.addEventListener("click", function(e){
   openTagEditKey = null;
 });
 
-// ===== レーン単位リセット（←追加）=====
-window.resetLane = async function(docId, matchNumber, lane){
-
-  const ref = doc(db,"expeditions",docId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-
-  const match = data.matches.find(m=>m.matchNumber === matchNumber);
-  if(!match) return;
-
-  // 指定レーン削除
-  match.players = match.players.filter(p=>p.lane !== lane);
-
-  // 最新playersから再生成
-  const lanePlayers = players
-    .filter(p=>p.lane === lane)
-    .sort((a,b)=>a.order - b.order)
-    .map(p=>({
-      name: p.name,
-      lane: p.lane,
-      style: p.range,
-      survival: "",
-      damageTypes: []
-    }));
-
-  match.players.push(...lanePlayers);
-
-  await updateDoc(ref, data);
-
-};
-
 // ===== 対戦相手（格上／同格／格下）の更新 =====
 window.updateOpponent = async function(docId, matchNumber, value){
   const ref = doc(db,"expeditions",docId);
@@ -1610,17 +1614,6 @@ window.moveMatchPlayer = async function(docId, matchNumber, lane, pos, direction
   await updateDoc(ref, data);
 };
 
-// ===== 回戦内に手動でプレイヤー行を追加 =====
-window.addMatchPlayerRow = async function(docId, matchNumber, lane){
-  const ref = doc(db,"expeditions",docId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-  const match = data.matches.find(m=>m.matchNumber === matchNumber);
-  if(!match) return;
-  match.players.push({ name: "", lane, style: "", survival: "", damageTypes: [] });
-  await updateDoc(ref, data);
-};
-
 // ===== 回戦内のプレイヤー行を削除 =====
 window.deleteMatchPlayerRow = async function(docId, matchNumber, lane, pos){
   if(!confirm("この行を削除しますか？")) return;
@@ -1642,20 +1635,6 @@ window.toggleWeekEdit = function(docId){
   if(editWeekIds.has(docId)) editWeekIds.delete(docId);
   else editWeekIds.add(docId);
   if(lastExpeditionDocs) renderExpeditions(lastExpeditionDocs);
-};
-
-// 回戦削除（週指定）
-window.deleteMatchByWeek = async function(docId, matchNumber){
-
-  if(!confirm("この回戦を削除しますか？")) return;
-
-  const ref = doc(db,"expeditions",docId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-
-  data.matches = data.matches.filter(m=>m.matchNumber !== matchNumber);
-
-  await updateDoc(ref, data);
 };
 
 // 週ごと削除
