@@ -1345,8 +1345,9 @@ header.innerHTML = `
     matchNumbers.forEach(mn=>{
       const match = exp.matches.find(m=>m.matchNumber === mn);
       const opponent = match?.opponent || "";
+      const results = match?.results || {};
       header1 += `
-      <th colspan="5">
+      <th colspan="4">
       ${mn}回戦
       <div class="opponent-row">
         <span class="opponent-label no-export">対戦相手</span>
@@ -1359,6 +1360,22 @@ header.innerHTML = `
           <option value="格下" ${opponent==="格下" ? "selected" : ""}>格下</option>
         </select>
       </div>
+      <div class="lane-results-row">
+        ${[1,2,3].map(l=>{
+          const v = results[l] || "";
+          return `
+          <span class="lane-result-item">
+            <span class="lane-result-label">レーン${l}</span>
+            <select class="lane-result-select result-${v || "none"}"
+              onclick="event.stopPropagation()"
+              onchange="event.stopPropagation(); updateLaneResult('${d.id}',${mn},${l},this.value)">
+              <option value="" ${!v ? "selected" : ""}>未選択</option>
+              <option value="win" ${v==="win" ? "selected" : ""}>勝ち</option>
+              <option value="lose" ${v==="lose" ? "selected" : ""}>負け</option>
+            </select>
+          </span>`;
+        }).join("")}
+      </div>
       </th>
       `;
       header2 += `
@@ -1366,7 +1383,6 @@ header.innerHTML = `
       <th>戦術</th>
       <th>生存時間</th>
       <th>火力内訳</th>
-      <th>勝敗</th>
       `;
     });
     header1 += `</tr>`;
@@ -1407,7 +1423,6 @@ header.innerHTML = `
           const p = lanePlayers[i];
           row.setAttribute("data-match-number", mn);
           row.innerHTML += renderMatchPlayerCells(d.id, mn, lane, i, p, lanePlayers.length, isEditing);
-          row.innerHTML += renderLaneResultCell(d.id, mn, lane, i, match, lanePlayers.length);
         });
         table.appendChild(row);
       }
@@ -1607,29 +1622,6 @@ document.addEventListener("click", function(e){
   });
   openTagEditKey = null;
 });
-
-// レーンごとの勝敗セル（回戦×レーン単位。同じレーンの人数分をrowspanでまとめて1つだけ表示）
-function renderLaneResultCell(docId, mn, lane, i, match, laneCount){
-  if(laneCount === 0){
-    return `<td data-match-number="${mn}"></td>`;
-  }
-  if(i === 0){
-    const value = (match && match.results && match.results[lane]) || "";
-    return `
-      <td data-match-number="${mn}" rowspan="${laneCount}">
-        <select class="cell-select result-select result-${value || "none"}"
-          onclick="event.stopPropagation()"
-          onchange="event.stopPropagation(); updateLaneResult('${docId}',${mn},${lane},this.value)">
-          <option value="" ${!value ? "selected" : ""}>未選択</option>
-          <option value="win" ${value==="win" ? "selected" : ""}>勝ち</option>
-          <option value="lose" ${value==="lose" ? "selected" : ""}>負け</option>
-        </select>
-      </td>
-    `;
-  }
-  if(i < laneCount) return ""; // rowspanでカバー済み
-  return `<td data-match-number="${mn}"></td>`;
-}
 
 // ===== レーンごとの勝敗（勝ち／負け／未選択）の更新 =====
 window.updateLaneResult = async function(docId, matchNumber, lane, value){
