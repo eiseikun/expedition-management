@@ -775,6 +775,31 @@ button:hover {
   cursor: pointer;
   accent-color: var(--gold);
 }
+.import-lane-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.import-result-select {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel3);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.import-result-select.result-win { background: rgba(79,191,106,0.16); border-color: var(--up); color: #8fe3a5; }
+.import-result-select.result-lose { background: rgba(224,85,90,0.18); border-color: var(--blood-bright); color: #f3a3a3; }
+
+/* ==============================
+   レーンごとの勝敗（遠征記録テーブル内）
+============================== */
+.result-select { background: rgba(255,255,255,0.10); color: var(--text-dim); }
+.result-select.result-win  { background: rgba(79,191,106,0.16);  border-color: var(--up);           color: #8fe3a5; }
+.result-select.result-lose { background: rgba(224,85,90,0.18);   border-color: var(--blood-bright);  color: #f3a3a3; }
 .import-actions {
   justify-content: center;
   gap: 10px;
