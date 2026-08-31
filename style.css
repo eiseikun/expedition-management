@@ -795,11 +795,38 @@ button:hover {
 .import-result-select.result-lose { background: rgba(224,85,90,0.18); border-color: var(--blood-bright); color: #f3a3a3; }
 
 /* ==============================
-   レーンごとの勝敗（遠征記録テーブル内）
+   レーンごとの勝敗（対戦相手の下に表示・編集）
 ============================== */
-.result-select { background: rgba(255,255,255,0.10); color: var(--text-dim); }
-.result-select.result-win  { background: rgba(79,191,106,0.16);  border-color: var(--up);           color: #8fe3a5; }
-.result-select.result-lose { background: rgba(224,85,90,0.18);   border-color: var(--blood-bright);  color: #f3a3a3; }
+.lane-results-row {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  white-space: nowrap;
+}
+.lane-result-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lane-result-label {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.lane-result-select {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel3);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.lane-result-select.result-win  { background: rgba(79,191,106,0.16);  border-color: var(--up);           color: #8fe3a5; }
+.lane-result-select.result-lose { background: rgba(224,85,90,0.18);  border-color: var(--blood-bright);  color: #f3a3a3; }
 .import-actions {
   justify-content: center;
   gap: 10px;
@@ -1026,6 +1053,8 @@ button:hover {
   .cell-input { font-size: 11px; min-width: 56px; }
   .cell-select { font-size: 10px; padding: 3px 6px; }
   .opponent-select { font-size: 10px; }
+  .lane-result-select { font-size: 10px; }
+  .lane-result-label { font-size: 9px; }
   .damage-bar { height: 15px; min-width: 60px; }
   .damage-bar-seg { font-size: 8px; }
   .btn-mini { width: 20px; height: 18px; }
