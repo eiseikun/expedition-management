@@ -1097,10 +1097,39 @@ window.openImportPanel = function(){
   const date = document.getElementById("weekDate").value;
   if(!date) return showToast("日付を選択して");
   document.getElementById("importPanel").style.display = "flex";
+  updateImportLaneVisibility();
+  applyImportResultDefaults();
 };
 
 window.closeImportPanel = function(){
   document.getElementById("importPanel").style.display = "none";
+};
+
+// レーンのチェックを外している間は、そのレーンの勝敗選択を隠す（取り込み対象外のため）
+window.updateImportLaneVisibility = function(){
+  [1,2,3].forEach(l=>{
+    const checkbox = document.getElementById(`importLane${l}`);
+    const group = checkbox ? checkbox.closest(".import-lane-group") : null;
+    const select = document.getElementById(`importResult${l}`);
+    if(select) select.style.display = (checkbox && checkbox.checked) ? "inline-block" : "none";
+    if(group) group.classList.toggle("lane-disabled", !(checkbox && checkbox.checked));
+  });
+};
+
+// 対戦相手の設定に応じて、勝敗のデフォルト値を各レーンにセットする
+// 格上→負け／同格→未選択／格下→勝ち
+window.applyImportResultDefaults = function(){
+  const opponent = document.getElementById("importOpponent").value;
+  const defaultMap = { "格上": "lose", "同格": "", "格下": "win" };
+  const def = defaultMap[opponent] ?? "";
+  [1,2,3].forEach(l=>{
+    const select = document.getElementById(`importResult${l}`);
+    if(!select) return;
+    select.value = def;
+    select.classList.remove("result-win","result-lose");
+    if(def === "win") select.classList.add("result-win");
+    if(def === "lose") select.classList.add("result-lose");
+  });
 };
 
 window.confirmImport = async function(){
@@ -1120,6 +1149,12 @@ window.confirmImport = async function(){
     showToast("レーンを1つ以上選択してください");
     return;
   }
+
+  // チェックが入っているレーンだけ、選択された勝敗を取り込む
+  const newResults = {};
+  allowedLanes.forEach(l=>{
+    newResults[l] = document.getElementById(`importResult${l}`).value || "";
+  });
 
   // 名前・レーン・戦術（距離／タクティクス）はページ1の内容をそのまま取り込む（ページ2では編集不可）
   const matchPlayers = players
@@ -1147,20 +1182,29 @@ window.confirmImport = async function(){
         const old = oldMatch.players.find(op => op.name === p.name);
         return old ? { ...p, survival: old.survival || "", damageTypes: old.damageTypes || [] } : p;
       });
-      data.matches[idx] = { matchNumber, opponent: opponent || oldMatch.opponent || "", players: mergedPlayers };
+      // 勝敗は取り込み対象のレーンだけ上書きし、対象外のレーンは既存の記録を維持する
+      const mergedResults = { ...(oldMatch.results || {}), ...newResults };
+      data.matches[idx] = { matchNumber, opponent: opponent || oldMatch.opponent || "", players: mergedPlayers, results: mergedResults };
     }else{
-      data.matches.push({ matchNumber, opponent, players: matchPlayers });
+      data.matches.push({ matchNumber, opponent, players: matchPlayers, results: newResults });
     }
     await updateDoc(doc(db,"expeditions",existing.id), data);
   }else{
     await addDoc(collection(db,"expeditions"), {
       date: weekKey,
-      matches: [{ matchNumber, opponent, players: matchPlayers }]
+      matches: [{ matchNumber, opponent, players: matchPlayers, results: newResults }]
     });
   }
 
   closeImportPanel();
   showToast(`${matchNumber}回戦を取り込みました`);
+};
+
+// 勝敗セレクトを手動変更した際に、色分け用クラスを更新する
+window.updateImportResultClass = function(select){
+  select.classList.remove("result-win","result-lose");
+  if(select.value === "win") select.classList.add("result-win");
+  if(select.value === "lose") select.classList.add("result-lose");
 };
 
 // ===== 削除パネル（回戦とレーンを指定して、そのプレイヤーだけをまとめて削除）=====
@@ -1302,7 +1346,7 @@ header.innerHTML = `
       const match = exp.matches.find(m=>m.matchNumber === mn);
       const opponent = match?.opponent || "";
       header1 += `
-      <th colspan="4">
+      <th colspan="5">
       ${mn}回戦
       <div class="opponent-row">
         <span class="opponent-label no-export">対戦相手</span>
@@ -1322,6 +1366,7 @@ header.innerHTML = `
       <th>戦術</th>
       <th>生存時間</th>
       <th>火力内訳</th>
+      <th>勝敗</th>
       `;
     });
     header1 += `</tr>`;
@@ -1362,6 +1407,7 @@ header.innerHTML = `
           const p = lanePlayers[i];
           row.setAttribute("data-match-number", mn);
           row.innerHTML += renderMatchPlayerCells(d.id, mn, lane, i, p, lanePlayers.length, isEditing);
+          row.innerHTML += renderLaneResultCell(d.id, mn, lane, i, match, lanePlayers.length);
         });
         table.appendChild(row);
       }
@@ -1413,9 +1459,11 @@ function normalizeDamageEntry(t){
 }
 
 // 火力内訳を横向き積み上げ棒グラフ（HTML/CSS）で描画。画像保存にもそのまま含まれる。
+// 値が大きい順に左から並ぶようにソートする。
 function renderDamageBar(damageTypes){
   const entries = (damageTypes || []).map(normalizeDamageEntry).filter(e => e.value > 0);
   if(entries.length === 0) return '<span class="no-tag">未設定</span>';
+  entries.sort((a,b)=> b.value - a.value);
   const total = entries.reduce((s,e)=>s+e.value, 0);
   return `<div class="damage-bar">${entries.map(e=>{
     const pct = Math.round((e.value / total) * 1000) / 10;
@@ -1559,6 +1607,41 @@ document.addEventListener("click", function(e){
   });
   openTagEditKey = null;
 });
+
+// レーンごとの勝敗セル（回戦×レーン単位。同じレーンの人数分をrowspanでまとめて1つだけ表示）
+function renderLaneResultCell(docId, mn, lane, i, match, laneCount){
+  if(laneCount === 0){
+    return `<td data-match-number="${mn}"></td>`;
+  }
+  if(i === 0){
+    const value = (match && match.results && match.results[lane]) || "";
+    return `
+      <td data-match-number="${mn}" rowspan="${laneCount}">
+        <select class="cell-select result-select result-${value || "none"}"
+          onclick="event.stopPropagation()"
+          onchange="event.stopPropagation(); updateLaneResult('${docId}',${mn},${lane},this.value)">
+          <option value="" ${!value ? "selected" : ""}>未選択</option>
+          <option value="win" ${value==="win" ? "selected" : ""}>勝ち</option>
+          <option value="lose" ${value==="lose" ? "selected" : ""}>負け</option>
+        </select>
+      </td>
+    `;
+  }
+  if(i < laneCount) return ""; // rowspanでカバー済み
+  return `<td data-match-number="${mn}"></td>`;
+}
+
+// ===== レーンごとの勝敗（勝ち／負け／未選択）の更新 =====
+window.updateLaneResult = async function(docId, matchNumber, lane, value){
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+  if(!match.results) match.results = {};
+  match.results[lane] = value;
+  await updateDoc(ref, data);
+};
 
 // ===== 対戦相手（格上／同格／格下）の更新 =====
 window.updateOpponent = async function(docId, matchNumber, value){
