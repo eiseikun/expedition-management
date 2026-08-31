@@ -67,7 +67,7 @@
   </div>
   <div class="import-row">
     <label>対戦相手</label>
-    <select id="importOpponent">
+    <select id="importOpponent" onchange="applyImportResultDefaults()">
       <option value="">未設定</option>
       <option value="格上">格上</option>
       <option value="同格">同格</option>
@@ -75,9 +75,30 @@
     </select>
   </div>
   <div class="import-row import-lanes">
-    <label><input type="checkbox" id="importLane1" checked> レーン1</label>
-    <label><input type="checkbox" id="importLane2" checked> レーン2</label>
-    <label><input type="checkbox" id="importLane3" checked> レーン3</label>
+    <div class="import-lane-group">
+      <label><input type="checkbox" id="importLane1" checked onchange="updateImportLaneVisibility()"> レーン1</label>
+      <select id="importResult1" class="import-result-select" onchange="updateImportResultClass(this)">
+        <option value="">未選択</option>
+        <option value="win">勝ち</option>
+        <option value="lose">負け</option>
+      </select>
+    </div>
+    <div class="import-lane-group">
+      <label><input type="checkbox" id="importLane2" checked onchange="updateImportLaneVisibility()"> レーン2</label>
+      <select id="importResult2" class="import-result-select" onchange="updateImportResultClass(this)">
+        <option value="">未選択</option>
+        <option value="win">勝ち</option>
+        <option value="lose">負け</option>
+      </select>
+    </div>
+    <div class="import-lane-group">
+      <label><input type="checkbox" id="importLane3" checked onchange="updateImportLaneVisibility()"> レーン3</label>
+      <select id="importResult3" class="import-result-select" onchange="updateImportResultClass(this)">
+        <option value="">未選択</option>
+        <option value="win">勝ち</option>
+        <option value="lose">負け</option>
+      </select>
+    </div>
   </div>
   <div class="import-row import-actions">
     <button class="btn-primary" onclick="confirmImport()">取り込む</button>
