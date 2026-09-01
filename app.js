@@ -1322,6 +1322,9 @@ header.innerHTML = `
       });
     }
     header.onclick = (e) => {
+      // ヘッダー内のボタン（保存・編集・削除）をクリックした時は、
+      // 折りたたみの開閉を切り替えない（誤って開閉状態が壊れるのを防ぐ）
+      if(e.target.closest("button")) return;
       const willOpen = content.style.display === "none";
       content.style.display = willOpen ? "block" : "none";
       header.querySelectorAll("button").forEach(btn => {
@@ -1594,8 +1597,14 @@ window.closeTagEdit = async function(button){
     if(v > 0) active.push({ type: s.dataset.type, value: v });
   });
 
-  // 表示更新
+  // 表示更新（Firestoreへの保存より前に確定させる）
+  // openTagEditKeyを先に外しておかないと、保存中にonSnapshotで再描画が走った際
+  // 「編集中だったセルを再度開く」処理が働いてしまい、閉じたはずの編集画面が
+  // 結果表示の上に再び開いてしまう（＝結果が表示されないように見える）。
+  openTagEditKey = null;
   viewDiv.innerHTML = renderDamageBar(active);
+  editDiv.style.display = "none";
+  viewDiv.style.display = "block";
 
   // Firestore 更新
   const ref = doc(db,"expeditions",docId);
@@ -1606,10 +1615,6 @@ window.closeTagEdit = async function(button){
 
   player.damageTypes = active;
   await updateDoc(ref, docData);
-
-  editDiv.style.display = "none";
-  viewDiv.style.display = "block";
-  openTagEditKey = null;
 };
 
 // クリックで外側を閉じる処理はそのまま
