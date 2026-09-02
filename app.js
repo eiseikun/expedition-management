@@ -716,11 +716,35 @@ window.saveNote = async function(id, value){
 };
   
 
+// ===== 画像保存の共通下処理 =====
+// html2canvas は <select> の表示や position:sticky を正しく描画できないため、
+// 画像化する直前に「選択中のテキストだけを表示する<div>」へ置き換え、
+// theadのsticky指定も解除しておく。
+function prepareCloneForImageExport(clone){
+  // <select>（対戦相手・生存時間・レーンの勝敗など）を、選択中テキストの<div>に置き換える
+  clone.querySelectorAll("select").forEach(sel=>{
+    const div = document.createElement("div");
+    div.className = sel.className;
+    const opt = sel.options[sel.selectedIndex];
+    div.textContent = opt ? opt.textContent.trim() : "";
+    div.style.display = "inline-block";
+    div.style.whiteSpace = "nowrap";
+    div.style.textAlign = "center";
+    sel.replaceWith(div);
+  });
+  // position:sticky のヘッダーがおかしな位置に描画されるのを防ぐ
+  clone.querySelectorAll("th").forEach(th=>{
+    th.style.position = "static";
+    th.style.top = "auto";
+  });
+}
+
 // ===== 画像保存 =====
 window.saveTableImage = async function(includeNotes = false){
   const original = document.getElementById("captureArea");
   const clone = original.cloneNode(true);
   clone.querySelectorAll(".update-btn, .update-time, .no-export").forEach(el => el.remove());
+  prepareCloneForImageExport(clone);
   if(!includeNotes){
     clone.querySelectorAll(".note-cell").forEach(el => el.remove());
   }else{
@@ -1877,6 +1901,7 @@ window.saveWeekImage = async function(btn){
   // 不要なボタン削除
   clone.querySelectorAll("button").forEach(b => b.remove());
   clone.querySelectorAll(".no-export").forEach(el => el.remove());
+  prepareCloneForImageExport(clone);
   // スタイル
   clone.style.width = original.scrollWidth + "px";
   clone.style.background = "#111";
@@ -1915,6 +1940,7 @@ window.saveMatchImage = async function(btn, matchNumber){
   const clone = original.cloneNode(true);
   clone.querySelectorAll("button").forEach(b => b.remove());
   clone.querySelectorAll(".no-export").forEach(el => el.remove());
+  prepareCloneForImageExport(clone);
   clone.querySelectorAll("td, th").forEach(cell=>{
   const match = cell.getAttribute("data-match-number");
   if(match && match !== String(matchNumber)){
