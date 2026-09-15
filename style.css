@@ -853,18 +853,31 @@ button:hover {
   font-size: 10px;
   color: var(--text-faint);
 }
-.lane-duration-input {
-  width: 56px;
-  font-size: 11px;
-  font-weight: bold;
-  padding: 2px 6px;
+.lane-duration-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg-panel3);
-  color: var(--text-dim);
-  text-align: center;
+  padding: 2px 6px;
 }
-.lane-duration-input:focus { outline: none; border-color: var(--gold); }
+.lane-duration-input {
+  width: 32px;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  text-align: right;
+}
+.lane-duration-input:focus { outline: none; }
+.lane-duration-suffix {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-faint);
+}
 .lane-duration-view {
   font-size: 11px;
   font-weight: bold;
@@ -1107,7 +1120,7 @@ button:hover {
   .opponent-select { font-size: 10px; }
   .lane-result-select { font-size: 10px; }
   .lane-result-label { font-size: 9px; }
-  .lane-duration-input, .lane-duration-view { font-size: 10px; }
+  .lane-duration-input, .lane-duration-view, .lane-duration-suffix { font-size: 10px; }
   .lane-duration-label { font-size: 9px; }
   .damage-bar { height: 15px; min-width: 60px; }
   .damage-bar-seg { font-size: 8px; }
