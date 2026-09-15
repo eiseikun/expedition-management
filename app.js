@@ -732,6 +732,16 @@ function prepareCloneForImageExport(clone){
     div.style.textAlign = "center";
     sel.replaceWith(div);
   });
+  // 試合時間の入力欄（編集モード時）も、テキスト表示の<div>に置き換える
+  clone.querySelectorAll(".lane-duration-input").forEach(input=>{
+    const div = document.createElement("div");
+    div.className = "lane-duration-view";
+    div.textContent = input.value || "-";
+    div.style.display = "inline-block";
+    div.style.whiteSpace = "nowrap";
+    div.style.textAlign = "center";
+    input.replaceWith(div);
+  });
   // position:sticky のヘッダーがおかしな位置に描画されるのを防ぐ
   clone.querySelectorAll("th").forEach(th=>{
     th.style.position = "static";
@@ -1379,12 +1389,14 @@ header.innerHTML = `
       const match = exp.matches.find(m=>m.matchNumber === mn);
       const opponent = match?.opponent || "";
       const results = match?.results || {};
+      const durations = match?.durations || {};
       header1 += `
       <th colspan="4" data-match-number="${mn}">
       ${mn}回戦
       <div class="opponent-row">
         <span class="opponent-label no-export">対戦相手</span>
         <select class="opponent-select opponent-${opponent || "none"}"
+          ${isEditing ? "" : "disabled"}
           onclick="event.stopPropagation()"
           onchange="event.stopPropagation(); updateOpponent('${d.id}',${mn}, this.value)">
           <option value="" ${!opponent ? "selected" : ""}>未設定</option>
@@ -1400,12 +1412,30 @@ header.innerHTML = `
           <span class="lane-result-item">
             <span class="lane-result-label">レーン${l}</span>
             <select class="lane-result-select result-${v || "none"}"
+              ${isEditing ? "" : "disabled"}
               onclick="event.stopPropagation()"
               onchange="event.stopPropagation(); updateLaneResult('${d.id}',${mn},${l},this.value)">
               <option value="" ${!v ? "selected" : ""}>未選択</option>
               <option value="win" ${v==="win" ? "selected" : ""}>勝ち</option>
               <option value="lose" ${v==="lose" ? "selected" : ""}>負け</option>
             </select>
+          </span>`;
+        }).join("")}
+      </div>
+      <div class="lane-durations-row">
+        ${[1,2,3].map(l=>{
+          const dv = durations[l] || "";
+          return `
+          <span class="lane-duration-item">
+            <span class="lane-duration-label">レーン${l}</span>
+            ${isEditing ? `
+            <input type="text" inputmode="numeric" class="lane-duration-input" value="${escapeAttr(dv)}"
+              placeholder="試合時間"
+              onclick="event.stopPropagation()"
+              oninput="event.stopPropagation(); formatDurationInput(this,'${d.id}',${mn},${l})">
+            ` : `
+            <span class="lane-duration-view">${dv ? escapeHtml(dv) : "-"}</span>
+            `}
           </span>`;
         }).join("")}
       </div>
@@ -1667,6 +1697,26 @@ window.updateLaneResult = async function(docId, matchNumber, lane, value){
   if(!match.results) match.results = {};
   match.results[lane] = value;
   await updateDoc(ref, data);
+};
+
+// ===== レーンごとの試合時間の更新 =====
+window.updateLaneDuration = async function(docId, matchNumber, lane, value){
+  const ref = doc(db,"expeditions",docId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+  const match = data.matches.find(m=>m.matchNumber === matchNumber);
+  if(!match) return;
+  if(!match.durations) match.durations = {};
+  match.durations[lane] = value;
+  await updateDoc(ref, data);
+};
+
+// 試合時間の入力欄：数字以外を取り除き、末尾に「s」を自動で付ける
+window.formatDurationInput = function(input, docId, matchNumber, lane){
+  const digits = input.value.replace(/[^0-9]/g, "");
+  const formatted = digits ? `${digits}s` : "";
+  input.value = formatted;
+  updateLaneDuration(docId, matchNumber, lane, formatted);
 };
 
 // ===== 対戦相手（格上／同格／格下）の更新 =====
