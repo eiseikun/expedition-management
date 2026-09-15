@@ -733,14 +733,16 @@ function prepareCloneForImageExport(clone){
     sel.replaceWith(div);
   });
   // 試合時間の入力欄（編集モード時）も、テキスト表示の<div>に置き換える
-  clone.querySelectorAll(".lane-duration-input").forEach(input=>{
+  clone.querySelectorAll(".lane-duration-input-wrap").forEach(wrap=>{
+    const input = wrap.querySelector(".lane-duration-input");
+    const digits = input ? input.value.replace(/[^0-9]/g, "") : "";
     const div = document.createElement("div");
     div.className = "lane-duration-view";
-    div.textContent = input.value || "-";
+    div.textContent = digits ? `${digits}s` : "-";
     div.style.display = "inline-block";
     div.style.whiteSpace = "nowrap";
     div.style.textAlign = "center";
-    input.replaceWith(div);
+    wrap.replaceWith(div);
   });
   // position:sticky のヘッダーがおかしな位置に描画されるのを防ぐ
   clone.querySelectorAll("th").forEach(th=>{
@@ -1425,14 +1427,18 @@ header.innerHTML = `
       <div class="lane-durations-row">
         ${[1,2,3].map(l=>{
           const dv = durations[l] || "";
+          const dvDigits = dv.replace(/[^0-9]/g, "");
           return `
           <span class="lane-duration-item">
             <span class="lane-duration-label">レーン${l}</span>
             ${isEditing ? `
-            <input type="text" inputmode="numeric" class="lane-duration-input" value="${escapeAttr(dv)}"
-              placeholder="試合時間"
-              onclick="event.stopPropagation()"
-              oninput="event.stopPropagation(); formatDurationInput(this,'${d.id}',${mn},${l})">
+            <span class="lane-duration-input-wrap">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" class="lane-duration-input" value="${escapeAttr(dvDigits)}"
+                placeholder="時間"
+                onclick="event.stopPropagation()"
+                oninput="event.stopPropagation(); formatDurationInput(this,'${d.id}',${mn},${l})">
+              <span class="lane-duration-suffix">s</span>
+            </span>
             ` : `
             <span class="lane-duration-view">${dv ? escapeHtml(dv) : "-"}</span>
             `}
@@ -1711,11 +1717,12 @@ window.updateLaneDuration = async function(docId, matchNumber, lane, value){
   await updateDoc(ref, data);
 };
 
-// 試合時間の入力欄：数字以外を取り除き、末尾に「s」を自動で付ける
+// 試合時間の入力欄：入力欄自体は数字だけを保持し（末尾のsが入力中に割り込まないように）、
+// 保存する値にだけ「s」を付ける
 window.formatDurationInput = function(input, docId, matchNumber, lane){
   const digits = input.value.replace(/[^0-9]/g, "");
+  if(input.value !== digits) input.value = digits;
   const formatted = digits ? `${digits}s` : "";
-  input.value = formatted;
   updateLaneDuration(docId, matchNumber, lane, formatted);
 };
 
