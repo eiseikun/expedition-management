@@ -1436,7 +1436,8 @@ header.innerHTML = `
               <input type="text" inputmode="numeric" pattern="[0-9]*" class="lane-duration-input" value="${escapeAttr(dvDigits)}"
                 placeholder="時間"
                 onclick="event.stopPropagation()"
-                oninput="event.stopPropagation(); formatDurationInput(this,'${d.id}',${mn},${l})">
+                oninput="event.stopPropagation(); sanitizeDurationInput(this)"
+                onchange="event.stopPropagation(); formatDurationInput(this,'${d.id}',${mn},${l})">
               <span class="lane-duration-suffix">s</span>
             </span>
             ` : `
@@ -1717,8 +1718,14 @@ window.updateLaneDuration = async function(docId, matchNumber, lane, value){
   await updateDoc(ref, data);
 };
 
-// 試合時間の入力欄：入力欄自体は数字だけを保持し（末尾のsが入力中に割り込まないように）、
-// 保存する値にだけ「s」を付ける
+// 試合時間の入力欄：入力中（1文字ごと）は数字以外を取り除くだけでFirestoreへは書き込まない
+// （書き込むたびに一覧が再描画され、入力中のフォーカスが外れてしまうのを防ぐため）
+window.sanitizeDurationInput = function(input){
+  const digits = input.value.replace(/[^0-9]/g, "");
+  if(input.value !== digits) input.value = digits;
+};
+
+// 入力欄からフォーカスが外れた時（入力確定時）にだけ、末尾に「s」を付けてFirestoreへ保存する
 window.formatDurationInput = function(input, docId, matchNumber, lane){
   const digits = input.value.replace(/[^0-9]/g, "");
   if(input.value !== digits) input.value = digits;
