@@ -1214,10 +1214,13 @@ window.confirmImport = async function(){
     }
     await updateDoc(doc(db,"expeditions",existing.id), data);
   }else{
-    await addDoc(collection(db,"expeditions"), {
+    const newDocRef = await addDoc(collection(db,"expeditions"), {
       date: weekKey,
       matches: [{ matchNumber, opponent, players: matchPlayers, results: newResults }]
     });
+    // 新しく追加した週だけを展開し、それまで開いていた他の週は折りたたむ
+    openWeekIds.clear();
+    openWeekIds.add(newDocRef.id);
   }
 
   closeImportPanel();
@@ -1374,7 +1377,7 @@ header.innerHTML = `
       const opponent = match?.opponent || "";
       const results = match?.results || {};
       header1 += `
-      <th colspan="4">
+      <th colspan="4" data-match-number="${mn}">
       ${mn}回戦
       <div class="opponent-row">
         <span class="opponent-label no-export">対戦相手</span>
@@ -1406,10 +1409,10 @@ header.innerHTML = `
       </th>
       `;
       header2 += `
-      <th>名前</th>
-      <th>戦術</th>
-      <th>生存時間</th>
-      <th>火力内訳</th>
+      <th data-match-number="${mn}">名前</th>
+      <th data-match-number="${mn}">戦術</th>
+      <th data-match-number="${mn}">生存時間</th>
+      <th data-match-number="${mn}">火力内訳</th>
       `;
     });
     header1 += `</tr>`;
@@ -1448,7 +1451,6 @@ header.innerHTML = `
             : [];
 
           const p = lanePlayers[i];
-          row.setAttribute("data-match-number", mn);
           row.innerHTML += renderMatchPlayerCells(d.id, mn, lane, i, p, lanePlayers.length, isEditing);
         });
         table.appendChild(row);
