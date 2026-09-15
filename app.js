@@ -1214,13 +1214,16 @@ window.confirmImport = async function(){
     }
     await updateDoc(doc(db,"expeditions",existing.id), data);
   }else{
-    const newDocRef = await addDoc(collection(db,"expeditions"), {
+    // 先にID発行済みの参照を作り、書き込み前に開閉状態を更新する。
+    // （addDocの結果を待ってからopenWeekIdsを更新すると、Firestoreのローカル反映による
+    //   再描画の方が先に走ってしまい、新しい週が開かない・前の週が閉じないことがあるため）
+    const newDocRef = doc(collection(db,"expeditions"));
+    openWeekIds.clear();
+    openWeekIds.add(newDocRef.id);
+    await setDoc(newDocRef, {
       date: weekKey,
       matches: [{ matchNumber, opponent, players: matchPlayers, results: newResults }]
     });
-    // 新しく追加した週だけを展開し、それまで開いていた他の週は折りたたむ
-    openWeekIds.clear();
-    openWeekIds.add(newDocRef.id);
   }
 
   closeImportPanel();
