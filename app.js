@@ -2049,7 +2049,232 @@ window.saveMatchImage = async function(btn, matchNumber){
   });
 };
 
+// ============================
+// ===== メンバー構成プリセット =====
+// ============================
+// Firestore: settings/lanePresets  { presets: [ { id, name, createdAt, updatedAt, members: [{id, name, lane}] } ] }
+// members は「レーン順 → 各レーン内の並び順」に並べて保存する（配列順＝並び順）
+let lanePresets = [];
+let presetOpenDetailIds = new Set();
+
+function newPresetId(){
+  return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// 現在のメンバー構成を保存用データにする
+function snapshotCurrentLanes(){
+  const members = [];
+  laneOrderList.forEach(l=>{
+    players
+      .filter(p=>p.lane === l)
+      .sort((a,b)=>a.order - b.order)
+      .forEach(p=> members.push({ id: p.id, name: p.name, lane: l }));
+  });
+  return members;
+}
+
+// プリセット内のメンバーと、現在のプレイヤーを突き合わせる（まずid、見つからなければ名前で照合）
+function matchPresetMembers(preset){
+  const used = new Set();
+  const matched = [];   // { member, player }
+  const missing = [];   // 現在は存在しないメンバー
+  preset.members.forEach(m=>{
+    let p = players.find(x=>x.id === m.id && !used.has(x.id));
+    if(!p) p = players.find(x=>x.name === m.name && !used.has(x.id));
+    if(p){
+      used.add(p.id);
+      matched.push({ member: m, player: p });
+    }else{
+      missing.push(m);
+    }
+  });
+  const extra = players.filter(p=>!used.has(p.id)); // プリセットに含まれない現在のプレイヤー
+  return { matched, missing, extra };
+}
+
+async function saveLanePresets(){
+  await setDoc(doc(db,"settings","lanePresets"), { presets: lanePresets });
+}
+
+function subscribeLanePresets(){
+  onSnapshot(doc(db,"settings","lanePresets"), (snap)=>{
+    lanePresets = (snap.exists() && Array.isArray(snap.data().presets)) ? snap.data().presets : [];
+    renderPresetList();
+  });
+}
+
+function formatPresetDate(ms){
+  if(!ms) return "";
+  const d = new Date(ms);
+  const pad = n => String(n).padStart(2,"0");
+  return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+window.openPresetModal = function(){
+  document.body.classList.add("modal-open");
+  document.getElementById("presetModal").style.display = "block";
+  document.getElementById("presetBackdrop").style.display = "block";
+  document.getElementById("presetNewName").value = "";
+  renderPresetList();
+};
+
+window.closePresetModal = function(){
+  document.body.classList.remove("modal-open");
+  document.getElementById("presetModal").style.display = "none";
+  document.getElementById("presetBackdrop").style.display = "none";
+};
+
+window.togglePresetDetail = function(id, isOpen){
+  if(isOpen) presetOpenDetailIds.add(id);
+  else presetOpenDetailIds.delete(id);
+};
+
+function renderPresetList(){
+  const box = document.getElementById("presetListContainer");
+  if(!box) return;
+
+  if(lanePresets.length === 0){
+    box.innerHTML = `<div class="preset-empty">保存済みのプリセットはまだありません。</div>`;
+    return;
+  }
+
+  box.innerHTML = lanePresets.map(pr=>{
+    const { matched, missing } = matchPresetMembers(pr);
+    const livingMembers = new Set(matched.map(x=>x.member));
+    const counts = laneOrderList.map(l=>{
+      const n = pr.members.filter(m=>m.lane === l).length;
+      return `<span>${laneNames[l]} <b>${n}</b>人</span>`;
+    }).join("");
+
+    const details = laneOrderList.map(l=>{
+      const list = pr.members.filter(m=>m.lane === l);
+      if(!list.length) return "";
+      const names = list.map(m=> livingMembers.has(m)
+        ? escapeHtml(m.name)
+        : `<span class="gone" title="現在は登録されていません">${escapeHtml(m.name)}</span>`
+      ).join("、");
+      return `<div class="preset-lane-members"><span class="preset-lane-label">${laneNames[l]}</span><span class="preset-lane-names">${names}</span></div>`;
+    }).join("");
+
+    const date = formatPresetDate(pr.updatedAt || pr.createdAt);
+    const id = escapeAttr(pr.id);
+    return `
+      <div class="preset-card">
+        <div class="preset-card-head">
+          <span class="preset-name">${escapeHtml(pr.name)}</span>
+          ${date ? `<span class="preset-date">${date}</span>` : ""}
+        </div>
+        <div class="preset-counts">${counts}</div>
+        <details class="preset-details" ${presetOpenDetailIds.has(pr.id) ? "open" : ""} ontoggle="togglePresetDetail('${id}', this.open)">
+          <summary>メンバーを見る${missing.length ? `（現在いない人 ${missing.length}人）` : ""}</summary>
+          ${details}
+        </details>
+        <div class="preset-actions">
+          <button class="btn-primary" onclick="applyPreset('${id}')">呼び出す</button>
+          <button onclick="overwritePreset('${id}')">今の構成で上書き</button>
+          <button onclick="renamePreset('${id}')">名前変更</button>
+          <button class="btn-delete" onclick="deletePreset('${id}')">削除</button>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+window.addPreset = async function(){
+  const input = document.getElementById("presetNewName");
+  const name = input.value.trim();
+  if(!name){
+    showToast("プリセット名を入力してください");
+    return;
+  }
+  const members = snapshotCurrentLanes();
+  if(members.length === 0){
+    showToast("保存できるメンバーがいません");
+    return;
+  }
+  if(lanePresets.some(p=>p.name === name) && !confirm(`「${name}」という名前のプリセットがすでにあります。同じ名前で追加しますか？`)) return;
+
+  const now = Date.now();
+  lanePresets = [...lanePresets, { id: newPresetId(), name, createdAt: now, updatedAt: now, members }];
+  input.value = "";
+  renderPresetList();
+  await saveLanePresets();
+  showToast(`「${name}」を保存しました`);
+};
+
+window.overwritePreset = async function(id){
+  const pr = lanePresets.find(p=>p.id === id);
+  if(!pr) return;
+  if(!confirm(`「${pr.name}」を現在のメンバー構成で上書きしますか？`)) return;
+  const members = snapshotCurrentLanes();
+  if(members.length === 0){
+    showToast("保存できるメンバーがいません");
+    return;
+  }
+  lanePresets = lanePresets.map(p=> p.id === id ? { ...p, members, updatedAt: Date.now() } : p);
+  renderPresetList();
+  await saveLanePresets();
+  showToast(`「${pr.name}」を上書きしました`);
+};
+
+window.renamePreset = async function(id){
+  const pr = lanePresets.find(p=>p.id === id);
+  if(!pr) return;
+  const input = prompt("新しいプリセット名", pr.name);
+  if(input === null) return;
+  const name = input.trim().slice(0, 30);
+  if(!name){
+    showToast("プリセット名を入力してください");
+    return;
+  }
+  if(name === pr.name) return;
+  lanePresets = lanePresets.map(p=> p.id === id ? { ...p, name } : p);
+  renderPresetList();
+  await saveLanePresets();
+  showToast("名前を変更しました");
+};
+
+window.deletePreset = async function(id){
+  const pr = lanePresets.find(p=>p.id === id);
+  if(!pr) return;
+  if(!confirm(`「${pr.name}」を削除しますか？\n（プレイヤーのデータは変わりません）`)) return;
+  lanePresets = lanePresets.filter(p=>p.id !== id);
+  presetOpenDetailIds.delete(id);
+  renderPresetList();
+  await saveLanePresets();
+  showToast(`「${pr.name}」を削除しました`);
+};
+
+window.applyPreset = async function(id){
+  const pr = lanePresets.find(p=>p.id === id);
+  if(!pr) return;
+
+  const { matched, missing, extra } = matchPresetMembers(pr);
+  if(matched.length === 0){
+    showToast("このプリセットのメンバーが現在いないため呼び出せません");
+    return;
+  }
+
+  const changedCount = matched.filter(({member, player})=>player.lane !== member.lane).length;
+  let msg = `「${pr.name}」を呼び出しますか？\n${matched.length}人のレーン・並び順を保存時の状態に戻します（レーンが変わる人：${changedCount}人）。`;
+  if(missing.length) msg += `\n\n※保存後に削除された ${missing.length}人（${missing.map(m=>m.name).join("、")}）は反映されません。`;
+  if(extra.length)   msg += `\n\n※プリセットに含まれない ${extra.length}人（${extra.map(p=>p.name).join("、")}）は今の場所のままです。`;
+  if(!confirm(msg)) return;
+
+  const base = Date.now();
+  const batch = writeBatch(db);
+  matched.forEach(({member, player}, i)=>{
+    batch.update(doc(db,"players",player.id), { lane: member.lane, order: base + i });
+  });
+  await batch.commit();
+
+  selectedIds.clear();
+  closePresetModal();
+  showPage(1);
+  showToast(`「${pr.name}」を呼び出しました`);
+};
+
 subscribePlayers();
 subscribeExpeditions();
 subscribeRuneOptions();
 subscribeDamageTypes();
+subscribeLanePresets();
