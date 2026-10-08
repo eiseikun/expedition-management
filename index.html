@@ -16,6 +16,7 @@
 
 <div class="app-header">
   <button class="settings-gear-btn" id="settingsGearBtn" onclick="showPage(3)" aria-label="設定" title="設定">⚙</button>
+  <button class="preset-header-btn" id="presetBtn" onclick="openPresetModal()" aria-label="プリセット" title="メンバー構成プリセット">📋</button>
   <div class="app-eyebrow">CAT PIRATES CLAN</div>
   <div class="app-banner"><h1>ねこ海賊団 遠征管理</h1></div>
   <div class="app-sub">EXPEDITION MANAGEMENT BOARD</div>
@@ -174,6 +175,26 @@
 
 <!-- モーダルの外側タップで閉じるための背景（保存はしない＝閉じるボタンと同じ動作） -->
 <div id="editorBackdrop" class="editor-backdrop" style="display:none;" onclick="closeEditor()"></div>
+
+<!-- プリセット（メンバー構成の保存・呼び出し） -->
+<div id="presetBackdrop" class="editor-backdrop" style="display:none;" onclick="closePresetModal()"></div>
+<div id="presetModal" class="editor preset-modal" style="display:none;">
+  <h2>メンバー構成プリセット</h2>
+  <p class="preset-hint">現在のレーン1〜3・控え・クラン外の構成（誰がどこにいるか、並び順）を保存して、あとから呼び出せます。</p>
+
+  <h3>現在の構成を新しく保存</h3>
+  <div class="preset-add-row">
+    <input id="presetNewName" placeholder="プリセット名（例：1回戦用）" maxlength="30">
+    <button class="btn-primary" onclick="addPreset()">保存</button>
+  </div>
+
+  <h3>保存済みプリセット</h3>
+  <div id="presetListContainer"></div>
+
+  <div class="editor-footer">
+    <button onclick="closePresetModal()">閉じる</button>
+  </div>
+</div>
 
 <!-- モーダル（1ページ目用） -->
 <div id="editor" class="editor" style="display:none;">
