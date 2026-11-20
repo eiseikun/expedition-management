@@ -1726,3 +1726,21 @@ td { position: relative; }
   font-size: 12px;
   border-radius: 999px;
 }
+/* ルーン共通効果 */
+.rune-common-card {
+  border-style: dashed;
+}
+.rune-common-card .rune-type-card-header h4 {
+  font-size: 13px;
+}
+.rune-effect-chip button[title="この分類の共通効果にする"] {
+  font-size: 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.rune-common-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
