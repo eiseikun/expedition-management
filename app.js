@@ -614,6 +614,18 @@ window.savePlayer = async function(){
     if(name && q!=="none") runes.push({name,q,e});
   });
 
+  // 設定画面の並び順（分類順 → 分類内の並び順）に揃える。設定にない（削除済み）ルーンは末尾。同順位は入力順を維持
+  const runeNameOrder = orderedRuneNames();
+  const runeSortKey = (n)=>{
+    const ci = RUNE_CATEGORIES.indexOf(runeGroups[n]);
+    const ni = runeNameOrder.indexOf(n);
+    return (ci<0||ni<0) ? [999,999] : [ci,ni];
+  };
+  runes.sort((a,b)=>{
+    const ka=runeSortKey(a.name), kb=runeSortKey(b.name);
+    return (ka[0]-kb[0]) || (ka[1]-kb[1]);
+  });
+
   const gearDetail = [];
   document.querySelectorAll("#chaos > div").forEach(div=>{
     const set = div.querySelector("[data-type='set']").value;
