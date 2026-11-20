@@ -92,6 +92,7 @@ const defaultRuneOptions = {
 };
 let runeOptions = {}; // 実データはsubscribeRuneOptions()でFirestoreから読み込む
 let runeOrder = [];   // ルーン種類の表示順（名前の配列）
+let runeCommonEffects = {}; // 分類 → その分類の全ルーンで共通の効果（配列）
 let runeGroups = {};  // ルーン種類 → 分類（"強化ルーン"/"能力ルーン"/"祝福ルーン" のいずれか。必ずどれかに属する）
 
 // ルーンは必ずこの3分類のいずれかに属する（プレイヤー編集画面でのルーン選択の絞り込みに使う）
@@ -117,6 +118,7 @@ function subscribeRuneOptions(){
       runeOptions = data.options || {};
       runeOrder = Array.isArray(data.order) ? data.order : [];
       runeGroups = data.groups || {};
+      runeCommonEffects = data.commonEffects || {};
 
       // 旧仕様（鋭利・アロレが固定欄だった頃）からの移行：一度だけ自動で追加する
       if(!data.migratedFixedRunes){
@@ -131,6 +133,7 @@ function subscribeRuneOptions(){
       runeOptions = { ...defaultRuneOptions };
       runeOrder = Object.keys(defaultRuneOptions);
       runeGroups = {};
+      runeCommonEffects = {};
       needsSave = true;
     }
 
@@ -143,10 +146,14 @@ function subscribeRuneOptions(){
       }
     });
 
+    RUNE_CATEGORIES.forEach(c=>{
+      if(!Array.isArray(runeCommonEffects[c])) runeCommonEffects[c] = [];
+    });
+
     runeOrder = orderedRuneNames(); // 正規化（実在しないキーの除去／未登録キーの補完）
 
     if(needsSave){
-      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, migratedFixedRunes: true });
+      setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, commonEffects: runeCommonEffects, migratedFixedRunes: true });
     }
 
     refreshOpenRuneSelects();
@@ -156,7 +163,7 @@ function subscribeRuneOptions(){
 
 async function saveRuneOptions(){
   runeOrder = orderedRuneNames();
-  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, migratedFixedRunes: true });
+  await setDoc(doc(db,"settings","runeOptions"), { options: runeOptions, order: runeOrder, groups: runeGroups, commonEffects: runeCommonEffects, migratedFixedRunes: true });
 }
 
 // 指定した分類（強化ルーン／能力ルーン／祝福ルーン）に属するルーン名の一覧を、表示順で返す
@@ -200,8 +207,15 @@ function refreshOpenRuneSelects(){
   });
 }
 
+// そのルーンで選べる効果＝「分類の共通効果」＋「そのルーン個別の効果」（重複は除く）
+function effectiveRuneEffects(name){
+  const common = runeCommonEffects[runeGroups[name]] || [];
+  const own = runeOptions[name] || [];
+  return [...common, ...own.filter(e=>!common.includes(e))];
+}
+
 function updateEnchant(nameSelect, enchantSelect, currentEffect){
-  const effects = runeOptions[nameSelect.value] || [];
+  const effects = effectiveRuneEffects(nameSelect.value);
   let list = effects;
   if(currentEffect && !effects.includes(currentEffect)){
     list = [currentEffect, ...effects]; // 設定から消えた過去の効果もデータ保護のため一時表示
@@ -216,10 +230,6 @@ function renderRuneSettings(){
   if(!container) return;
 
   const names = orderedRuneNames();
-  if(names.length === 0){
-    container.innerHTML = `<p class="no-effect">まだルーン種類がありません。上のフォームから追加してください。</p>`;
-    return;
-  }
 
   // 強化ルーン／能力ルーン／祝福ルーンの固定3分類ごとにまとめる（分類が空でも見出しは常に表示）
   const groupedNames = {};
@@ -237,6 +247,7 @@ function renderRuneSettings(){
           <span class="rune-group-count">(${groupNames.length})</span>
         </div>
         <div class="rune-group-body" ${isOpen ? "" : 'style="display:none;"'}>
+          ${renderCommonEffectsCard(g)}
           ${groupNames.length
             ? groupNames.map(name=>renderRuneTypeCard(name, groupNames)).join("")
             : `<p class="no-effect">この分類のルーンはまだありません。</p>`
@@ -248,8 +259,37 @@ function renderRuneSettings(){
   `;
 }
 
+function renderCommonEffectsCard(category){
+  const common = runeCommonEffects[category] || [];
+  const key = cssKey(category);
+  return `
+    <div class="rune-type-card rune-common-card">
+      <div class="rune-type-card-header">
+        <h4>共通効果（${category}すべてで選べます）</h4>
+      </div>
+      <div class="rune-effect-chips">
+        ${
+          common.length
+          ? common.map(e=>`
+            <span class="rune-effect-chip">
+              ${e}
+              <button onclick="deleteCommonEffect('${escapeForAttr(category)}','${escapeForAttr(e)}')" title="削除">✕</button>
+            </span>
+          `).join("")
+          : `<span class="no-effect">共通効果は未登録です</span>`
+        }
+      </div>
+      <div class="add-effect-row">
+        <input placeholder="共通効果を追加" id="commonInput-${key}">
+        <button onclick="addCommonEffect('${escapeForAttr(category)}')">追加</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderRuneTypeCard(name, groupNames){
   const effects = runeOptions[name] || [];
+  const common = runeCommonEffects[runeGroups[name]] || [];
   const idx = groupNames.indexOf(name);
   return `
     <div class="rune-type-card">
@@ -274,12 +314,14 @@ function renderRuneTypeCard(name, groupNames){
           ? effects.map(e=>`
             <span class="rune-effect-chip">
               ${e}
+              <button onclick="promoteRuneEffect('${escapeForAttr(name)}','${escapeForAttr(e)}')" title="この分類の共通効果にする">共通化</button>
               <button onclick="deleteRuneEffect('${escapeForAttr(name)}','${escapeForAttr(e)}')" title="削除">✕</button>
             </span>
           `).join("")
-          : `<span class="no-effect">効果が未登録です</span>`
+          : `<span class="no-effect">個別の効果は未登録です</span>`
         }
       </div>
+      ${common.length ? `<div class="rune-common-note">＋共通：${common.join("、")}</div>` : ""}
       <div class="add-effect-row">
         <input placeholder="新しい効果を追加" id="effectInput-${cssKey(name)}">
         <button onclick="addRuneEffect('${escapeForAttr(name)}')">追加</button>
@@ -381,6 +423,46 @@ window.moveRuneTypeDown = async function(name){
   await saveRuneOptions();
 };
 
+window.addCommonEffect = async function(category){
+  const input = document.getElementById(`commonInput-${cssKey(category)}`);
+  const effect = input.value.trim();
+  if(!effect){
+    showToast("効果を入力してください");
+    return;
+  }
+  if(!runeCommonEffects[category]) runeCommonEffects[category] = [];
+  if(runeCommonEffects[category].includes(effect)){
+    showToast("すでに同じ共通効果があります");
+    return;
+  }
+  runeCommonEffects[category].push(effect);
+  // 同じ効果が各ルーンの個別効果にあれば、重複を避けるため個別側から外す
+  Object.keys(runeOptions).forEach(n=>{
+    if(runeGroups[n] === category) runeOptions[n] = (runeOptions[n]||[]).filter(e=>e!==effect);
+  });
+  await saveRuneOptions();
+  showToast(`共通効果「${effect}」を追加しました`);
+};
+
+window.deleteCommonEffect = async function(category, effect){
+  runeCommonEffects[category] = (runeCommonEffects[category] || []).filter(e=>e!==effect);
+  await saveRuneOptions();
+  showToast(`共通効果「${effect}」を削除しました`);
+};
+
+// 個別効果を、その分類の共通効果へ移す（同じ分類の他ルーンにある同名の個別効果もまとめて整理）
+window.promoteRuneEffect = async function(name, effect){
+  const category = runeGroups[name];
+  if(!RUNE_CATEGORIES.includes(category)) return;
+  if(!runeCommonEffects[category]) runeCommonEffects[category] = [];
+  if(!runeCommonEffects[category].includes(effect)) runeCommonEffects[category].push(effect);
+  Object.keys(runeOptions).forEach(n=>{
+    if(runeGroups[n] === category) runeOptions[n] = (runeOptions[n]||[]).filter(e=>e!==effect);
+  });
+  await saveRuneOptions();
+  showToast(`「${effect}」を${category}の共通効果にしました`);
+};
+
 window.addRuneEffect = async function(name){
   const input = document.getElementById(`effectInput-${cssKey(name)}`);
   const effect = input.value.trim();
@@ -389,8 +471,8 @@ window.addRuneEffect = async function(name){
     return;
   }
   if(!runeOptions[name]) runeOptions[name] = [];
-  if(runeOptions[name].includes(effect)){
-    showToast("すでに同じ効果があります");
+  if(runeOptions[name].includes(effect) || (runeCommonEffects[runeGroups[name]] || []).includes(effect)){
+    showToast("すでに同じ効果があります（共通効果を含む）");
     return;
   }
   runeOptions[name].push(effect);
